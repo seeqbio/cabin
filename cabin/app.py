@@ -73,7 +73,7 @@ class ShellCommand(AppCommand):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.parser.add_argument('--user', default=READER, help="user to log in to MySQL")
+        self.parser.add_argument('--user', '-u', default=READER, help="user to log in to MySQL")
 
     def run(self):
         """Executes mysql client in _this_ process (replaces python process
@@ -88,12 +88,9 @@ class ShellCommand(AppCommand):
         """
         user = self.app.args.user
         password = self.app.config['mysql']['passwords'][user]
-        argv = [
-            'mysql',
-            '-u', user,
-            '-p' + password,
-            '-D', self.app.config['mysql']['database']
-        ]
+        argv = ['mysql', '-u', user, '-D', self.app.config['mysql']['database']]
+        if password:
+            argv += ['-p' + str(password)]
         os.execvp('mysql', argv)
 
 
