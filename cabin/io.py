@@ -3,6 +3,7 @@ import allel
 import subprocess
 import numpy as np
 from lxml import etree
+from Bio import SeqIO
 from ftplib import FTP
 from dateutil import parser
 from pathlib import Path
@@ -70,25 +71,9 @@ def read_xml(source, tag):
 
 
 def read_fasta(path, gzipped=False):
-    path = str(path)
-
     f = gzip.open(path, 'rt') if gzipped else open(path, 'r')
-    log('reading FASTA sequences from "{p}"'.format(p=f.name))
-
-    name = sequence = None
-    for line in f:
-        if line[0] == '>':
-            name = line[1:].strip()
-            sequence = ''
-            for line in f:
-                if line[0] == '>':
-                    yield name, sequence
-                    name = sequence = None
-                    break
-                sequence += line.strip()
-        line = f.readline()
-    if name:
-        yield name, sequence
+    for record in SeqIO.parse(f, 'fasta'):
+        yield record.id, str(record.seq)
 
     f.close()
 
