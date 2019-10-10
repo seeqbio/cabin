@@ -5,7 +5,6 @@ from biodb.io import ftp_modify_time
 
 
 class FtpTimestampedMixin:
-    # TODO document
     ftp_server = AbstractAttribute()
     ftp_path = AbstractAttribute()
 

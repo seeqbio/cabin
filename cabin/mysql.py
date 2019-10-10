@@ -18,12 +18,17 @@ class MySQL:
 
     def debuglog(self, message, file=sys.stderr):
         if self.debug:
-            log(message, header='DEBUG')
+            log(message, header='[DEBUG] ')
 
     @contextmanager
     def transaction(self, connection_kw={}, cursor_kw={}):
 
         def create_table(cursor, table_name, query):
+            assert isinstance(table_name, str), 'bad table name: ' + table_name
+            # MySQL has a maximum table name length of 64
+            # https://dev.mysql.com/doc/refman/8.0/en/identifier-length.html
+            if len(table_name) > 64:
+                raise BiodbError('Table name `%s` exceeds the maximum allowed 64 characters' % table_name)
             cursor._created_tables.append(table_name)
             cursor.execute(query)
 
@@ -35,12 +40,22 @@ class MySQL:
             cnx.start_transaction()
             with cnx.cursor(**cursor_kw) as cursor:
                 cursor._created_tables = []
+                # monkey patch a new method on the cursor we produce; we need a
+                # separate method for table creation to allow clean rollbacks.
+                # This is because CREATE/DROP table is not rollbackable by
+                # MySQL but we really need to at least rollback CREATE's to
+                # simplifying testing (failed import should fail cleanly and
+                # not leave a partial or empty table around).
                 cursor.create_table = types.MethodType(create_table, cursor)
                 cursor.drop_created_tables = types.MethodType(drop_created_tables, cursor)
                 try:
                     yield cursor
                     cnx.commit()
-                except: # catches all exceptions, even user-initiated ctrl + C
+                # catch all exceptions, even KeyboardInterrupt (i.e. ctrl+C)
+                # we must ensure to re-raise it.
+                # NOTE it seems like cursor.execute swallows keyboard
+                # interrupts!
+                except:
                     cursor.drop_created_tables()
                     cnx.rollback()
                     raise

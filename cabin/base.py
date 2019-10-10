@@ -112,7 +112,7 @@ class BaseDataset(ABC):
             self.imported = self._imported()
             return self.imported
         else:
-            raise AttributeError
+            raise AttributeError(attr)
 
     @property
     def label(self):
@@ -122,10 +122,16 @@ class BaseDataset(ABC):
     # download and archive
     # ====================
     @property
-    def filename(self):
-        return '{name}::{version}.{ext}'.format(
+    def basename(self):
+        return '{name}::{version}'.format(
             name=self.name,
             version=self.version.serialize(upto='checksum'),
+        )
+
+    @property
+    def filename(self):
+        return '{basename}.{ext}'.format(
+            basename=self.basename,
             ext=self.file_extension
         )
 
@@ -260,8 +266,6 @@ class BaseDataset(ABC):
     @property
     def table_name(self):
         name = '{name}::{version}'.format(name=self.name, version=self.version.serialize(upto='git'))
-        if len(name) > 64:
-            raise BiodbError('Table name `%s` exceeds the maximum allowed 64 characters' % name)
         return name
 
     @property
