@@ -18,7 +18,7 @@ class MySQL:
 
     def debuglog(self, message, file=sys.stderr):
         if self.debug:
-            log(message, header='DEBUG')
+            log(message, header='[DEBUG] ')
 
     @contextmanager
     def transaction(self, connection_kw={}, cursor_kw={}):

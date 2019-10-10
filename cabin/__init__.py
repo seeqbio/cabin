@@ -1,4 +1,5 @@
 import sys
+from datetime import datetime
 
 
 # abstract class attributes are complicated https://stackoverflow.com/a/45250114
@@ -9,10 +10,14 @@ class AbstractAttribute:
         raise NotImplementedError('Class "{c}" has an undefined abstract class attribute'.format(c=type.__name__))
 
 
-def log(msg, file=sys.stderr, asline=True, header='biodb'):
-    if asline:
-        msg = '[{h}] {m}\n'.format(h=header, m=msg)
-    file.write(msg)
+def log(msg, file=sys.stderr, asline=True, header=None):
+    if header is None:
+        now = datetime.now().strftime('%H:%M')
+        header = '[{now}] '.format(now=now)
+
+    line = header + msg + ('\n' if asline else '')
+    file.write(line)
+    file.flush()
 
 
 class BiodbError(RuntimeError):
