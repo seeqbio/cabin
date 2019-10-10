@@ -34,7 +34,7 @@ def read_xsv(path, delimiter='\t', columns=None, gzipped=False):
 def read_vcf(path, numbers, fields):
     path = str(path)
     log('reading VCF records from "{p}"'.format(p=path))
-    _, _, _, chunk_iter = allel.iter_vcf_chunks(path, numbers=numbers, fields=fields, chunk_length=1000)
+    _, _, _, chunk_iter = allel.iter_vcf_chunks(path, numbers=numbers, fields=fields, chunk_length=100)
     for chunk in chunk_iter:
         variants = chunk[0]
         # all variants[X] values are ndarrays with the same shape

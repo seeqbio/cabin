@@ -309,7 +309,7 @@ class App:
             try:
                 return self.commands[self.args.command].run()
             except BiodbError as e:
-                log('error: ' + str(e))
+                log('Error: ' + str(e))
                 if self.args.debug:
                     raise
                 return 1
