@@ -319,7 +319,7 @@ class BaseDataset(ABC):
         s3 = boto3.client('s3')
         res = s3.list_objects(Bucket=app.config['s3_archive']['bucket'],
                               Prefix=app.config['s3_archive']['prefix'])
-        for s3_obj in res['Contents']:
+        for s3_obj in res.get('Contents', []):
             version = cls.deserialize_version(Path(s3_obj['Key']).name)
             if version:
                 yield version
