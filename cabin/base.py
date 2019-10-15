@@ -344,20 +344,29 @@ class BaseDataset(ABC):
 
         # go through each of the 3 dictionaries (order of operations matter);
         # when visiting each dictionary pop identical versions from other
-        # dictionaries.
+        # dictionaries. Keep a working copy so we don't lose information while
+        # processing copies in the same bunch (e.g. we don't want to forget that
+        # an archived copy exists as go through multiple imported versions with
+        # the same source version and checksum.
+        working_a_versions = a_versions.copy()
+        working_d_versions = d_versions.copy()
         for version in i_versions:
             subversion = version.sub(upto='checksum')
+            a_versions.pop(subversion, None)
+            d_versions.pop(subversion, None)
             yield cls(app=app,
                       version=version,
-                      downloaded=d_versions.pop(subversion, False),
-                      archived=a_versions.pop(subversion, False),
+                      downloaded=working_d_versions.get(subversion, False),
+                      archived=working_a_versions.get(subversion, False),
                       imported=True)
 
         # remaining archived versions are guaranteed to not be imported
+        working_d_versions = d_versions.copy()
         for version in a_versions:
+            d_versions.pop(subversion, None)
             yield cls(app=app,
                       version=version,
-                      downloaded=d_versions.pop(version, False),
+                      downloaded=working_d_versions.get(version, False),
                       archived=True,
                       imported=False)
 
