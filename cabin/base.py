@@ -363,6 +363,7 @@ class BaseDataset(ABC):
         # remaining archived versions are guaranteed to not be imported
         working_d_versions = d_versions.copy()
         for version in a_versions:
+            subversion = version.sub(upto='checksum')
             d_versions.pop(subversion, None)
             yield cls(app=app,
                       version=version,
