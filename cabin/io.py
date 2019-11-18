@@ -12,7 +12,7 @@ from biodb import log
 from biodb import BiodbError
 
 
-def read_xsv(path, delimiter='\t', columns=None, gzipped=False):
+def read_xsv(path, delimiter='\t', columns=None, header_leading_hash=True, gzipped=False):
     path = str(path)
     f = gzip.open(path, 'rt') if gzipped else open(path, 'r')
 
@@ -20,9 +20,10 @@ def read_xsv(path, delimiter='\t', columns=None, gzipped=False):
 
     if columns is None:
         header = f.readline().strip()
-        if header[0] != '#':
-            raise BiodbError('Expected first line to start with #')
-        header = header[1:]
+        if header_leading_hash:
+            if header[0] != '#':
+                raise BiodbError('Expected first line to start with #')
+            header = header[1:]
         columns = header.split(delimiter)
 
     for line in f:
