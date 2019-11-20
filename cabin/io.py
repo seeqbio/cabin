@@ -13,6 +13,20 @@ from biodb import BiodbError
 
 
 def read_xsv(path, delimiter='\t', columns=None, header_leading_hash=True, gzipped=False):
+    """
+    Parses a delimiter separated text file and yields rows as dictionaries.
+
+    Args:
+        delimiter (str):        column delimiter.
+        columns   (list|None):  If a list is given it is assumed that all lines
+                                of the source file are content lines (yielded
+                                as rows).  If None it is expected that the
+                                first line of the file (the "header line")
+                                defines the column names.
+        header_leading_hash (bool): Whether the header line has a leading `#`;
+                                ignored if `columns` is given.
+        gzipped (bool):         Whether the given file is gzipped.
+    """
     path = str(path)
     f = gzip.open(path, 'rt') if gzipped else open(path, 'r')
 

@@ -19,8 +19,15 @@ class FtpTimestampedMixin:
 
 
 class RecordByRecordImportMixin:
-    field_mappings = None # dictionary of old to new (filter and rename), if None no filtering or renaming
     columns = AbstractAttribute()
+    """A list of columns as per SQL schema which is used to produce the
+    `INSERT` command as well as to filter unwanted columns from the original
+    source."""
+
+    field_mappings = None
+    """A dictionary of old column name (in original source) to new column name
+    (as per SQL schema) which filters and renames the columns read from
+    original source. By default no renaming or filtering is performed."""
 
     @property
     def sql_insert(self):
