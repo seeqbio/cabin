@@ -302,6 +302,13 @@ class App:
         with open(self.config['mysql']['passwords']) as f:
             self.config['mysql']['passwords'] = yaml.load(f, Loader=yaml.FullLoader)
 
+        if 'SGX_MYSQL_HOST' in os.environ:
+            self.config['mysql']['host'] = os.environ['SGX_MYSQL_HOST']
+        if 'SGX_S3_ARCHIVE_BUCKET' in os.environ:
+            self.config['s3_archive']['bucket'] = os.environ['SGX_S3_ARCHIVE_BUCKET']
+        if 'SGX_S3_ARCHIVE_PREFIX' in os.environ:
+            self.config['s3_archive']['prefix'] = os.environ['SGX_S3_ARCHIVE_PREFIX']
+
         self.mysql = MySQL(config=self.config['mysql'], debug=self.args.debug)
 
     def run(self, *argv):

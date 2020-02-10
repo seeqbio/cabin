@@ -1,3 +1,4 @@
+import os
 import sys
 import types
 import textwrap
@@ -65,7 +66,7 @@ class MySQL:
         cnx_kw = {
             'user': user,
             'password': self.config['passwords'][user],
-            'host': 'localhost',
+            'host': self.config['host'],
             'database': self.config['database'],
         }
         cnx_kw.update(**kw)
@@ -115,6 +116,7 @@ class MySQL:
         database = self.config['database']
 
         cnx = mysql.connector.connect(user='root',
+                                      host=self.config['host'],
                                       password=self.config['passwords']['root'])
         cursor = cnx.cursor()
 
