@@ -4,6 +4,12 @@ from biodb import AbstractAttribute
 from biodb.io import ftp_modify_time
 
 
+def liftover_b37tohg38(chrom, pos, lo_tohg19, lo_tohg38):
+    hg19_coor = lo_to19.convert_coordinate(chrom, pos)
+    hg38_coor = lo_to38.convert_coordinate(hg19_coor[0][0], hg19_coor[0][1])
+    return hg38_coor[0][0], str(hg38_coor[0][1])
+
+
 class FtpTimestampedMixin:
     ftp_server = AbstractAttribute()
     ftp_path = AbstractAttribute()

@@ -35,7 +35,9 @@ from biodb.datasets.ClinVar import ClinVar
 from biodb.datasets.ensembl import ENSEMBL_DATASETS
 from biodb.datasets.CancerMine import CancerMineCollated
 from biodb.datasets.CancerMine import CancerMineSentences
-from biodb.datasets.CIViC import CIViC
+from biodb.datasets.CIViC import CIViC_url
+from biodb.datasets.CIViC import CIViC_hg38
+
 
 class UsageError(Exception):
     pass
@@ -249,7 +251,8 @@ class App:
         gene2refseq,
         gene2ensembl,
         ClinVar,
-        CIViC,
+        CIViC_url,
+        CIViC_hg38,
         dbNSFP,
         dbSNP,
     ] + list(ENSEMBL_DATASETS.values())
