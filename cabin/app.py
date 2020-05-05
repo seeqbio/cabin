@@ -37,6 +37,7 @@ from biodb.datasets.CancerMine import CancerMineCollated
 from biodb.datasets.CancerMine import CancerMineSentences
 from biodb.datasets.CIViC import CIViC
 
+
 class UsageError(Exception):
     pass
 
