@@ -32,6 +32,7 @@ from biodb.datasets.gene2ensembl import gene2ensembl
 from biodb.datasets.dbSNP import dbSNP
 from biodb.datasets.dbNSFP import dbNSFP
 from biodb.datasets.ClinVar import ClinVar
+from biodb.datasets.ClinVarHGVS4Variation import ClinVarHGVS4Variation
 from biodb.datasets.ensembl import ENSEMBL_DATASETS
 from biodb.datasets.CancerMine import CancerMineCollated
 from biodb.datasets.CancerMine import CancerMineSentences
@@ -250,6 +251,7 @@ class App:
         gene2refseq,
         gene2ensembl,
         ClinVar,
+        ClinVarHGVS4Variation,
         CIViC,
         dbNSFP,
         dbSNP,
