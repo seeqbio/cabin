@@ -25,6 +25,7 @@ def read_xsv(path, delimiter='\t', columns=None, header_leading_hash=True, ignor
                                 defines the column names.
         header_leading_hash (bool): Whether the header line has a leading `#`;
                                 ignored if `columns` is given.
+        ignore_leading_hash:    ignores lines with leading # from file contents.
         gzipped (bool):         Whether the given file is gzipped.
     """
     path = str(path)
