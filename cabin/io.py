@@ -12,7 +12,7 @@ from biodb import log
 from biodb import BiodbError
 
 
-def read_xsv(path, delimiter='\t', columns=None, header_leading_hash=True, gzipped=False):
+def read_xsv(path, delimiter='\t', columns=None, header_leading_hash=True, ignore_leading_hash=False, gzipped=False):
     """
     Parses a delimiter separated text file and yields rows as dictionaries.
 
@@ -25,6 +25,7 @@ def read_xsv(path, delimiter='\t', columns=None, header_leading_hash=True, gzipp
                                 defines the column names.
         header_leading_hash (bool): Whether the header line has a leading `#`;
                                 ignored if `columns` is given.
+        ignore_leading_hash:    ignores lines with leading # from file contents.
         gzipped (bool):         Whether the given file is gzipped.
     """
     path = str(path)
@@ -41,6 +42,8 @@ def read_xsv(path, delimiter='\t', columns=None, header_leading_hash=True, gzipp
         columns = header.split(delimiter)
 
     for line in f:
+        if ignore_leading_hash and line.startswith('#'):
+            continue
         values = line.strip().split(delimiter)
         yield dict(zip(columns, values))
 
