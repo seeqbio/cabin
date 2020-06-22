@@ -32,10 +32,10 @@ from biodb.datasets.gene2ensembl import gene2ensembl
 from biodb.datasets.dbSNP import dbSNP
 from biodb.datasets.dbNSFP import dbNSFP
 from biodb.datasets.ClinVarOld import ClinVar
-from biodb.datasets.ClinVarUpdated import ClinVarVCF
-from biodb.datasets.ClinVarUpdated import ClinVarHGVS4Variation
-from biodb.datasets.ClinVarUpdated import ClinVarSCV
-from biodb.datasets.ClinVarUpdated import ClinVarRCV
+from biodb.datasets.ClinVar import ClinVarVCF
+from biodb.datasets.ClinVar import ClinVarHGVS4Variation
+from biodb.datasets.ClinVar import ClinVarSCV
+from biodb.datasets.ClinVar import ClinVarRCV
 from biodb.datasets.ensembl import ENSEMBL_DATASETS
 from biodb.datasets.CancerMine import CancerMineCollated
 from biodb.datasets.CancerMine import CancerMineSentences
