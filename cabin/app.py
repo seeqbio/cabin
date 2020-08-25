@@ -40,7 +40,7 @@ from biodb.datasets.ensembl import ENSEMBL_DATASETS
 from biodb.datasets.CancerMine import CancerMineCollated
 from biodb.datasets.CancerMine import CancerMineSentences
 from biodb.datasets.CIViC import CIViC
-
+from biodb.datasets.hpo import hpo
 
 class UsageError(Exception):
     pass
@@ -261,6 +261,7 @@ class App:
         CIViC,
         dbNSFP,
         dbSNP,
+        hpo,
     ] + list(ENSEMBL_DATASETS.values())
 
     def dataset(self, name, version):
