@@ -41,7 +41,7 @@ from biodb.datasets.CancerMine import CancerMineCollated
 from biodb.datasets.CancerMine import CancerMineSentences
 from biodb.datasets.CIViC import CIViC
 from biodb.datasets.hpo import hpo
-from biodb.datasets.do import do
+from biodb.datasets.disease_ontology import DiseaseOntology
 
 class UsageError(Exception):
     pass
@@ -263,7 +263,7 @@ class App:
         dbNSFP,
         dbSNP,
         hpo,
-        do,
+        DiseaseOntology,
     ] + list(ENSEMBL_DATASETS.values())
 
     def dataset(self, name, version):
