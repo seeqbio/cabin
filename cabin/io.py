@@ -88,6 +88,33 @@ def read_xml(source, tag):
         yield elem
 
 
+def read_obo(path):
+    """ For each term in ontology, yields the name and id of the the term,
+    the immediate children term, and immediate parent terms. All xrefs are
+    kept and user can parse for a subset by prefix. Source: obo format. """
+
+    from pronto import Ontology
+    # FIXME: UnicodeWarning: unsound encoding, assuming ISO-8859-1 (73% confidence)
+    # with hpo import, not mondo or disease ontology
+
+    ontology = Ontology(str(path))
+
+    row = []
+    for term in ontology.terms():
+
+        children = [child.id for child in ontology[term.id].subclasses(distance=1, with_self=False)]
+
+        parents = [parent.id for parent in ontology[term.id].superclasses(distance=1, with_self=False)]
+
+        yield {
+            'name': term.name,
+            'id': term.id,
+            'children': children,
+            'parents': parents,
+            'xrefs': [xref.id for xref in term.xrefs]
+        }
+
+
 def read_fasta(path, gzipped=False):
     f = gzip.open(path, 'rt') if gzipped else open(path, 'r')
     for record in SeqIO.parse(f, 'fasta'):
