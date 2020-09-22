@@ -1,5 +1,5 @@
 import gzip
-import allel
+import pysam
 import subprocess
 import numpy as np
 from lxml import etree
@@ -50,16 +50,22 @@ def read_xsv(path, delimiter='\t', columns=None, header_leading_hash=True, ignor
     f.close()
 
 
-def read_vcf(path, numbers, fields):
+def read_vcf(path):
     path = str(path)
     log('reading VCF records from "{p}"'.format(p=path))
-    _, _, _, chunk_iter = allel.iter_vcf_chunks(path, numbers=numbers, fields=fields, chunk_length=100)
-    for chunk in chunk_iter:
-        variants = chunk[0]
-        # all variants[X] values are ndarrays with the same shape
-        for row in zip(*(variants['variants/' + field] for field in fields)):
-            row = [int(x) if isinstance(x, np.int32) else x for x in row]
-            yield dict(zip(fields, row))
+    vf = pysam.VariantFile(path)
+    for variant in vf.fetch():
+        row = {
+            'CHROM': variant.chrom,
+            'POS': variant.pos,
+            'ID': variant.id,
+            'REF': variant.ref,
+            'ALT': variant.alts,         # tuple: ('A',)
+            'QUAL': variant.qual,
+            'FILTER': variant.filter,
+            'INFO': variant.info,        # eg usage: info.get('CLNDISDB')
+        }
+        yield row
 
 
 # A callback to free the memory used by elements retrieved by etree.iterparse
@@ -99,11 +105,9 @@ def read_obo(path):
 
     ontology = Ontology(str(path))
 
-    row = []
     for term in ontology.terms():
 
         children = [child.id for child in ontology[term.id].subclasses(distance=1, with_self=False)]
-
         parents = [parent.id for parent in ontology[term.id].superclasses(distance=1, with_self=False)]
 
         yield {
