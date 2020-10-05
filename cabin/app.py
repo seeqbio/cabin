@@ -43,6 +43,8 @@ from biodb.datasets.CIViC import CIViC
 from biodb.datasets.hpo import hpo
 from biodb.datasets.disease_ontology import DiseaseOntology
 from biodb.datasets.mondo import mondo
+from biodb.datasets.pmkb import pmkb
+
 
 class UsageError(Exception):
     pass
@@ -266,6 +268,7 @@ class App:
         hpo,
         DiseaseOntology,
         mondo,
+        pmkb,
     ] + list(ENSEMBL_DATASETS.values())
 
     def dataset(self, name, version):

@@ -1,3 +1,4 @@
+import csv
 import gzip
 import pysam
 import subprocess
@@ -48,6 +49,17 @@ def read_xsv(path, delimiter='\t', columns=None, header_leading_hash=True, ignor
         yield dict(zip(columns, values))
 
     f.close()
+
+def read_csv(path, delimiter=',', quotechar='"'):
+    """
+    uses csv library to parse csv where read xsv fails
+    """
+    with open(path) as infile:
+        csv_content = csv.reader(infile, delimiter=delimiter, quotechar=quotechar)
+        header = next(csv_content)
+
+        for row in csv_content:
+            yield dict(zip(header, row))
 
 
 def read_vcf(path):
