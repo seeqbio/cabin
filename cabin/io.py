@@ -52,7 +52,9 @@ def read_xsv(path, delimiter='\t', columns=None, header_leading_hash=True, ignor
 
 def read_csv(path, delimiter=',', quotechar='"'):
     """
-    uses csv library to parse csv where read xsv fails
+    Uses csv library to parse csv in the event that simple delimiter split is not
+    enough. For example, some cells contain a citation, with a ',' in it, that
+    is in quotes. eg:  "Flex E, et al. Somatically acquired JAK1".
     """
     with open(path) as infile:
         csv_content = csv.reader(infile, delimiter=delimiter, quotechar=quotechar)
