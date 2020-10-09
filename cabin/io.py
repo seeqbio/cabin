@@ -1,3 +1,4 @@
+import csv
 import gzip
 import pysam
 import subprocess
@@ -48,6 +49,19 @@ def read_xsv(path, delimiter='\t', columns=None, header_leading_hash=True, ignor
         yield dict(zip(columns, values))
 
     f.close()
+
+def read_csv(path, delimiter=',', quotechar='"'):
+    """
+    Uses csv library to parse csv in the event that simple delimiter split is not
+    enough. For example, some cells contain a citation, with a ',' in it, that
+    is in quotes. eg:  "Flex E, et al. Somatically acquired JAK1".
+    """
+    with open(path) as infile:
+        csv_content = csv.reader(infile, delimiter=delimiter, quotechar=quotechar)
+        header = next(csv_content)
+
+        for row in csv_content:
+            yield dict(zip(header, row))
 
 
 def read_vcf(path):
