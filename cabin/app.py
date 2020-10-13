@@ -44,6 +44,7 @@ from biodb.datasets.hpo import hpo
 from biodb.datasets.disease_ontology import DiseaseOntology
 from biodb.datasets.mondo import mondo
 from biodb.datasets.pmkb import pmkb
+from biodb.datasets.pfam import Pfam
 
 
 class UsageError(Exception):
@@ -64,6 +65,7 @@ class AppCommand(ABC):
         description = self.description if self.description else self.help
         self.parser = app.cmd_parser.add_parser(self.name, description=description, help=self.help)
         self.app = app
+
 
     @abstractmethod
     def run(self):
@@ -269,6 +271,7 @@ class App:
         DiseaseOntology,
         mondo,
         pmkb,
+        Pfam,
     ] + list(ENSEMBL_DATASETS.values())
 
     def dataset(self, name, version):
