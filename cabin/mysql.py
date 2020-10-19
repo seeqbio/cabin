@@ -115,7 +115,10 @@ class _MySQL:
     def initialize(self):
         database = settings.SGX_MYSQL_DB
 
-        root_password = getpass.getpass("Enter root password (given to you): ")
+        if 'SGX_MYSQL_ROOT_PASSWORD' in os.environ:
+            root_password = os.environ['SGX_MYSQL_ROOT_PASSWORD']
+        else:
+            root_password = getpass.getpass("Enter root password (given to you): ")
 
         cnx = mysql.connector.connect(user='root',
                                       host=settings.SGX_MYSQL_HOST,
