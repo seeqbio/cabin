@@ -6,8 +6,8 @@ import textwrap
 import mysql.connector
 from contextlib import contextmanager
 
+from biodb import logger
 from biodb import settings
-from biodb.io import log
 
 
 READER = 'reader'
@@ -18,12 +18,8 @@ class MySQL:
     passwords = {'reader': settings.SGX_MYSQL_READER_PASSWORD,
                  'writer': settings.SGX_MYSQL_WRITER_PASSWORD}
 
-    def __init__(self, debug=False):
-        self.debug = debug # FIXME environment var?
-
-    def debuglog(self, message, file=sys.stderr):
-        if self.debug:
-            log(message, header='[DEBUG] ')
+    def __init__(self, profile=False):
+        self.profile = profile
 
     @contextmanager
     def transaction(self, connection_kw={}, cursor_kw={}):
@@ -81,19 +77,19 @@ class MySQL:
         def cursor_wrapper(*args, **kwargs):
 
             cursor = real_cursor(cnx, *args, **kwargs)
-            if self.debug:
+            if self.profile:
                 cursor.execute('SET profiling = 1')
 
             try:
                 yield cursor
             finally:
-                if self.debug:
+                if self.profile:
                     cursor.execute('SHOW profiles;')
                     for row in cursor:
                         idx, time_s, query = row
                         time_ms = '{t} ms'.format(t=round(time_s * 1000, 2)).ljust(10)
                         query = '\n\t\t\t'.join(textwrap.wrap(query, 80))
-                        self.debuglog('{time}{query}'.format(idx=idx, time=time_ms, query=query))
+                        print('  {time}{query}'.format(idx=idx, time=time_ms, query=query))
                 cursor.close()
 
         cnx.cursor = cursor_wrapper
@@ -127,21 +123,21 @@ class MySQL:
         cursor = cnx.cursor()
 
         cursor.execute('CREATE DATABASE IF NOT EXISTS {db};'.format(db=database))
-        log('created database "%s"' % database)
+        logger.info('created database "%s"' % database)
 
         def _grant(grant, user):
             q_tpl = 'GRANT {grant} ON `{db}`.* TO "{user}"@"%" IDENTIFIED BY "{password}";'
             q = q_tpl.format(grant=grant, db=database, user=user, password=self.passwords[user])
 
             cursor.execute(q)
-            log('granted "{g}" to user "{u}"'.format(g=grant, u=user))
+            logger.info('granted "{g}" to user "{u}"'.format(g=grant, u=user))
 
         _grant('SELECT', 'reader')
         _grant('ALL PRIVILEGES', 'writer')
         cursor.execute('FLUSH PRIVILEGES;')
         cursor.close()
 
-        log('successfully initialized "{db}"!'.format(db=database))
+        logger.info('successfully initialized "{db}"!'.format(db=database))
 
     def shell(self, user):
         argv = ['mysql',

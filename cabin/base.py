@@ -8,7 +8,7 @@ from distutils.version import LooseVersion
 from abc import ABC
 from abc import abstractmethod
 
-from biodb import log
+from biodb import logger
 from biodb import BiodbError
 from biodb import ProgrammingError
 from biodb import AbstractAttribute
@@ -155,7 +155,7 @@ class BaseDataset(ABC):
 
     @classmethod
     def sha256(cls, path, buffer_size=int(1e6)):
-        log('Calculating SHA256 of file %s' % path)
+        logger.info('Calculating SHA256 of file %s' % path)
         sha = hashlib.sha256()
         with path.open('rb') as f:
             data = f.read(buffer_size)
@@ -179,17 +179,17 @@ class BaseDataset(ABC):
         self.download_path.parent.mkdir(parents=True, exist_ok=True)
         if self.version.checksum:
             if self.downloaded:
-                log('Downloaded copy already exists!')
+                logger.info('Downloaded copy already exists!')
                 return
 
-            log('Downloading %s from archive.' % self.label)
+            logger.info('Downloading %s from archive.' % self.label)
             self.download_from_archive()
         else:
             self.download_from_source()
 
         assert self.version.checksum
         self.downloaded = True
-        log('Downloaded %s to: %s' % (self.label, self.download_path))
+        logger.info('Downloaded %s to: %s' % (self.label, self.download_path))
 
     def download_from_archive(self):
         assert self.version.checksum
@@ -213,7 +213,7 @@ class BaseDataset(ABC):
         # after we have calculated its checksum
         dl_path = self.download_path
 
-        log('downloading {label} from source at:\n\t{u}'.format(label=self.label, u=self.source_url))
+        logger.info('downloading {label} from source at:\n\t{u}'.format(label=self.label, u=self.source_url))
         retcode = wget(self.source_url, dl_path)
         if retcode:
             dl_path.unlink()
@@ -229,14 +229,14 @@ class BaseDataset(ABC):
         if not self.version.checksum:
             raise ProgrammingError('Refusing to archive when the dataset has no checksum: ' + self.label)
 
-        log('Archiving ' + self.label)
+        logger.info('Archiving ' + self.label)
         if self.archived:
-            log('Archived copy already exists!')
+            logger.info('Archived copy already exists!')
             return
 
         self.archive_real()
         self.archived = True
-        log('Successfully archived ' + self.label)
+        logger.info('Successfully archived ' + self.label)
 
     def archive_real(self):
         path = self.download_path
@@ -276,20 +276,20 @@ class BaseDataset(ABC):
     def import_(self):
         self.download()
         self.version.git = self.app.git_version
-        log('Importing ' + self.label)
+        logger.info('Importing ' + self.label)
         if self.imported:
-            log('Imported copy of %s already exists!' % self.label)
+            logger.info('Imported copy of %s already exists!' % self.label)
             return
         self.import_real()
         self.imported = True
-        log('Successfully imported ' + self.label)
+        logger.info('Successfully imported ' + self.label)
 
     @abstractmethod
     def import_real(self):
         pass
 
     def drop(self):
-        log('dropping ' + self.label)
+        logger.info('dropping ' + self.label)
         with self.app.mysql.transaction() as cursor:
             cursor.execute(self.sql_drop)
 

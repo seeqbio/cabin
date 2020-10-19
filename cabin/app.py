@@ -8,7 +8,7 @@ from abc import abstractmethod
 from collections import OrderedDict
 from pathlib import Path
 
-from biodb import log
+from biodb import logger
 from biodb import BiodbError
 from biodb import AbstractAttribute
 # NOTE For some unknown reason this segfaults on python 3.5.2 and
@@ -132,7 +132,7 @@ class ImportCommand(AppCommand):
         classes = [ds_class for ds_class in self.app.dataset_classes
                    if fnmatch.fnmatch(ds_class.name, self.app.args.dataset)]
         if not classes:
-            log('unknown dataset (pattern) "%s"' % self.app.args.dataset)
+            logger.error('unknown dataset pattern "%s"' % self.app.args.dataset)
             return 1
         for ds_class in classes:
             ds_name = ds_class.name
@@ -311,7 +311,9 @@ class App:
 
     def init(self, *argv):
         self.args = self.parser.parse_args(argv)
-        self.mysql = MySQL(debug=self.args.debug)
+        if self.args.debug:
+            logger.setLevel('DEBUG')
+        self.mysql = MySQL(profile=settings.SGX_MYSQL_PROFILE)
 
     def run(self, *argv):
         self.init(*argv)
@@ -323,7 +325,7 @@ class App:
             try:
                 return self.commands[self.args.command].run()
             except BiodbError as e:
-                log('Error: ' + str(e))
+                logger.error('Error: ' + str(e))
                 if self.args.debug:
                     raise
                 return 1
