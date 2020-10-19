@@ -31,7 +31,6 @@ from biodb.datasets.gene2refseq import gene2refseq
 from biodb.datasets.gene2ensembl import gene2ensembl
 from biodb.datasets.dbSNP import dbSNP
 from biodb.datasets.dbNSFP import dbNSFP
-from biodb.datasets.ClinVarOld import ClinVar
 from biodb.datasets.ClinVar import ClinVarVCF
 from biodb.datasets.ClinVar import ClinVarHGVS4Variation
 from biodb.datasets.ClinVar import ClinVarSCV
@@ -124,8 +123,6 @@ class ImportCommand(AppCommand):
 
         self.parser.add_argument('--no-dbnsfp-s3-cache', action='store_true',
                                  help='Do not use S3 cached version of dbNSFP (only in effect if dataset is "dbNSFP")')
-        self.parser.add_argument('--ClinVar-gene2refseq-table', help='Name of gene2refseq table to use in ClinVar import')
-
     def run(self):
         # fnmatch is the internal mechanism used by glob; currently only
         # works for "ensembl.*" (and not, say, "gene2ref*")
@@ -255,7 +252,6 @@ class App:
         refseq_summary,
         gene2refseq,
         gene2ensembl,
-        ClinVar,
         ClinVarVCF,
         ClinVarHGVS4Variation,
         ClinVarSCV,
