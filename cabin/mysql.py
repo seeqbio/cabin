@@ -14,7 +14,7 @@ READER = 'reader'
 WRITER = 'writer'
 
 
-class MySQL:
+class _MySQL:
     passwords = {'reader': settings.SGX_MYSQL_READER_PASSWORD,
                  'writer': settings.SGX_MYSQL_WRITER_PASSWORD}
 
@@ -145,3 +145,6 @@ class MySQL:
                 '-D', settings.SGX_MYSQL_DB,
                 '-p' + self.passwords[user]]
         os.execvp('mysql', argv)
+
+
+MYSQL = _MySQL(profile=settings.SGX_MYSQL_PROFILE)

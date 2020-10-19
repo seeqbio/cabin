@@ -20,7 +20,7 @@ from biodb import AbstractAttribute
 #   >>> import mysql.connector; import hashlib
 #
 # This means we should import mysql.connector _before_ hashlib.
-from biodb.mysql import MySQL
+from biodb.mysql import MYSQL
 from biodb.mysql import READER
 
 from biodb.base import DatasetVersion
@@ -76,7 +76,7 @@ class InitCommand(AppCommand):
     help = "initialize databases and users"
 
     def run(self):
-        self.app.mysql.initialize()
+        MYSQL.initialize()
 
 
 class ShellCommand(AppCommand):
@@ -99,7 +99,7 @@ class ShellCommand(AppCommand):
             since that, too, is passed as argv to the executable.
         """
         user = self.app.args.user
-        self.app.mysql.shell(self.app.args.user) # execvp to mysql client
+        MYSQL.shell(self.app.args.user) # execvp to mysql client
 
 
 class ListCommand(AppCommand):
@@ -121,8 +121,6 @@ class ImportCommand(AppCommand):
         self.parser.add_argument('source_version', help=self.source_version_help)
         self.parser.add_argument('checksum', nargs='?', help=self.checksum_help)
 
-        self.parser.add_argument('--no-dbnsfp-s3-cache', action='store_true',
-                                 help='Do not use S3 cached version of dbNSFP (only in effect if dataset is "dbNSFP")')
     def run(self):
         # fnmatch is the internal mechanism used by glob; currently only
         # works for "ensembl.*" (and not, say, "gene2ref*")
@@ -192,7 +190,7 @@ class StatusCommand(AppCommand):
             if token is not None and cls.name[:len(token)] != token:
                 continue
 
-            for dataset in cls.search_sorted(self.app):
+            for dataset in cls.search_sorted():
                 row = [
                     dataset.name,
                     dataset.version.source,
@@ -215,9 +213,6 @@ class DownloadCommand(AppCommand):
         self.parser.add_argument('dataset', help=self.dataset_help)
         self.parser.add_argument('source_version', help=self.source_version_help)
         self.parser.add_argument('checksum', nargs='?', help=self.checksum_help)
-
-        self.parser.add_argument('--no-dbnsfp-s3-cache', action='store_true',
-                                 help='Do not use S3 cached version of dbNSFP (only in effect if dataset is "dbNSFP")')
 
     def run(self):
         version = DatasetVersion(source=self.app.args.source_version,
@@ -269,24 +264,14 @@ class App:
     def dataset(self, name, version):
         for cls in self.dataset_classes:
             if cls.name == name:
-                return cls(app=self, version=version)
+                return cls(version=version)
         else:
             raise BiodbError('Unknown dataset ' + name)
 
-    def __init__(self, git_version=None, root_dir=None):
-        self.root_dir = Path(root_dir)
-        self.schema_dir = self.root_dir / 'schema'
-        assert git_version, 'Bad git repository version: ' + git_version
-        self.git_version = git_version
-
-        # ======= argument parsers =======
+    def __init__(self):
         parser = argparse.ArgumentParser(description="""
             Versioned importer of datasets into MySQL with S3 archiving.
         """)
-        default_config = str(self.root_dir / 'config.yaml')
-        parser.add_argument('--config',
-                            default=default_config,
-                            help="Path to configuration file, default: " + default_config)
         parser.add_argument('-d', '--debug',
                             default=False, action='store_true',
                             help="Print debugging information, default: False")
@@ -309,7 +294,6 @@ class App:
         self.args = self.parser.parse_args(argv)
         if self.args.debug:
             logger.setLevel('DEBUG')
-        self.mysql = MySQL(profile=settings.SGX_MYSQL_PROFILE)
 
     def run(self, *argv):
         self.init(*argv)

@@ -15,6 +15,8 @@ from biodb import AbstractAttribute
 from biodb import settings
 from biodb.io import wget
 
+from biodb.mysql import MYSQL
+
 
 class DatasetVersion:
 
@@ -82,9 +84,8 @@ class BaseDataset(ABC):
     file_extension = AbstractAttribute()
     name = AbstractAttribute()
 
-    def __init__(self, app, version, downloaded=None, archived=None, imported=None):
+    def __init__(self, version, downloaded=None, archived=None, imported=None):
         self.version = version
-        self.app = app
 
         # if any of the status attributes (downloaded, archived, imported) are
         # set to any value but None we set the corresponding instance attribute
@@ -251,13 +252,13 @@ class BaseDataset(ABC):
     # import
     # ======
     def _imported(self):
-        with self.app.mysql.cursor('reader') as cursor:
+        with MYSQL.cursor('reader') as cursor:
             cursor.execute('SHOW TABLES LIKE "{n}";'.format(n=self.table_name))
             return bool(cursor.fetchall())
 
     @property
     def schema_path(self):
-        return self.app.schema_dir / '{name}.sql'.format(name=self.name)
+        return settings.SGX_SCHEMA_DIR / '{name}.sql'.format(name=self.name)
 
     @property
     def sql_create(self):
@@ -275,7 +276,7 @@ class BaseDataset(ABC):
 
     def import_(self):
         self.download()
-        self.version.git = self.app.git_version
+        self.version.git = settings.SGX_GIT_VERSION
         logger.info('Importing ' + self.label)
         if self.imported:
             logger.info('Imported copy of %s already exists!' % self.label)
@@ -290,7 +291,7 @@ class BaseDataset(ABC):
 
     def drop(self):
         logger.info('dropping ' + self.label)
-        with self.app.mysql.transaction() as cursor:
+        with MYSQL.transaction() as cursor:
             cursor.execute(self.sql_drop)
 
     # ======
@@ -307,7 +308,7 @@ class BaseDataset(ABC):
         return DatasetVersion.parse(match.group('version'))
 
     @classmethod
-    def downloaded_versions(cls, app):
+    def downloaded_versions(cls):
         download_dir = Path(settings.SGX_DOWNLOAD_DIR)
         pattern = '{n}*.{e}'.format(n=cls.name, e=cls.file_extension)
         for path in download_dir.glob(pattern):
@@ -316,7 +317,7 @@ class BaseDataset(ABC):
                 yield version
 
     @classmethod
-    def archived_versions(cls, app):
+    def archived_versions(cls):
         s3 = boto3.client('s3')
         res = s3.list_objects(Bucket=settings.SGX_S3_ARCHIVE_BUCKET,
                               Prefix=settings.SGX_S3_ARCHIVE_PREFIX)
@@ -326,8 +327,8 @@ class BaseDataset(ABC):
                 yield version
 
     @classmethod
-    def imported_versions(cls, app):
-        with app.mysql.cursor('reader') as cursor:
+    def imported_versions(cls):
+        with MYSQL.cursor('reader') as cursor:
             cursor.execute('SHOW TABLES LIKE "{n}::%";'.format(n=cls.name))
             for row in cursor:
                 table_name = row[0]
@@ -336,12 +337,12 @@ class BaseDataset(ABC):
                     yield version
 
     @classmethod
-    def search(cls, app):
+    def search(cls):
         """Collects all downloaded, archived, and imported copies of this
         dataset and coalesces them based on version."""
-        i_versions = {version: True for version in cls.imported_versions(app)}
-        a_versions = {version: True for version in cls.archived_versions(app)}
-        d_versions = {version: True for version in cls.downloaded_versions(app)}
+        i_versions = {version: True for version in cls.imported_versions()}
+        a_versions = {version: True for version in cls.archived_versions()}
+        d_versions = {version: True for version in cls.downloaded_versions()}
 
         # go through each of the 3 dictionaries (order of operations matter);
         # when visiting each dictionary pop identical versions from other
@@ -355,8 +356,7 @@ class BaseDataset(ABC):
             subversion = version.sub(upto='checksum')
             a_versions.pop(subversion, None)
             d_versions.pop(subversion, None)
-            yield cls(app=app,
-                      version=version,
+            yield cls(version=version,
                       downloaded=working_d_versions.get(subversion, False),
                       archived=working_a_versions.get(subversion, False),
                       imported=True)
@@ -366,22 +366,20 @@ class BaseDataset(ABC):
         for version in a_versions:
             subversion = version.sub(upto='checksum')
             d_versions.pop(subversion, None)
-            yield cls(app=app,
-                      version=version,
+            yield cls(version=version,
                       downloaded=working_d_versions.get(version, False),
                       archived=True,
                       imported=False)
 
         # remaining downloaded versions are guaranteed to not be archived or imported
         for version in d_versions:
-            yield cls(app=app,
-                      version=version,
+            yield cls(version=version,
                       downloaded=True,
                       archived=False,
                       imported=False)
 
     @classmethod
-    def search_sorted(cls, app):
+    def search_sorted(cls):
         def sort_key(dataset):
             # LooseVersion gets confused when there are mixed integer and
             # string components to version strings, cf. https://bugs.python.org/issue14894
@@ -389,4 +387,4 @@ class BaseDataset(ABC):
             # make our own tuple from LooseVersion parsed version token list
             return tuple(str(x) for x in LooseVersion(dataset.version.source).version)
 
-        return sorted(cls.search(app), key=sort_key)
+        return sorted(cls.search(), key=sort_key)
