@@ -12,6 +12,7 @@ from biodb import log
 from biodb import BiodbError
 from biodb import ProgrammingError
 from biodb import AbstractAttribute
+from biodb import settings
 from biodb.io import wget
 
 
@@ -137,15 +138,15 @@ class BaseDataset(ABC):
 
     @property
     def download_path(self):
-        return Path(self.app.config['download_dir']) / self.filename
+        return Path(settings.SGX_DOWNLOAD_DIR) / self.filename
 
     @property
     def archive_bucket(self):
-        return self.app.config['s3_archive']['bucket']
+        return settings.SGX_S3_ARCHIVE_BUCKET
 
     @property
     def archive_key(self):
-        return Path(self.app.config['s3_archive']['prefix']) / self.filename
+        return Path(settings.SGX_S3_ARCHIVE_PREFIX) / self.filename
 
     @property
     @abstractmethod
@@ -307,7 +308,7 @@ class BaseDataset(ABC):
 
     @classmethod
     def downloaded_versions(cls, app):
-        download_dir = Path(app.config['download_dir'])
+        download_dir = Path(settings.SGX_DOWNLOAD_DIR)
         pattern = '{n}*.{e}'.format(n=cls.name, e=cls.file_extension)
         for path in download_dir.glob(pattern):
             version = cls.deserialize_version(path.name)
@@ -317,8 +318,8 @@ class BaseDataset(ABC):
     @classmethod
     def archived_versions(cls, app):
         s3 = boto3.client('s3')
-        res = s3.list_objects(Bucket=app.config['s3_archive']['bucket'],
-                              Prefix=app.config['s3_archive']['prefix'])
+        res = s3.list_objects(Bucket=settings.SGX_S3_ARCHIVE_BUCKET,
+                              Prefix=settings.SGX_S3_ARCHIVE_PREFIX)
         for s3_obj in res.get('Contents', []):
             version = cls.deserialize_version(Path(s3_obj['Key']).name)
             if version:

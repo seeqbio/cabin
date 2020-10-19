@@ -100,11 +100,7 @@ class ShellCommand(AppCommand):
             since that, too, is passed as argv to the executable.
         """
         user = self.app.args.user
-        password = self.app.config['mysql']['passwords'][user]
-        argv = ['mysql', '-u', user, '-D', self.app.config['mysql']['database']]
-        if password:
-            argv += ['-p' + str(password)]
-        os.execvp('mysql', argv)
+        self.app.mysql.shell(self.app.args.user) # execvp to mysql client
 
 
 class ListCommand(AppCommand):
@@ -315,21 +311,7 @@ class App:
 
     def init(self, *argv):
         self.args = self.parser.parse_args(argv)
-
-        with open(self.args.config) as f:
-            self.config = yaml.load(f, Loader=yaml.FullLoader)
-
-        with open(self.config['mysql']['passwords']) as f:
-            self.config['mysql']['passwords'] = yaml.load(f, Loader=yaml.FullLoader)
-
-        if 'SGX_MYSQL_HOST' in os.environ:
-            self.config['mysql']['host'] = os.environ['SGX_MYSQL_HOST']
-        if 'SGX_S3_ARCHIVE_BUCKET' in os.environ:
-            self.config['s3_archive']['bucket'] = os.environ['SGX_S3_ARCHIVE_BUCKET']
-        if 'SGX_S3_ARCHIVE_PREFIX' in os.environ:
-            self.config['s3_archive']['prefix'] = os.environ['SGX_S3_ARCHIVE_PREFIX']
-
-        self.mysql = MySQL(config=self.config['mysql'], debug=self.args.debug)
+        self.mysql = MySQL(debug=self.args.debug)
 
     def run(self, *argv):
         self.init(*argv)

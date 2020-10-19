@@ -1,10 +1,12 @@
 import os
 import sys
 import types
+import getpass
 import textwrap
 import mysql.connector
 from contextlib import contextmanager
 
+from biodb import settings
 from biodb.io import log
 
 
@@ -13,9 +15,11 @@ WRITER = 'writer'
 
 
 class MySQL:
-    def __init__(self, config, debug=False):
-        self.config = config
-        self.debug = debug
+    passwords = {'reader': settings.SGX_MYSQL_READER_PASSWORD,
+                 'writer': settings.SGX_MYSQL_WRITER_PASSWORD}
+
+    def __init__(self, debug=False):
+        self.debug = debug # FIXME environment var?
 
     def debuglog(self, message, file=sys.stderr):
         if self.debug:
@@ -65,9 +69,9 @@ class MySQL:
     def connection(self, user, **kw):
         cnx_kw = {
             'user': user,
-            'password': self.config['passwords'][user],
-            'host': self.config['host'],
-            'database': self.config['database'],
+            'password': self.passwords[user],
+            'host': settings.SGX_MYSQL_HOST,
+            'database': settings.SGX_MYSQL_DB,
         }
         cnx_kw.update(**kw)
         cnx = mysql.connector.connect(**cnx_kw)
@@ -113,11 +117,13 @@ class MySQL:
     #   * /etc/my.cnf in RHEL
     #   * /etc/mysql/mysql.conf.d/mysql.cnf in Ubuntu
     def initialize(self):
-        database = self.config['database']
+        database = settings.SGX_MYSQL_DB
+
+        root_password = getpass.getpass("Enter root password (given to you): ")
 
         cnx = mysql.connector.connect(user='root',
-                                      host=self.config['host'],
-                                      password=self.config['passwords']['root'])
+                                      host=settings.SGX_MYSQL_HOST,
+                                      password=root_password)
         cursor = cnx.cursor()
 
         cursor.execute('CREATE DATABASE IF NOT EXISTS {db};'.format(db=database))
@@ -125,8 +131,7 @@ class MySQL:
 
         def _grant(grant, user):
             q_tpl = 'GRANT {grant} ON `{db}`.* TO "{user}"@"%" IDENTIFIED BY "{password}";'
-            q = q_tpl.format(grant=grant, db=database, user=user,
-                             password=self.config['passwords'][user])
+            q = q_tpl.format(grant=grant, db=database, user=user, password=self.passwords[user])
 
             cursor.execute(q)
             log('granted "{g}" to user "{u}"'.format(g=grant, u=user))
@@ -138,10 +143,9 @@ class MySQL:
 
         log('successfully initialized "{db}"!'.format(db=database))
 
-    def num_records(self, table):
-        if not self.tables(table):
-            return None
-        with self.connection('reader') as cnx:
-            cursor = cnx.cursor()
-            cursor.execute('SELECT COUNT(*) FROM `{t}`;'.format(t=table))
-            return cursor.fetchone()[0]
+    def shell(self, user):
+        argv = ['mysql',
+                '-u', user,
+                '-D', settings.SGX_MYSQL_DB,
+                '-p' + self.passwords[user]]
+        os.execvp('mysql', argv)
