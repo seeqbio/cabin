@@ -2,6 +2,7 @@ import os
 import sys
 import yaml
 import fnmatch
+import logging
 import argparse
 from abc import ABC
 from abc import abstractmethod
@@ -293,7 +294,7 @@ class App:
     def init(self, *argv):
         self.args = self.parser.parse_args(argv)
         if self.args.debug:
-            logger.setLevel('DEBUG')
+            logger.setLevel(logging.debug)
 
     def run(self, *argv):
         self.init(*argv)
