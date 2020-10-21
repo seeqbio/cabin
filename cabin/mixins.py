@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from biodb import BiodbError
 from biodb import AbstractAttribute
+from biodb.mysql import MYSQL
 from biodb.io import ftp_modify_time
 
 
@@ -49,7 +50,7 @@ class RecordByRecordImportMixin:
         pass
 
     def import_real(self):
-        with self.app.mysql.transaction() as cursor:
+        with MYSQL.transaction() as cursor:
             cursor.create_table(self.table_name, self.sql_create)
             # execute is ever so slightly slower than executemany, but
             # executemany requires us to manually buffer our records (does not

@@ -8,11 +8,14 @@ from distutils.version import LooseVersion
 from abc import ABC
 from abc import abstractmethod
 
-from biodb import log
+from biodb import logger
 from biodb import BiodbError
 from biodb import ProgrammingError
 from biodb import AbstractAttribute
+from biodb import settings
 from biodb.io import wget
+
+from biodb.mysql import MYSQL
 
 
 class DatasetVersion:
@@ -81,9 +84,8 @@ class BaseDataset(ABC):
     file_extension = AbstractAttribute()
     name = AbstractAttribute()
 
-    def __init__(self, app, version, downloaded=None, archived=None, imported=None):
+    def __init__(self, version, downloaded=None, archived=None, imported=None):
         self.version = version
-        self.app = app
 
         # if any of the status attributes (downloaded, archived, imported) are
         # set to any value but None we set the corresponding instance attribute
@@ -137,15 +139,15 @@ class BaseDataset(ABC):
 
     @property
     def download_path(self):
-        return Path(self.app.config['download_dir']) / self.filename
+        return Path(settings.SGX_DOWNLOAD_DIR) / self.filename
 
     @property
     def archive_bucket(self):
-        return self.app.config['s3_archive']['bucket']
+        return settings.SGX_S3_ARCHIVE_BUCKET
 
     @property
     def archive_key(self):
-        return Path(self.app.config['s3_archive']['prefix']) / self.filename
+        return Path(settings.SGX_S3_ARCHIVE_PREFIX) / self.filename
 
     @property
     @abstractmethod
@@ -154,7 +156,7 @@ class BaseDataset(ABC):
 
     @classmethod
     def sha256(cls, path, buffer_size=int(1e6)):
-        log('Calculating SHA256 of file %s' % path)
+        logger.info('Calculating SHA256 of file %s' % path)
         sha = hashlib.sha256()
         with path.open('rb') as f:
             data = f.read(buffer_size)
@@ -178,17 +180,17 @@ class BaseDataset(ABC):
         self.download_path.parent.mkdir(parents=True, exist_ok=True)
         if self.version.checksum:
             if self.downloaded:
-                log('Downloaded copy already exists!')
+                logger.info('Downloaded copy already exists!')
                 return
 
-            log('Downloading %s from archive.' % self.label)
+            logger.info('Downloading %s from archive.' % self.label)
             self.download_from_archive()
         else:
             self.download_from_source()
 
         assert self.version.checksum
         self.downloaded = True
-        log('Downloaded %s to: %s' % (self.label, self.download_path))
+        logger.info('Downloaded %s to: %s' % (self.label, self.download_path))
 
     def download_from_archive(self):
         assert self.version.checksum
@@ -212,7 +214,7 @@ class BaseDataset(ABC):
         # after we have calculated its checksum
         dl_path = self.download_path
 
-        log('downloading {label} from source at:\n\t{u}'.format(label=self.label, u=self.source_url))
+        logger.info('downloading {label} from source at:\n\t{u}'.format(label=self.label, u=self.source_url))
         retcode = wget(self.source_url, dl_path)
         if retcode:
             dl_path.unlink()
@@ -228,14 +230,14 @@ class BaseDataset(ABC):
         if not self.version.checksum:
             raise ProgrammingError('Refusing to archive when the dataset has no checksum: ' + self.label)
 
-        log('Archiving ' + self.label)
+        logger.info('Archiving ' + self.label)
         if self.archived:
-            log('Archived copy already exists!')
+            logger.info('Archived copy already exists!')
             return
 
         self.archive_real()
         self.archived = True
-        log('Successfully archived ' + self.label)
+        logger.info('Successfully archived ' + self.label)
 
     def archive_real(self):
         path = self.download_path
@@ -250,13 +252,13 @@ class BaseDataset(ABC):
     # import
     # ======
     def _imported(self):
-        with self.app.mysql.cursor('reader') as cursor:
+        with MYSQL.cursor('reader') as cursor:
             cursor.execute('SHOW TABLES LIKE "{n}";'.format(n=self.table_name))
             return bool(cursor.fetchall())
 
     @property
     def schema_path(self):
-        return self.app.schema_dir / '{name}.sql'.format(name=self.name)
+        return settings.SGX_SCHEMA_DIR / '{name}.sql'.format(name=self.name)
 
     @property
     def sql_create(self):
@@ -274,22 +276,22 @@ class BaseDataset(ABC):
 
     def import_(self):
         self.download()
-        self.version.git = self.app.git_version
-        log('Importing ' + self.label)
+        self.version.git = settings.SGX_GIT_VERSION
+        logger.info('Importing ' + self.label)
         if self.imported:
-            log('Imported copy of %s already exists!' % self.label)
+            logger.info('Imported copy of %s already exists!' % self.label)
             return
         self.import_real()
         self.imported = True
-        log('Successfully imported ' + self.label)
+        logger.info('Successfully imported ' + self.label)
 
     @abstractmethod
     def import_real(self):
         pass
 
     def drop(self):
-        log('dropping ' + self.label)
-        with self.app.mysql.transaction() as cursor:
+        logger.info('dropping ' + self.label)
+        with MYSQL.transaction() as cursor:
             cursor.execute(self.sql_drop)
 
     # ======
@@ -306,8 +308,8 @@ class BaseDataset(ABC):
         return DatasetVersion.parse(match.group('version'))
 
     @classmethod
-    def downloaded_versions(cls, app):
-        download_dir = Path(app.config['download_dir'])
+    def downloaded_versions(cls):
+        download_dir = Path(settings.SGX_DOWNLOAD_DIR)
         pattern = '{n}*.{e}'.format(n=cls.name, e=cls.file_extension)
         for path in download_dir.glob(pattern):
             version = cls.deserialize_version(path.name)
@@ -315,18 +317,18 @@ class BaseDataset(ABC):
                 yield version
 
     @classmethod
-    def archived_versions(cls, app):
+    def archived_versions(cls):
         s3 = boto3.client('s3')
-        res = s3.list_objects(Bucket=app.config['s3_archive']['bucket'],
-                              Prefix=app.config['s3_archive']['prefix'])
+        res = s3.list_objects(Bucket=settings.SGX_S3_ARCHIVE_BUCKET,
+                              Prefix=settings.SGX_S3_ARCHIVE_PREFIX)
         for s3_obj in res.get('Contents', []):
             version = cls.deserialize_version(Path(s3_obj['Key']).name)
             if version:
                 yield version
 
     @classmethod
-    def imported_versions(cls, app):
-        with app.mysql.cursor('reader') as cursor:
+    def imported_versions(cls):
+        with MYSQL.cursor('reader') as cursor:
             cursor.execute('SHOW TABLES LIKE "{n}::%";'.format(n=cls.name))
             for row in cursor:
                 table_name = row[0]
@@ -335,12 +337,12 @@ class BaseDataset(ABC):
                     yield version
 
     @classmethod
-    def search(cls, app):
+    def search(cls):
         """Collects all downloaded, archived, and imported copies of this
         dataset and coalesces them based on version."""
-        i_versions = {version: True for version in cls.imported_versions(app)}
-        a_versions = {version: True for version in cls.archived_versions(app)}
-        d_versions = {version: True for version in cls.downloaded_versions(app)}
+        i_versions = {version: True for version in cls.imported_versions()}
+        a_versions = {version: True for version in cls.archived_versions()}
+        d_versions = {version: True for version in cls.downloaded_versions()}
 
         # go through each of the 3 dictionaries (order of operations matter);
         # when visiting each dictionary pop identical versions from other
@@ -354,8 +356,7 @@ class BaseDataset(ABC):
             subversion = version.sub(upto='checksum')
             a_versions.pop(subversion, None)
             d_versions.pop(subversion, None)
-            yield cls(app=app,
-                      version=version,
+            yield cls(version=version,
                       downloaded=working_d_versions.get(subversion, False),
                       archived=working_a_versions.get(subversion, False),
                       imported=True)
@@ -365,22 +366,20 @@ class BaseDataset(ABC):
         for version in a_versions:
             subversion = version.sub(upto='checksum')
             d_versions.pop(subversion, None)
-            yield cls(app=app,
-                      version=version,
+            yield cls(version=version,
                       downloaded=working_d_versions.get(version, False),
                       archived=True,
                       imported=False)
 
         # remaining downloaded versions are guaranteed to not be archived or imported
         for version in d_versions:
-            yield cls(app=app,
-                      version=version,
+            yield cls(version=version,
                       downloaded=True,
                       archived=False,
                       imported=False)
 
     @classmethod
-    def search_sorted(cls, app):
+    def search_sorted(cls):
         def sort_key(dataset):
             # LooseVersion gets confused when there are mixed integer and
             # string components to version strings, cf. https://bugs.python.org/issue14894
@@ -388,4 +387,4 @@ class BaseDataset(ABC):
             # make our own tuple from LooseVersion parsed version token list
             return tuple(str(x) for x in LooseVersion(dataset.version.source).version)
 
-        return sorted(cls.search(app), key=sort_key)
+        return sorted(cls.search(), key=sort_key)

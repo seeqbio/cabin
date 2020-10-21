@@ -9,7 +9,7 @@ from ftplib import FTP
 from dateutil import parser
 from pathlib import Path
 
-from biodb import log
+from biodb import logger
 from biodb import BiodbError
 
 
@@ -32,7 +32,7 @@ def read_xsv(path, delimiter='\t', columns=None, header_leading_hash=True, ignor
     path = str(path)
     f = gzip.open(path, 'rt') if gzipped else open(path, 'r')
 
-    log('reading records from "{p}"'.format(p=f.name))
+    logger.info('reading records from "{p}"'.format(p=f.name))
 
     if columns is None:
         header = f.readline().strip()
@@ -66,7 +66,7 @@ def read_csv(path, delimiter=',', quotechar='"'):
 
 def read_vcf(path):
     path = str(path)
-    log('reading VCF records from "{p}"'.format(p=path))
+    logger.info('reading VCF records from "{p}"'.format(p=path))
     vf = pysam.VariantFile(path)
     for variant in vf.fetch():
         row = {
@@ -173,7 +173,7 @@ def gunzip(src, dst):
 
 
 def unzip(zipname, extract_dir=None):
-    log('Unzipping: ' + str(zipname))
+    logger.info('Unzipping: ' + str(zipname))
     zipname = Path(zipname)
     if extract_dir is None:
         assert Path(zipname).suffix == '.zip', 'expected zip file name to end with ".zip"'
@@ -182,7 +182,7 @@ def unzip(zipname, extract_dir=None):
         extract_dir = Path(extract_dir)
 
     if extract_dir.exists():
-        log('Extracted directory exists, skipping unzip: ' + str(extract_dir))
+        logger.info('Extracted directory exists, skipping unzip: ' + str(extract_dir))
         return extract_dir
 
     extract_dir.mkdir(parents=True, exist_ok=True)

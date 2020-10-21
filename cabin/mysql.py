@@ -1,25 +1,25 @@
 import os
 import sys
 import types
+import getpass
 import textwrap
 import mysql.connector
 from contextlib import contextmanager
 
-from biodb.io import log
+from biodb import logger
+from biodb import settings
 
 
 READER = 'reader'
 WRITER = 'writer'
 
 
-class MySQL:
-    def __init__(self, config, debug=False):
-        self.config = config
-        self.debug = debug
+class _MySQL:
+    passwords = {'reader': settings.SGX_MYSQL_READER_PASSWORD,
+                 'writer': settings.SGX_MYSQL_WRITER_PASSWORD}
 
-    def debuglog(self, message, file=sys.stderr):
-        if self.debug:
-            log(message, header='[DEBUG] ')
+    def __init__(self, profile=False):
+        self.profile = profile
 
     @contextmanager
     def transaction(self, connection_kw={}, cursor_kw={}):
@@ -65,9 +65,9 @@ class MySQL:
     def connection(self, user, **kw):
         cnx_kw = {
             'user': user,
-            'password': self.config['passwords'][user],
-            'host': self.config['host'],
-            'database': self.config['database'],
+            'password': self.passwords[user],
+            'host': settings.SGX_MYSQL_HOST,
+            'database': settings.SGX_MYSQL_DB,
         }
         cnx_kw.update(**kw)
         cnx = mysql.connector.connect(**cnx_kw)
@@ -77,19 +77,19 @@ class MySQL:
         def cursor_wrapper(*args, **kwargs):
 
             cursor = real_cursor(cnx, *args, **kwargs)
-            if self.debug:
+            if self.profile:
                 cursor.execute('SET profiling = 1')
 
             try:
                 yield cursor
             finally:
-                if self.debug:
+                if self.profile:
                     cursor.execute('SHOW profiles;')
                     for row in cursor:
                         idx, time_s, query = row
                         time_ms = '{t} ms'.format(t=round(time_s * 1000, 2)).ljust(10)
                         query = '\n\t\t\t'.join(textwrap.wrap(query, 80))
-                        self.debuglog('{time}{query}'.format(idx=idx, time=time_ms, query=query))
+                        print('  {time}{query}'.format(idx=idx, time=time_ms, query=query))
                 cursor.close()
 
         cnx.cursor = cursor_wrapper
@@ -113,35 +113,41 @@ class MySQL:
     #   * /etc/my.cnf in RHEL
     #   * /etc/mysql/mysql.conf.d/mysql.cnf in Ubuntu
     def initialize(self):
-        database = self.config['database']
+        database = settings.SGX_MYSQL_DB
+
+        if 'SGX_MYSQL_ROOT_PASSWORD' in os.environ:
+            root_password = os.environ['SGX_MYSQL_ROOT_PASSWORD']
+        else:
+            root_password = getpass.getpass("Enter root password (given to you): ")
 
         cnx = mysql.connector.connect(user='root',
-                                      host=self.config['host'],
-                                      password=self.config['passwords']['root'])
+                                      host=settings.SGX_MYSQL_HOST,
+                                      password=root_password)
         cursor = cnx.cursor()
 
         cursor.execute('CREATE DATABASE IF NOT EXISTS {db};'.format(db=database))
-        log('created database "%s"' % database)
+        logger.info('created database "%s"' % database)
 
         def _grant(grant, user):
             q_tpl = 'GRANT {grant} ON `{db}`.* TO "{user}"@"%" IDENTIFIED BY "{password}";'
-            q = q_tpl.format(grant=grant, db=database, user=user,
-                             password=self.config['passwords'][user])
+            q = q_tpl.format(grant=grant, db=database, user=user, password=self.passwords[user])
 
             cursor.execute(q)
-            log('granted "{g}" to user "{u}"'.format(g=grant, u=user))
+            logger.info('granted "{g}" to user "{u}"'.format(g=grant, u=user))
 
         _grant('SELECT', 'reader')
         _grant('ALL PRIVILEGES', 'writer')
         cursor.execute('FLUSH PRIVILEGES;')
         cursor.close()
 
-        log('successfully initialized "{db}"!'.format(db=database))
+        logger.info('successfully initialized "{db}"!'.format(db=database))
 
-    def num_records(self, table):
-        if not self.tables(table):
-            return None
-        with self.connection('reader') as cnx:
-            cursor = cnx.cursor()
-            cursor.execute('SELECT COUNT(*) FROM `{t}`;'.format(t=table))
-            return cursor.fetchone()[0]
+    def shell(self, user):
+        argv = ['mysql',
+                '-u', user,
+                '-D', settings.SGX_MYSQL_DB,
+                '-p' + self.passwords[user]]
+        os.execvp('mysql', argv)
+
+
+MYSQL = _MySQL(profile=settings.SGX_MYSQL_PROFILE)

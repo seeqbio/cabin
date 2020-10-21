@@ -2,13 +2,14 @@ import os
 import sys
 import yaml
 import fnmatch
+import logging
 import argparse
 from abc import ABC
 from abc import abstractmethod
 from collections import OrderedDict
 from pathlib import Path
 
-from biodb import log
+from biodb import logger
 from biodb import BiodbError
 from biodb import AbstractAttribute
 # NOTE For some unknown reason this segfaults on python 3.5.2 and
@@ -20,7 +21,7 @@ from biodb import AbstractAttribute
 #   >>> import mysql.connector; import hashlib
 #
 # This means we should import mysql.connector _before_ hashlib.
-from biodb.mysql import MySQL
+from biodb.mysql import MYSQL
 from biodb.mysql import READER
 
 from biodb.base import DatasetVersion
@@ -31,7 +32,6 @@ from biodb.datasets.gene2refseq import gene2refseq
 from biodb.datasets.gene2ensembl import gene2ensembl
 from biodb.datasets.dbSNP import dbSNP
 from biodb.datasets.dbNSFP import dbNSFP
-from biodb.datasets.ClinVarOld import ClinVar
 from biodb.datasets.ClinVar import ClinVarVCF
 from biodb.datasets.ClinVar import ClinVarHGVS4Variation
 from biodb.datasets.ClinVar import ClinVarSCV
@@ -77,7 +77,7 @@ class InitCommand(AppCommand):
     help = "initialize databases and users"
 
     def run(self):
-        self.app.mysql.initialize()
+        MYSQL.initialize()
 
 
 class ShellCommand(AppCommand):
@@ -100,11 +100,7 @@ class ShellCommand(AppCommand):
             since that, too, is passed as argv to the executable.
         """
         user = self.app.args.user
-        password = self.app.config['mysql']['passwords'][user]
-        argv = ['mysql', '-u', user, '-D', self.app.config['mysql']['database']]
-        if password:
-            argv += ['-p' + str(password)]
-        os.execvp('mysql', argv)
+        MYSQL.shell(self.app.args.user) # execvp to mysql client
 
 
 class ListCommand(AppCommand):
@@ -126,17 +122,13 @@ class ImportCommand(AppCommand):
         self.parser.add_argument('source_version', help=self.source_version_help)
         self.parser.add_argument('checksum', nargs='?', help=self.checksum_help)
 
-        self.parser.add_argument('--no-dbnsfp-s3-cache', action='store_true',
-                                 help='Do not use S3 cached version of dbNSFP (only in effect if dataset is "dbNSFP")')
-        self.parser.add_argument('--ClinVar-gene2refseq-table', help='Name of gene2refseq table to use in ClinVar import')
-
     def run(self):
         # fnmatch is the internal mechanism used by glob; currently only
         # works for "ensembl.*" (and not, say, "gene2ref*")
         classes = [ds_class for ds_class in self.app.dataset_classes
                    if fnmatch.fnmatch(ds_class.name, self.app.args.dataset)]
         if not classes:
-            log('unknown dataset (pattern) "%s"' % self.app.args.dataset)
+            logger.error('unknown dataset pattern "%s"' % self.app.args.dataset)
             return 1
         for ds_class in classes:
             ds_name = ds_class.name
@@ -199,7 +191,7 @@ class StatusCommand(AppCommand):
             if token is not None and cls.name[:len(token)] != token:
                 continue
 
-            for dataset in cls.search_sorted(self.app):
+            for dataset in cls.search_sorted():
                 row = [
                     dataset.name,
                     dataset.version.source,
@@ -222,9 +214,6 @@ class DownloadCommand(AppCommand):
         self.parser.add_argument('dataset', help=self.dataset_help)
         self.parser.add_argument('source_version', help=self.source_version_help)
         self.parser.add_argument('checksum', nargs='?', help=self.checksum_help)
-
-        self.parser.add_argument('--no-dbnsfp-s3-cache', action='store_true',
-                                 help='Do not use S3 cached version of dbNSFP (only in effect if dataset is "dbNSFP")')
 
     def run(self):
         version = DatasetVersion(source=self.app.args.source_version,
@@ -259,7 +248,6 @@ class App:
         refseq_summary,
         gene2refseq,
         gene2ensembl,
-        ClinVar,
         ClinVarVCF,
         ClinVarHGVS4Variation,
         ClinVarSCV,
@@ -277,24 +265,14 @@ class App:
     def dataset(self, name, version):
         for cls in self.dataset_classes:
             if cls.name == name:
-                return cls(app=self, version=version)
+                return cls(version=version)
         else:
             raise BiodbError('Unknown dataset ' + name)
 
-    def __init__(self, git_version=None, root_dir=None):
-        self.root_dir = Path(root_dir)
-        self.schema_dir = self.root_dir / 'schema'
-        assert git_version, 'Bad git repository version: ' + git_version
-        self.git_version = git_version
-
-        # ======= argument parsers =======
+    def __init__(self):
         parser = argparse.ArgumentParser(description="""
             Versioned importer of datasets into MySQL with S3 archiving.
         """)
-        default_config = str(self.root_dir / 'config.yaml')
-        parser.add_argument('--config',
-                            default=default_config,
-                            help="Path to configuration file, default: " + default_config)
         parser.add_argument('-d', '--debug',
                             default=False, action='store_true',
                             help="Print debugging information, default: False")
@@ -315,21 +293,8 @@ class App:
 
     def init(self, *argv):
         self.args = self.parser.parse_args(argv)
-
-        with open(self.args.config) as f:
-            self.config = yaml.load(f, Loader=yaml.FullLoader)
-
-        with open(self.config['mysql']['passwords']) as f:
-            self.config['mysql']['passwords'] = yaml.load(f, Loader=yaml.FullLoader)
-
-        if 'SGX_MYSQL_HOST' in os.environ:
-            self.config['mysql']['host'] = os.environ['SGX_MYSQL_HOST']
-        if 'SGX_S3_ARCHIVE_BUCKET' in os.environ:
-            self.config['s3_archive']['bucket'] = os.environ['SGX_S3_ARCHIVE_BUCKET']
-        if 'SGX_S3_ARCHIVE_PREFIX' in os.environ:
-            self.config['s3_archive']['prefix'] = os.environ['SGX_S3_ARCHIVE_PREFIX']
-
-        self.mysql = MySQL(config=self.config['mysql'], debug=self.args.debug)
+        if self.args.debug:
+            logger.setLevel(logging.debug)
 
     def run(self, *argv):
         self.init(*argv)
@@ -341,7 +306,7 @@ class App:
             try:
                 return self.commands[self.args.command].run()
             except BiodbError as e:
-                log('Error: ' + str(e))
+                logger.error('Error: ' + str(e))
                 if self.args.debug:
                     raise
                 return 1
