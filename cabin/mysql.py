@@ -146,6 +146,7 @@ class _MySQL:
         argv = ['mysql',
                 '-u', user,
                 '-D', settings.SGX_MYSQL_DB,
+                '-h', settings.SGX_MYSQL_HOST,
                 '-p' + self.passwords[user]]
         os.execvp('mysql', argv)
 
