@@ -45,6 +45,7 @@ from biodb.datasets.disease_ontology import DiseaseOntology
 from biodb.datasets.mondo import mondo
 from biodb.datasets.pmkb import pmkb
 from biodb.datasets.pfam import Pfam
+from biodb.datasets.pharmGKB import pharmGKB
 
 
 class UsageError(Exception):
@@ -260,6 +261,7 @@ class App:
         mondo,
         pmkb,
         Pfam,
+        pharmGKB,
     ] + list(ENSEMBL_DATASETS.values())
 
     def dataset(self, name, version):
