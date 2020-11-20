@@ -46,6 +46,9 @@ from biodb.datasets.mondo import mondo
 from biodb.datasets.pmkb import pmkb
 from biodb.datasets.pfam import Pfam
 from biodb.datasets.pharmGKB import pharmGKB
+from biodb.datasets.medgen import medgenNames
+from biodb.datasets.medgen import medgenDefn
+from biodb.datasets.medgen import medgenHPO
 
 
 class UsageError(Exception):
@@ -262,6 +265,9 @@ class App:
         pmkb,
         Pfam,
         pharmGKB,
+        medgenNames,
+        medgenDefn,
+        medgenHPO
     ] + list(ENSEMBL_DATASETS.values())
 
     def dataset(self, name, version):
