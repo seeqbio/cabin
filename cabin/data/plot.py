@@ -9,7 +9,6 @@ import networkx as nx
 def build_dag(datasets):
     G = nx.DiGraph()
     nodes = datasets.copy()
-    roots = []
     while nodes:
         current = nodes.pop()
         G.add_node(current.name,
