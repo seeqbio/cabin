@@ -15,8 +15,8 @@ WRITER = 'writer'
 
 
 class _MySQL:
-    passwords = {'reader': settings.SGX_MYSQL_READER_PASSWORD,
-                 'writer': settings.SGX_MYSQL_WRITER_PASSWORD}
+    passwords = {READER: settings.SGX_MYSQL_READER_PASSWORD,
+                 WRITER: settings.SGX_MYSQL_WRITER_PASSWORD}
 
     def __init__(self, profile=False):
         self.profile = profile
@@ -104,17 +104,7 @@ class _MySQL:
             with cnx.cursor(**kwargs) as cursor:
                 yield cursor
 
-    # NOTE we should get rid of anonymous users, either install 5.7 +
-    # (not available on our current RHEL AMI, but available on Ubuntu 16.04) or
-    # run mysql_secure_installation and remove anonymous users, cf.
-    # https://stackoverflow.com/a/1412356
-
-    # NOTE to move the mysql data directory, set `datadir` (under mysqld) in
-    #   * /etc/my.cnf in RHEL
-    #   * /etc/mysql/mysql.conf.d/mysql.cnf in Ubuntu
-    def initialize(self):
-        database = settings.SGX_MYSQL_DB
-
+    def _get_root_connection(self):
         if 'SGX_MYSQL_ROOT_PASSWORD' in os.environ:
             root_password = os.environ['SGX_MYSQL_ROOT_PASSWORD']
         else:
@@ -123,8 +113,13 @@ class _MySQL:
         cnx = mysql.connector.connect(user='root',
                                       host=settings.SGX_MYSQL_HOST,
                                       password=root_password)
-        cursor = cnx.cursor()
+        return cnx
 
+    def initialize(self):
+        database = settings.SGX_MYSQL_DB
+        cnx = self._get_root_connection()
+
+        cursor = cnx.cursor()
         cursor.execute('CREATE DATABASE IF NOT EXISTS {db};'.format(db=database))
         logger.info('created database "%s"' % database)
 
