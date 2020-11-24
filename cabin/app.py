@@ -46,6 +46,7 @@ from biodb.datasets.mondo import mondo
 from biodb.datasets.pmkb import pmkb
 from biodb.datasets.pfam import Pfam
 from biodb.datasets.pharmGKB import pharmGKB
+from biodb.datasets.dgi import dgi
 from biodb.datasets.medgen import medgenNames
 from biodb.datasets.medgen import medgenDefn
 from biodb.datasets.medgen import medgenHPO
@@ -265,6 +266,7 @@ class App:
         pmkb,
         Pfam,
         pharmGKB,
+        dgi,
         medgenNames,
         medgenDefn,
         medgenHPO
