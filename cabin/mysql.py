@@ -128,15 +128,25 @@ class _MySQL:
         cursor.execute('CREATE DATABASE IF NOT EXISTS {db};'.format(db=database))
         logger.info('created database "%s"' % database)
 
+        def _create(user):
+            cursor.execute("""
+                CREATE USER '{user}'@'%'
+                IDENTIFIED BY '{password}';
+            """.format(user=user, password=self.passwords[user]))
+            logger.info('created user "%s"' % user)
+
         def _grant(grant, user):
-            q_tpl = 'GRANT {grant} ON `{db}`.* TO "{user}"@"%" IDENTIFIED BY "{password}";'
-            q = q_tpl.format(grant=grant, db=database, user=user, password=self.passwords[user])
+            cursor.execute("""
+                GRANT {grant} ON `{db}`.* TO "{user}"@"%"
+            """.format(grant=grant, db=database, user=user))
+            logger.info('granted "%s" on "%s" to user "%s"' % (grant, database, user))
 
-            cursor.execute(q)
-            logger.info('granted "{g}" to user "{u}"'.format(g=grant, u=user))
-
+        _create('reader')
         _grant('SELECT', 'reader')
+
+        _create('writer')
         _grant('ALL PRIVILEGES', 'writer')
+
         cursor.execute('FLUSH PRIVILEGES;')
         cursor.close()
 
