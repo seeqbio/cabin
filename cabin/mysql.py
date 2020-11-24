@@ -136,16 +136,29 @@ class _MySQL:
             """.format(grant=grant, db=database, user=user))
             logger.info('granted "%s" on "%s" to user "%s"' % (grant, database, user))
 
-        _create('reader')
-        _grant('SELECT', 'reader')
+        _create(READER)
+        _grant('SELECT', READER)
 
-        _create('writer')
-        _grant('ALL PRIVILEGES', 'writer')
+        _create(WRITER)
+        _grant('ALL PRIVILEGES', WRITER)
 
         cursor.execute('FLUSH PRIVILEGES;')
         cursor.close()
 
         logger.info('successfully initialized "{db}"!'.format(db=database))
+
+    def drop_users(self):
+        cnx = self._get_root_connection()
+        cursor = cnx.cursor()
+
+        cursor.execute("DROP USER '{user}'@'%'".format(user=READER))
+        logger.info('dropped user "%s"!' % READER)
+
+        cursor.execute("DROP USER '{user}'@'%'".format(user=WRITER))
+        logger.info('dropped user "%s"!' % WRITER)
+
+        cursor.execute('FLUSH PRIVILEGES;')
+        cursor.close()
 
     def shell(self, user):
         argv = ['mysql',
