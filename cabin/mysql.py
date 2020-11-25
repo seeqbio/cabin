@@ -136,6 +136,10 @@ class _MySQL:
             """.format(grant=grant, db=database, user=user))
             logger.info('granted "%s" on "%s" to user "%s"' % (grant, database, user))
 
+        def _add_system_table(user):
+            pass
+
+
         _create(READER)
         _grant('SELECT', READER)
 
