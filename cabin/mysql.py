@@ -15,8 +15,8 @@ WRITER = 'writer'
 
 
 class _MySQL:
-    passwords = {'reader': settings.SGX_MYSQL_READER_PASSWORD,
-                 'writer': settings.SGX_MYSQL_WRITER_PASSWORD}
+    passwords = {READER: settings.SGX_MYSQL_READER_PASSWORD,
+                 WRITER: settings.SGX_MYSQL_WRITER_PASSWORD}
 
     def __init__(self, profile=False):
         self.profile = profile
@@ -104,17 +104,7 @@ class _MySQL:
             with cnx.cursor(**kwargs) as cursor:
                 yield cursor
 
-    # NOTE we should get rid of anonymous users, either install 5.7 +
-    # (not available on our current RHEL AMI, but available on Ubuntu 16.04) or
-    # run mysql_secure_installation and remove anonymous users, cf.
-    # https://stackoverflow.com/a/1412356
-
-    # NOTE to move the mysql data directory, set `datadir` (under mysqld) in
-    #   * /etc/my.cnf in RHEL
-    #   * /etc/mysql/mysql.conf.d/mysql.cnf in Ubuntu
-    def initialize(self):
-        database = settings.SGX_MYSQL_DB
-
+    def _get_root_connection(self):
         if 'SGX_MYSQL_ROOT_PASSWORD' in os.environ:
             root_password = os.environ['SGX_MYSQL_ROOT_PASSWORD']
         else:
@@ -123,24 +113,52 @@ class _MySQL:
         cnx = mysql.connector.connect(user='root',
                                       host=settings.SGX_MYSQL_HOST,
                                       password=root_password)
-        cursor = cnx.cursor()
+        return cnx
 
+    def initialize(self):
+        database = settings.SGX_MYSQL_DB
+        cnx = self._get_root_connection()
+
+        cursor = cnx.cursor()
         cursor.execute('CREATE DATABASE IF NOT EXISTS {db};'.format(db=database))
         logger.info('created database "%s"' % database)
 
+        def _create(user):
+            cursor.execute("""
+                CREATE USER '{user}'@'%'
+                IDENTIFIED BY '{password}';
+            """.format(user=user, password=self.passwords[user]))
+            logger.info('created user "%s"' % user)
+
         def _grant(grant, user):
-            q_tpl = 'GRANT {grant} ON `{db}`.* TO "{user}"@"%" IDENTIFIED BY "{password}";'
-            q = q_tpl.format(grant=grant, db=database, user=user, password=self.passwords[user])
+            cursor.execute("""
+                GRANT {grant} ON `{db}`.* TO "{user}"@"%"
+            """.format(grant=grant, db=database, user=user))
+            logger.info('granted "%s" on "%s" to user "%s"' % (grant, database, user))
 
-            cursor.execute(q)
-            logger.info('granted "{g}" to user "{u}"'.format(g=grant, u=user))
+        _create(READER)
+        _grant('SELECT', READER)
 
-        _grant('SELECT', 'reader')
-        _grant('ALL PRIVILEGES', 'writer')
+        _create(WRITER)
+        _grant('ALL PRIVILEGES', WRITER)
+
         cursor.execute('FLUSH PRIVILEGES;')
         cursor.close()
 
         logger.info('successfully initialized "{db}"!'.format(db=database))
+
+    def drop_users(self):
+        cnx = self._get_root_connection()
+        cursor = cnx.cursor()
+
+        cursor.execute("DROP USER '{user}'@'%'".format(user=READER))
+        logger.info('dropped user "%s"!' % READER)
+
+        cursor.execute("DROP USER '{user}'@'%'".format(user=WRITER))
+        logger.info('dropped user "%s"!' % WRITER)
+
+        cursor.execute('FLUSH PRIVILEGES;')
+        cursor.close()
 
     def shell(self, user):
         argv = ['mysql',

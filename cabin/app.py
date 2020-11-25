@@ -84,6 +84,14 @@ class InitCommand(AppCommand):
         MYSQL.initialize()
 
 
+class DropUsersCommand(AppCommand):
+    name = "drop-users"
+    help = "inverse of 'init', drops all users and their privileges, database itself stays put."
+
+    def run(self):
+        MYSQL.drop_users()
+
+
 class ShellCommand(AppCommand):
     name = "shell"
     help = "open the MySQL command line client"
@@ -297,6 +305,7 @@ class App:
             'status':   StatusCommand(app=self),
             'download': DownloadCommand(app=self),
             'archive':  ArchiveCommand(app=self),
+            'drop-users':   DropUsersCommand(app=self),
         }
 
     def init(self, *argv):
