@@ -42,6 +42,21 @@ class AppCommand(ABC):
     def run(self):
         pass
 
+class InitCommand(AppCommand):
+    name = "init"
+    help = "initialize database, users, and build system table"
+
+    def run(self):
+        MYSQL.initialize()
+
+
+class DropUsersCommand(AppCommand):
+    name = "drop-users"
+    help = "inverse of 'init', drops all users and their privileges, database itself stays put."
+
+    def run(self):
+        MYSQL.drop_users()
+
 
 class ShellCommand(AppCommand):
     name = "shell"
@@ -80,6 +95,8 @@ class App:
 
         self.commands = {
             'shell':    ShellCommand(app=self),
+            'init':     InitCommand(app=self),
+            'drop-users':     DropUsersCommand(app=self)
 
         }
 

@@ -136,6 +136,21 @@ class _MySQL:
             """.format(grant=grant, db=database, user=user))
             logger.info('granted "%s" on "%s" to user "%s"' % (grant, database, user))
 
+        def _add_system_table():
+            print('--> initializing database')
+            query = ("""
+                USE {db};
+                CREATE TABLE IF NOT EXISTS system (
+                    sha         VARCHAR(64)  PRIMARY KEY,
+                    type        VARCHAR(128),
+                    name        VARCHAR(255),
+                    table_name  VARCHAR(255),
+                    formula     VARCHAR(4096)
+                );
+            """).format(db=database)
+            cursor.execute(query)
+
+
         _create(READER)
         _grant('SELECT', READER)
 
@@ -143,6 +158,8 @@ class _MySQL:
         _grant('ALL PRIVILEGES', WRITER)
 
         cursor.execute('FLUSH PRIVILEGES;')
+
+        _add_system_table()
         cursor.close()
 
         logger.info('successfully initialized "{db}"!'.format(db=database))
