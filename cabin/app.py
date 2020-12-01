@@ -1,13 +1,10 @@
-import os
 import sys
-import yaml
 import fnmatch
 import logging
 import argparse
 from abc import ABC
 from abc import abstractmethod
 from collections import OrderedDict
-from pathlib import Path
 
 from biodb import logger
 from biodb import BiodbError
@@ -71,7 +68,6 @@ class AppCommand(ABC):
         self.parser = app.cmd_parser.add_parser(self.name, description=description, help=self.help)
         self.app = app
 
-
     @abstractmethod
     def run(self):
         pass
@@ -112,7 +108,6 @@ class ShellCommand(AppCommand):
             process.  The latter includes another copy of the executable name
             since that, too, is passed as argv to the executable.
         """
-        user = self.app.args.user
         MYSQL.shell(self.app.args.user) # execvp to mysql client
 
 

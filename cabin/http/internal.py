@@ -1,9 +1,9 @@
-from flask import request
 from flask import Blueprint
 from flask import jsonify
 from biodb.mysql import MYSQL
 
 bp = Blueprint("internal", __name__, url_prefix="/internal")
+
 
 @bp.route("/tables")
 def list_tables():

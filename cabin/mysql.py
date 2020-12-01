@@ -1,5 +1,4 @@
 import os
-import sys
 import types
 import getpass
 import textwrap
@@ -8,6 +7,7 @@ from contextlib import contextmanager
 
 from biodb import logger
 from biodb import settings
+from biodb import BiodbError
 
 
 READER = 'reader'

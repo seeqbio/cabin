@@ -54,6 +54,7 @@ TYPE_REGISTRY = load_dataset_classes(biodb.data.datasets)
 for name, cls in TYPE_REGISTRY.items():
     globals()[name] = cls
 
+
 # Table registry should be reloaded every time from scratch since the state of
 # DB might change throughout the course of execution
 # NOTE in python 3.7+ we can just define __getattr__, cf. https://stackoverflow.com/a/48916205

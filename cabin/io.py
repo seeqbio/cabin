@@ -2,7 +2,6 @@ import csv
 import gzip
 import pysam
 import subprocess
-import numpy as np
 from lxml import etree
 from Bio import SeqIO
 from ftplib import FTP
@@ -49,6 +48,7 @@ def read_xsv(path, delimiter='\t', columns=None, header_leading_hash=True, ignor
         yield dict(zip(columns, values))
 
     f.close()
+
 
 def read_csv(path, delimiter=',', quotechar='"'):
     """

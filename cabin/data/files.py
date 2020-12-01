@@ -47,7 +47,7 @@ class FTPTimestampedFile(ExternalFile):
 
     @classmethod
     def validate_class(cls):
-        super().validate_class();
+        super().validate_class()
         cls.assert_class_attributes(str, 'ftp_server', 'ftp_path')
 
     @property
@@ -64,7 +64,7 @@ class LocalFile(Dataset):
 
     @classmethod
     def validate_class(cls):
-        super().validate_class();
+        super().validate_class()
         cls.assert_class_attributes(str, 'extension')
 
     @property
@@ -108,7 +108,7 @@ class S3MirrorFile(Dataset):
 
     @classmethod
     def validate_class(cls):
-        super().validate_class();
+        super().validate_class()
         cls.assert_class_attributes(str, 'extension')
 
     @property

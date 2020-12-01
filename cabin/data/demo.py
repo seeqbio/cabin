@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-import json
 import sys
 from pathlib import Path
 
 # add repo root to $PYTHONPATH
 sys.path.append(str(Path(__file__).absolute().parent.parent.parent))
 
-from biodb.data.plot import plot_dag
 from biodb.data.db import init_db
 
 

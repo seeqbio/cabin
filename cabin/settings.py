@@ -26,8 +26,7 @@ def _git_version(root):
     proc = subprocess.Popen(git_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = proc.communicate()
     if proc.returncode:
-        raise RuntimeError(err.decode('utf-8') +
-                           '\nfailed to get git repo version: '
+        raise RuntimeError(err.decode('utf-8') + '\nfailed to get git repo version: '
                            'are there any git tags?')
     version = out.decode('utf-8').strip()
     return version
