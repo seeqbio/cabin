@@ -160,6 +160,8 @@ class _MySQL:
         cursor.execute('FLUSH PRIVILEGES;')
 
         _add_system_table()
+        cursor.execute("SET PERSIST local_infile = 'ON';")
+
         cursor.close()
 
         logger.info('successfully initialized "{db}"!'.format(db=database))
