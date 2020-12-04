@@ -163,6 +163,8 @@ class _MySQL:
         
         # Set global system variable to allow loading data into tables
         # from local files (see biodb/datasets/pfam.py).
+        # Docs: https://dev.mysql.com/doc/refman/8.0/en/persisted-system-variables.html
+        # Docs: https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_local_infile
         cursor.execute("SET PERSIST local_infile = 'ON';")
 
         cursor.close()
