@@ -160,6 +160,9 @@ class _MySQL:
         cursor.execute('FLUSH PRIVILEGES;')
 
         _add_system_table()
+        
+        # Set global system variable to allow loading data into tables
+        # from local files (see biodb/datasets/pfam.py).
         cursor.execute("SET PERSIST local_infile = 'ON';")
 
         cursor.close()
