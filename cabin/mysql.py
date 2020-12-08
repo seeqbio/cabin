@@ -105,13 +105,6 @@ class _MySQL:
             with cnx.cursor(**kwargs) as cursor:
                 yield cursor
 
-    def db_not_ready(self, err, wait_time):
-        logger.info('Database is not ready to accept connections yet. '
-                    'The encounter error was: {error} .'
-                    'Trying again in {time} seconds...'
-                    .format(error=err, time=wait_time))
-        sleep(wait_time)
-
 
     def _get_root_connection(self):
         if 'SGX_MYSQL_ROOT_PASSWORD' in os.environ:
@@ -119,16 +112,10 @@ class _MySQL:
         else:
             root_password = getpass.getpass("Enter root password (given to you): ")
 
-        db_ready = False
-        while not db_ready:
-            try:
-                cnx = mysql.connector.connect(user='root',
+        cnx = mysql.connector.connect(user='root',
                                             host=settings.SGX_MYSQL_HOST,
                                             password=root_password)
-                logger.info('Database connection created.')
-                db_ready = True
-            except Exception as err:
-                self.db_not_ready(err, 5)
+        
         return cnx
 
     def initialize(self):
