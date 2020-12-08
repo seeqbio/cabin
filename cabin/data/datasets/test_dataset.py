@@ -19,13 +19,8 @@ class TestDatasetFile(LocalFile):
     depends = {'TestDatasetOfficial': TestDatasetOfficial}
     extension = 'txt'
 
-
-#    @property
-#    def download_path(self):
-#        return Path(settings.SGX_DOWNLOAD_DIR) / self.name  # Dataset from core has this
-
     def produce(self):
-        wget(self.input.url, self.path)  # path for LocalFile is in mock_storage
+        wget(self.input.url, self.path)
 
 
 class TestDatasetTable(ImportedTable, RecordByRecordImportMixin):
@@ -37,10 +32,6 @@ class TestDatasetTable(ImportedTable, RecordByRecordImportMixin):
         'Symbol',
     ]
 
-    @property
-    def schema_path(self):  # TODO: absorbe schema into this directly
-        return settings.SGX_SCHEMA_DIR / 'gene2refseq.sql'
- 
     @property
     def schema(self):
         return """

@@ -112,14 +112,6 @@ class ShellCommand(AppCommand):
 
 
 class App:
-    def dataset_magic(self, name, version, depends):
-        for cls in self.dataset_classes:
-            if cls.name == name:
-                return cls()
-        else:
-            raise BiodbError('Unknown dataset ' + name)
-
-
     def __init__(self):
         parser = argparse.ArgumentParser(description="""
             Versioned importer of datasets into MySQL with S3 archiving.
