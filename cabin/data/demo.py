@@ -5,7 +5,7 @@ from pathlib import Path
 # add repo root to $PYTHONPATH
 sys.path.append(str(Path(__file__).absolute().parent.parent.parent))
 
-from biodb.data.db import init_db
+from biodb.data.plot import plot_dag
 
 
 def status():
@@ -16,7 +16,7 @@ def status():
 
 
 if __name__ == '__main__':
-    init_db()
+    # removed: init_db()
 
     from biodb.data.registry import ClinVarVCFTable
     from biodb.data.registry import load_table_registry

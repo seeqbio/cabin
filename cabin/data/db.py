@@ -2,11 +2,9 @@ import json
 import sqlite3
 from pathlib import Path
 from abc import abstractmethod
-
+from biodb.mysql import MYSQL
 from .core import Dataset, HistoricalDataset
-
-DB_PATH = 'mock_storage/db.sqlite3'
-
+ 
 
 class ImportedTable(Dataset):
     @property
@@ -19,71 +17,34 @@ class ImportedTable(Dataset):
         return self.name
 
     def create_table(self):
-        query = self.schema.format(table=self.table_name).strip()
-        print('%s\n' % query)
+        with MYSQL.transaction() as cursor:
+            # Create empty table
+            query = self.schema.format(table=self.table_name).strip()
+            cursor.execute(query) ## TODO: made this into cursor.create_table()
 
-        execute_sql("""
-            INSERT INTO system
-            (type, name, formula, sha, table_name)
-            VALUES
-            ('%s', '%s', '%s', '%s', '%s')
-        """ % (self.type, self.name, self.formula_json, self.formula_sha, self.table_name))
+            # instert table info into system
+            query = ("""
+                INSERT INTO system
+                (type, name, formula, sha, table_name)
+                VALUES
+                ('%s', '%s', '%s', '%s', '%s');
+            """ % (self.type, self.name, self.formula_json, self.formula_sha, self.table_name))
+            cursor.execute(query) 
+
 
     def exists(self):
-        return bool(execute_sql("""
-            SELECT *
-            FROM system
-            WHERE sha = '%s'
-        """ % self.formula_sha))
-
-
-# decorator for produce() of imported tables
-def atomic_transaction(**connection_kw):
-    # mock
-    def decorator(func):
-        def wrapped(*args, **kwargs):
-            return func(*args, **kwargs)
-
-        return wrapped
-    return decorator
+        with MSQL.transcation() as cursor:
+            return bool(cursor.execute("""
+                SELECT *
+                FROM system
+                WHERE sha = '%s'
+            """ % self.formula_sha))
 
 
 def execute_sql(query):
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute(query)
-
-    res = [r for r in cursor]
-
-    cursor.close()
-    conn.commit()
-    conn.close()
-
-    return res
-
-
-def init_db():
-    Path(DB_PATH).parent.mkdir(parents=True, exist_ok=True)
-
-    query = """
-        SELECT name
-        FROM sqlite_master
-        WHERE type='table'
-        AND name='system';
-    """
-    if execute_sql(query):
-        return
-
-    print('--> initializing database')
-    execute_sql("""
-        CREATE TABLE system (
-            sha         VARCHAR(64) PRIMARY KEY,
-            type        VARCHAR(128),
-            name       VARCHAR(255),
-            table_name  VARCHAR(255),
-            formula     VARCHAR(4096)
-        );
-    """)
+    with MYSQL.transaction() as cursor:
+        res = cursor.execute(query)
+        return res
 
 
 def imported_datasets(type=None):

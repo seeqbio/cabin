@@ -24,7 +24,8 @@ from biodb import AbstractAttribute
 from biodb.mysql import MYSQL
 from biodb.mysql import READER
 
-from biodb.data.core import Dataset  # not used currently 
+from biodb.data.datasets.test_dataset import TestDatasetTable  # rm during registry usage
+from biodb.data.datasets.test_dataset import TestDatasetFile  # rm during registry usage
 
 
 class AppCommand(ABC):
@@ -57,6 +58,19 @@ class DropUsersCommand(AppCommand):
     def run(self):
         MYSQL.drop_users()
 
+class ImportCommand(AppCommand):
+    name = "import"
+    help = "import a dataset into database"
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.parser.add_argument('dataset')
+
+    def run(self):
+        # why not self.dataset.produce()
+        #TestDatasetFile().produce()  # uncomment to download
+        TestDatasetTable().produce()
+
 
 class ShellCommand(AppCommand):
     name = "shell"
@@ -82,6 +96,14 @@ class ShellCommand(AppCommand):
 
 
 class App:
+    def dataset_magic(self, name, version, depends):
+        for cls in self.dataset_classes:
+            if cls.name == name:
+                return cls()
+        else:
+            raise BiodbError('Unknown dataset ' + name)
+
+
     def __init__(self):
         parser = argparse.ArgumentParser(description="""
             Versioned importer of datasets into MySQL with S3 archiving.
@@ -96,7 +118,8 @@ class App:
         self.commands = {
             'shell':    ShellCommand(app=self),
             'init':     InitCommand(app=self),
-            'drop-users':     DropUsersCommand(app=self)
+            'drop-users':     DropUsersCommand(app=self),
+            'import':     ImportCommand(app=self)
 
         }
 
