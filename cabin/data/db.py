@@ -16,6 +16,14 @@ class ImportedTable(Dataset):
     def table_name(self):
         return self.name
 
+    @property # modeled after base dataset
+    def sql_drop(self):
+        return 'DROP TABLE IF EXISTS `{table}`;'.format(table=self.table_name)
+
+    def drop(self):
+        with MYSQL.transaction() as cursor:
+            cursor.execute(self.sql_drop)
+
     def create_table(self):
         with MYSQL.transaction() as cursor:
             # Create empty table
