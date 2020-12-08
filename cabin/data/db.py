@@ -67,3 +67,29 @@ def imported_datasets(type=None):
     for name, formula_json, sha in execute_sql(query):
         formula = json.loads(formula_json)
         yield HistoricalDataset(formula, name=name, sha=sha)
+
+class RecordByRecordImportMixin:
+    from biodb import AbstractAttribute  # TODO: fix this 
+    columms = AbstractAttribute()  # TODO: q: whats the diff between this and @property
+    """A list of columns as per SQL schema which is used to produce the
+    `INSERT` command as well as to filter unwanted columns from the original
+    source."""
+
+    @property
+    def sql_insert(self):
+        return 'INSERT INTO `{table}` ({cols}) VALUES ({vals})'.format(
+            table=self.table_name,
+            cols=', '.join('`%s`' % col for col in self.columns),
+            vals=', '.join('%({c})s'.format(c=col) for col in self.columns)
+        )
+
+
+    @abstractmethod
+    def read(self):
+        pass
+
+    def produce_real(self):
+        with MYSQL.transaction() as cursor:
+            self.create_table()
+            for record in self.read():
+                cursor.execute(self.sql_insert, record)
