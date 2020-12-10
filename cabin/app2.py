@@ -58,6 +58,22 @@ class DropUsersCommand(AppCommand):
     def run(self):
         MYSQL.drop_users()
 
+
+class DropCommand(AppCommand):
+    name = "drop"
+    help = "inverse of 'import', drops table from db and `system` table."  ## FIXME: add drop to rm File
+
+    def run(self):
+        MYSQL.cursor.drop_created_tables()
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.parser.add_argument('dataset')
+
+    def run(self):
+        TestDatasetTable().drop()
+
+
 class ImportCommand(AppCommand):
     name = "import"
     help = "import a dataset into database"
@@ -119,7 +135,8 @@ class App:
             'shell':    ShellCommand(app=self),
             'init':     InitCommand(app=self),
             'drop-users':     DropUsersCommand(app=self),
-            'import':     ImportCommand(app=self)
+            'import':     ImportCommand(app=self),
+            'drop':        DropCommand(app=self)
 
         }
 
