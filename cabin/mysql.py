@@ -2,6 +2,7 @@ import os
 import types
 import getpass
 import textwrap
+from time import sleep
 import mysql.connector
 from contextlib import contextmanager
 
@@ -104,6 +105,7 @@ class _MySQL:
             with cnx.cursor(**kwargs) as cursor:
                 yield cursor
 
+
     def _get_root_connection(self):
         if 'SGX_MYSQL_ROOT_PASSWORD' in os.environ:
             root_password = os.environ['SGX_MYSQL_ROOT_PASSWORD']
@@ -111,8 +113,9 @@ class _MySQL:
             root_password = getpass.getpass("Enter root password (given to you): ")
 
         cnx = mysql.connector.connect(user='root',
-                                      host=settings.SGX_MYSQL_HOST,
-                                      password=root_password)
+                                            host=settings.SGX_MYSQL_HOST,
+                                            password=root_password)
+        
         return cnx
 
     def initialize(self):
@@ -159,7 +162,15 @@ class _MySQL:
 
         cursor.execute('FLUSH PRIVILEGES;')
 
+        # Set global system variable to allow loading data into tables
+        # from local files (see biodb/datasets/pfam.py).
+        # Docs: https://dev.mysql.com/doc/refman/8.0/en/persisted-system-variables.html
+        # Docs: https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_local_infile
+        cursor.execute("SET PERSIST local_infile = 'ON';")
+
         _add_system_table()
+        
+
         cursor.close()
 
         logger.info('successfully initialized "{db}"!'.format(db=database))
