@@ -86,7 +86,7 @@ class ImportCommand(AppCommand):
 
     def run(self):
         ds = getattr(registry, self.app.args.dataset)()
-        ds.produce()
+        ds.produce_recursive()
 
 class ShellCommand(AppCommand):
     name = "shell"

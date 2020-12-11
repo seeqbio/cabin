@@ -46,12 +46,13 @@ class ImportedTable(Dataset):
 
 
     def exists(self):
-        with MSQL.transcation() as cursor:
-            return bool(cursor.execute("""
-                SELECT *
+        with MYSQL.transaction() as cursor:
+            cursor.execute("""
+                SELECT COUNT(*)
                 FROM system
                 WHERE sha = '%s'
-            """ % self.formula_sha))
+            """ % self.formula_sha)
+            return cursor.fetchall()[0][0]
 
 
 def execute_sql(query):
