@@ -119,6 +119,46 @@ class ShellCommand(AppCommand):
         MYSQL.shell(self.app.args.user) # execvp to mysql client
 
 
+class StatusCommand(AppCommand):
+    name = "status"
+    help = "describe import and archive status of a dataset"
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.parser.add_argument('dataset', nargs='?')#, help=self.dataset_help)
+
+    def run(self):
+        def yesno(val):
+            return 'yes' if val else 'no'
+
+        width_by_column = OrderedDict([
+            ('name',         45),
+            ('version',      15),
+            ('requirements', 12),
+#            ('latest',       10),  # TODO: implement this
+        ])
+        columns = width_by_column.keys()
+        fmt_string = ''.join('{%s:%d}' % (col, width) for col, width in width_by_column.items())
+
+        # header line
+        print(fmt_string.format(**dict(zip(columns, columns))))
+
+        # content lines
+        token = self.app.args.dataset
+        for cls in registry.TYPE_REGISTRY:
+            dataset = getattr(registry, cls)()
+            if token is not None and cls.name[:len(token)] != token:
+                continue
+            row = [
+                dataset.name,
+                dataset.version,
+                list(dataset.depends.keys()),
+        #        yesno(dataset.latest), # not implemented yet
+            ]
+            row = [str(x) if x else '' for x in row]
+            print(fmt_string.format(**dict(zip(columns, row))))
+
+
 class App:
     def __init__(self):
         parser = argparse.ArgumentParser(description="""
@@ -137,7 +177,8 @@ class App:
             'list':     ListCommand(app=self),
             'drop-users':     DropUsersCommand(app=self),
             'import':     ImportCommand(app=self),
-            'drop':        DropCommand(app=self)
+            'drop':        DropCommand(app=self),
+            'status':        StatusCommand(app=self)
 
         }
 
