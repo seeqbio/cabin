@@ -53,6 +53,14 @@ class InitCommand(AppCommand):
         MYSQL.initialize()
 
 
+class ListCommand(AppCommand):
+    name = "list"
+    help = "list all datasets for which a handler exists based on registry"
+
+    def run(self):
+        print('\n'.join(c for c in registry.TYPE_REGISTRY))
+
+
 class DropUsersCommand(AppCommand):
     name = "drop-users"
     help = "inverse of 'init', drops all users and their privileges, database itself stays put."
@@ -126,6 +134,7 @@ class App:
         self.commands = {
             'shell':    ShellCommand(app=self),
             'init':     InitCommand(app=self),
+            'list':     ListCommand(app=self),
             'drop-users':     DropUsersCommand(app=self),
             'import':     ImportCommand(app=self),
             'drop':        DropCommand(app=self)
