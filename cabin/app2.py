@@ -134,7 +134,8 @@ class StatusCommand(AppCommand):
         width_by_column = OrderedDict([
             ('name',         45),
             ('version',      15),
-            ('requirements', 12),
+            ('formula sha',  15),
+            ('requirements', 22),
 #            ('latest',       10),  # TODO: implement this
         ])
         columns = width_by_column.keys()
@@ -152,6 +153,7 @@ class StatusCommand(AppCommand):
             row = [
                 dataset.name,
                 dataset.version,
+                dataset.formula_sha,
                 list(dataset.depends.keys()),
         #        yesno(dataset.latest), # not implemented yet
             ]
