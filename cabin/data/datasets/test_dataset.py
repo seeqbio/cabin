@@ -23,7 +23,7 @@ class TestDatasetFile(LocalFile):
         wget(self.input.url, self.path)
 
 
-class TestDatasetTable(ImportedTable, RecordByRecordImportMixin):
+class TestDatasetTable(RecordByRecordImportMixin, ImportedTable):
     version = '10'
     depends = {'TestDatasetFile': TestDatasetFile}
 
@@ -41,10 +41,6 @@ class TestDatasetTable(ImportedTable, RecordByRecordImportMixin):
                 INDEX (Symbol)
             );
         """
-
-
-    def produce(self):
-        self.produce_real()
 
     def read(self):
         for row in read_xsv(self.inputs['TestDatasetFile'].path):

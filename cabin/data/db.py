@@ -71,7 +71,7 @@ def imported_datasets(type=None):
 
 class RecordByRecordImportMixin:
     from biodb import AbstractAttribute  # TODO: fix this 
-    columms = AbstractAttribute()  # TODO: q: whats the diff between this and @property
+    columms = AbstractAttribute()
     """A list of columns as per SQL schema which is used to produce the
     `INSERT` command as well as to filter unwanted columns from the original
     source."""
@@ -89,7 +89,7 @@ class RecordByRecordImportMixin:
     def read(self):
         pass
 
-    def produce_real(self):
+    def produce(self):
         with MYSQL.transaction() as cursor:
             self.create_table()
             for record in self.read():
