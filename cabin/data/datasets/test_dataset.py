@@ -1,7 +1,7 @@
 from biodb.data.db import RecordByRecordImportMixin
 from biodb.data.db import ImportedTable
 from biodb.data.files import LocalFile, ExternalFile
-from biodb.io import read_xsv, wget
+from biodb.io import read_xsv
 from biodb import settings
 from pathlib import Path
 
@@ -18,9 +18,6 @@ class TestDatasetFile(LocalFile):
     version = '1'
     depends = {'TestDatasetOfficial': TestDatasetOfficial}
     extension = 'txt'
-
-    def produce(self):
-        wget(self.input.url, self.path)
 
 
 class TestDatasetTable(RecordByRecordImportMixin, ImportedTable):
