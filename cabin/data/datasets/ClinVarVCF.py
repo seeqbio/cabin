@@ -1,4 +1,4 @@
-from biodb.data.db import atomic_transaction, ImportedTable
+from biodb.data.db import ImportedTable
 from biodb.data.files import LocalFile, ExternalFile
 
 
@@ -35,7 +35,6 @@ class ClinVarVCFTable(ImportedTable):
         print('Reading from ' + self.input.path)
         yield
 
-    @atomic_transaction()
     def produce(self):
         self.create_table()
         # mock

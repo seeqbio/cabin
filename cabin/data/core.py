@@ -127,7 +127,7 @@ class Dataset(ABC):
     # Everything below is supposed to Just Work. Subclasses shouldn't (need to)
     # override any of them.
 
-    def produce_recursive(self):
+    def produce_recursive(self):  # FIXME: consider for @atomic_transaction()
         if self.exists():
             print('--> already exists: %s' % self.description)
         else:

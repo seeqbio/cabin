@@ -2,7 +2,7 @@ from pathlib import Path
 from abc import abstractmethod
 
 from .core import Dataset
-
+from biodb.io import wget
 
 # mock, local files in mock_storage/ mock all sorts of resources in this prototype
 # (files, s3, docker images, EBS volumes, etc.)
@@ -87,12 +87,7 @@ class LocalFile(Dataset):
         pass
 
     def produce(self):
-        # mock
-        print('$ wget {src} -O {dst}\n'.format(
-            src=self.input.url, # getattr magic
-            dst=self.path,
-        ))
-        touch(self.path)
+        wget(self.input.url, self.path)
 
 
 class S3MirrorFile(Dataset):

@@ -24,9 +24,11 @@ from biodb import AbstractAttribute
 from biodb.mysql import MYSQL
 from biodb.mysql import READER
 
-from biodb.data.datasets.test_dataset import TestDatasetTable  # rm during registry usage
-from biodb.data.datasets.test_dataset import TestDatasetFile  # rm during registry usage
-
+#from biodb.data.datasets.test_dataset import TestDatasetTable  # rm during registry usage
+#from biodb.data.datasets.test_dataset import TestDatasetFile  # rm during registry usage
+from biodb.data import registry
+from biodb.data.registry import TestDatasetTable
+from biodb.data.registry import TestDatasetFile
 
 class AppCommand(ABC):
     name = AbstractAttribute()
@@ -83,10 +85,8 @@ class ImportCommand(AppCommand):
         self.parser.add_argument('dataset')
 
     def run(self):
-        # why not self.dataset.produce()
-        #TestDatasetFile().produce()  # uncomment to download
-        TestDatasetTable().produce()
-
+        ds = getattr(registry, self.app.args.dataset)()
+        ds.produce_recursive()
 
 class ShellCommand(AppCommand):
     name = "shell"
@@ -112,14 +112,6 @@ class ShellCommand(AppCommand):
 
 
 class App:
-    def dataset_magic(self, name, version, depends):
-        for cls in self.dataset_classes:
-            if cls.name == name:
-                return cls()
-        else:
-            raise BiodbError('Unknown dataset ' + name)
-
-
     def __init__(self):
         parser = argparse.ArgumentParser(description="""
             Versioned importer of datasets into MySQL with S3 archiving.

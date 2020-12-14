@@ -1,7 +1,7 @@
-from biodb.mixins import RecordByRecordImportMixin
+from biodb.data.db import RecordByRecordImportMixin
 from biodb.data.db import ImportedTable
 from biodb.data.files import LocalFile, ExternalFile
-from biodb.io import read_xsv, wget
+from biodb.io import read_xsv
 from biodb import settings
 from pathlib import Path
 
@@ -20,15 +20,7 @@ class TestDatasetFile(LocalFile):
     extension = 'txt'
 
 
-#    @property
-#    def download_path(self):
-#        return Path(settings.SGX_DOWNLOAD_DIR) / self.name  # Dataset from core has this
-
-    def produce(self):
-        wget(self.input.url, self.path)  # path for LocalFile is in mock_storage
-
-
-class TestDatasetTable(ImportedTable, RecordByRecordImportMixin):
+class TestDatasetTable(RecordByRecordImportMixin, ImportedTable):
     version = '10'
     depends = {'TestDatasetFile': TestDatasetFile}
 
@@ -37,17 +29,6 @@ class TestDatasetTable(ImportedTable, RecordByRecordImportMixin):
         'Symbol',
     ]
 
-
-    @property
-    def schema_path(self):  # TODO: absorbe schema into this directly
-        return settings.SGX_SCHEMA_DIR / 'gene2refseq.sql'
-
-    @property
-    def sql_create(self):
-        pass  # needed for base's method that is needed by import_real  
-        # with self.schema_path.open() as f:
-            # return f.read().format(table=self.table_name)
- 
     @property
     def schema(self):
         return """
@@ -57,11 +38,6 @@ class TestDatasetTable(ImportedTable, RecordByRecordImportMixin):
                 INDEX (Symbol)
             );
         """
-
-
-    def produce(self):
-        self.create_table()
-        self.import_real()
 
     def read(self):
         for row in read_xsv(self.inputs['TestDatasetFile'].path):
