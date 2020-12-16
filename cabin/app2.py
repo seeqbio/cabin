@@ -87,10 +87,11 @@ class ImportCommand(AppCommand):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.parser.add_argument('dataset')
+        self.parser.add_argument('-n', '--dry-run', action='store_true', help="do not actually import, just show a synopsis")
 
     def run(self):
         ds = getattr(registry, self.app.args.dataset)()
-        ds.produce_recursive()
+        ds.produce_recursive(dry_run=self.app.args.dry_run)
 
 
 class ShellCommand(AppCommand):

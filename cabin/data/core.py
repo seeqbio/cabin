@@ -126,7 +126,8 @@ class Dataset(ABC):
     # Everything below is supposed to Just Work. Subclasses shouldn't (need to)
     # override any of them.
 
-    def produce_recursive(self):  # FIXME: consider for @atomic_transaction()
+    # FIXME: consider for @atomic_transaction()
+    def produce_recursive(self, dry_run=False):
         if self.exists():
             print('--> already exists: %s' % self.description)
         else:
@@ -134,10 +135,11 @@ class Dataset(ABC):
 
             for inp in self.inputs.values():
                 # recurse
-                inp.produce_recursive()
+                inp.produce_recursive(dry_run=dry_run)
 
-            print('--> producing:      %s' % self.description)
-            self.produce()
+            if not dry_run:
+                print('--> producing:      %s' % self.description)
+                self.produce()
 
     def root_versions(self):
         # returns a list of versions of all root ancestors. Root ancestors are
