@@ -2,8 +2,7 @@ from biodb.data.db import RecordByRecordImportMixin
 from biodb.data.db import ImportedTable
 from biodb.data.files import LocalFile, ExternalFile
 from biodb.io import read_xsv
-from biodb import settings
-from pathlib import Path
+
 
 class TestDatasetOfficial(ExternalFile):
     version = 'human.head'

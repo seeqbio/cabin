@@ -1,13 +1,10 @@
-import os
 import sys
-import yaml
 import fnmatch
 import logging
 import argparse
 from abc import ABC
 from abc import abstractmethod
 from collections import OrderedDict
-from pathlib import Path
 
 from biodb import logger
 from biodb import BiodbError
@@ -24,11 +21,10 @@ from biodb import AbstractAttribute
 from biodb.mysql import MYSQL
 from biodb.mysql import READER
 
-#from biodb.data.datasets.test_dataset import TestDatasetTable  # rm during registry usage
-#from biodb.data.datasets.test_dataset import TestDatasetFile  # rm during registry usage
 from biodb.data import registry
 from biodb.data.registry import TestDatasetTable
 from biodb.data.registry import TestDatasetFile
+
 
 class AppCommand(ABC):
     name = AbstractAttribute()
@@ -40,10 +36,10 @@ class AppCommand(ABC):
         self.parser = app.cmd_parser.add_parser(self.name, description=description, help=self.help)
         self.app = app
 
-
     @abstractmethod
     def run(self):
         pass
+
 
 class InitCommand(AppCommand):
     name = "init"
@@ -51,6 +47,14 @@ class InitCommand(AppCommand):
 
     def run(self):
         MYSQL.initialize()
+
+
+class ListCommand(AppCommand):
+    name = "list"
+    help = "list all datasets for which a handler exists"
+
+    def run(self):
+        print('\n'.join(c for c in registry.TYPE_REGISTRY))
 
 
 class DropUsersCommand(AppCommand):
@@ -63,7 +67,7 @@ class DropUsersCommand(AppCommand):
 
 class DropCommand(AppCommand):
     name = "drop"
-    help = "inverse of 'import', drops table from db and `system` table."  ## FIXME: add drop to rm File
+    help = "inverse of 'import', drops table from db and `system` table."  # FIXME: add drop to rm File
 
     def run(self):
         MYSQL.cursor.drop_created_tables()
@@ -88,6 +92,7 @@ class ImportCommand(AppCommand):
         ds = getattr(registry, self.app.args.dataset)()
         ds.produce_recursive()
 
+
 class ShellCommand(AppCommand):
     name = "shell"
     help = "open the MySQL command line client"
@@ -111,6 +116,48 @@ class ShellCommand(AppCommand):
         MYSQL.shell(self.app.args.user) # execvp to mysql client
 
 
+class StatusCommand(AppCommand):
+    name = "status"
+    help = "describe import and archive status of a dataset"
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.parser.add_argument('dataset', nargs='?')
+
+    def run(self):
+        def yesno(val):
+            return 'yes' if val else 'no'
+
+        width_by_column = OrderedDict([
+            ('name',         45),
+            ('version',      15),
+            ('formula sha',  15),
+            ('requirements', 22),
+            # ('latest',       10),  # TODO: implement this
+        ])
+        columns = width_by_column.keys()
+        fmt_string = ''.join('{%s:%d}' % (col, width) for col, width in width_by_column.items())
+
+        # header line
+        print(fmt_string.format(**dict(zip(columns, columns))))
+
+        # content lines
+        token = self.app.args.dataset
+        for cls in registry.TYPE_REGISTRY:
+            dataset = getattr(registry, cls)()
+            if token is not None and cls.name[:len(token)] != token:
+                continue
+            row = [
+                dataset.name,
+                dataset.version,
+                dataset.formula_sha,
+                list(dataset.depends.keys()),
+                # yesno(dataset.latest), # not implemented yet
+            ]
+            row = [str(x) if x else '' for x in row]
+            print(fmt_string.format(**dict(zip(columns, row))))
+
+
 class App:
     def __init__(self):
         parser = argparse.ArgumentParser(description="""
@@ -124,11 +171,13 @@ class App:
         self.parser = parser
 
         self.commands = {
-            'shell':    ShellCommand(app=self),
-            'init':     InitCommand(app=self),
-            'drop-users':     DropUsersCommand(app=self),
-            'import':     ImportCommand(app=self),
-            'drop':        DropCommand(app=self)
+            'shell':            ShellCommand(app=self),
+            'init':             InitCommand(app=self),
+            'list':             ListCommand(app=self),
+            'drop-users':       DropUsersCommand(app=self),
+            'import':           ImportCommand(app=self),
+            'drop':             DropCommand(app=self),
+            'status':           StatusCommand(app=self)
 
         }
 
