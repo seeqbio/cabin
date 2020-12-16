@@ -71,6 +71,7 @@ class LocalFile(Dataset):
         super().validate_class()
         cls.assert_class_attributes(str, 'extension')
 
+    # FIXME fix storage path
     @property
     def path(self):
         # include source version for intelligibility
@@ -113,6 +114,10 @@ class S3MirrorFile(Dataset):
     def validate_class(cls):
         super().validate_class()
         cls.assert_class_attributes(str, 'extension')
+
+    def drop(self):
+        # TODO: rm file or remove drop() from superclass, only for ImportedTable?
+        pass
 
     @property
     def s3_path(self):

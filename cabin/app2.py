@@ -171,6 +171,8 @@ class App:
         self.cmd_parser = parser.add_subparsers(title='commands', dest='command')
         self.parser = parser
 
+        # TODO consider refactor: stop passing app into commands, pass args to
+        # their run()
         self.commands = {
             'shell':            ShellCommand(app=self),
             'init':             InitCommand(app=self),

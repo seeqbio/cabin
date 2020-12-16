@@ -4,7 +4,7 @@ from pathlib import Path
 from abc import abstractmethod
 from biodb.mysql import MYSQL
 from .core import Dataset, HistoricalDataset
- 
+
 
 class ImportedTable(Dataset):
     @property
@@ -20,7 +20,7 @@ class ImportedTable(Dataset):
     def sql_drop(self):
         return 'DROP TABLE IF EXISTS `{table}`;'.format(table=self.table_name)
 
-    @property 
+    @property
     def drop_from_system(self): # FIXME: be more specific than dropping everything with that name
         return 'DELETE FROM system WHERE name="{table}";'.format(table=self.table_name)
 
@@ -34,6 +34,11 @@ class ImportedTable(Dataset):
             # Create empty table
             query = self.schema.format(table=self.table_name).strip()
             cursor.execute(query) ## TODO: made this into cursor.create_table()
+            # FIXME issues:
+            # 1. system table needs to be undone as well, maybe INSERT into it
+            # right after produce (not before)
+            # 2. partial info: ctrl-c in the middle of import did not undo
+            # create table even though cursor.create_table(self.table_name, query)
 
             # instert table info into system
             query = ("""
@@ -42,7 +47,7 @@ class ImportedTable(Dataset):
                 VALUES
                 ('%s', '%s', '%s', '%s', '%s');
             """ % (self.type, self.name, self.formula_json, self.formula_sha, self.table_name))
-            cursor.execute(query) 
+            cursor.execute(query)
 
 
     def exists(self):
@@ -70,7 +75,7 @@ def imported_datasets(type=None):
         yield HistoricalDataset(formula, name=name, sha=sha)
 
 class RecordByRecordImportMixin:
-    from biodb import AbstractAttribute  # TODO: fix this 
+    from biodb import AbstractAttribute  # TODO: fix this
     columms = AbstractAttribute()
     """A list of columns as per SQL schema which is used to produce the
     `INSERT` command as well as to filter unwanted columns from the original
