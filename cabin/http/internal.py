@@ -19,3 +19,15 @@ def list_tables():
 def print_version():
     with open('version.txt') as f:
         return f.read().strip()
+
+
+@bp.route("/snapshot_id")
+def print_snapshot_id():
+    with open('snapshot.txt') as f:
+        return f.read().strip()
+
+
+@bp.route("/rp")
+def print_mysql_root_password():
+    with open('password.txt') as f:
+        return f.read().strip()
