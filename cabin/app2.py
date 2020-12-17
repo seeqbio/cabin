@@ -116,18 +116,13 @@ class StatusCommand(AppCommand):
         def yesno(val):
             return 'yes' if val else 'no'
 
-        table_registry = load_table_registry()
-        def is_latest(dataset):
-            if dataset.name in load_table_registry():
-                return load_table_registry()[dataset.name].is_latest()
-            else:
-                return 'False'  # FIXME: better msg? 
 
         width_by_column = OrderedDict([
-            ('name',         45),
-            ('version',      15),
-            ('depends',      22),
+            ('type',         25),
+            ('version',      10),
+            ('depends',      32),
             ('latest',       10),
+            ('Full name',    50),
         ])
         columns = width_by_column.keys()
         fmt_string = ''.join('{%s:%d}' % (col, width) for col, width in width_by_column.items())
@@ -136,13 +131,13 @@ class StatusCommand(AppCommand):
         print(fmt_string.format(**dict(zip(columns, columns))))
 
         # content lines
-        for dataset in registry.TYPE_REGISTRY.values():
+        for _, hdataset in sorted(load_table_registry().items()):
             row = [
-                dataset.__name__,
-                dataset.version,
-                dataset.formula_sha,
-                ', '.join(c.__name__ for c in dataset.depends),
-                is_latest(dataset),
+                hdataset.type,
+                hdataset.formula['version'], # TODO: consider adding to historical dataset as atribute 
+                list(hdataset.formula['inputs'].keys()), # TODO: consider', '.join(c.__name__ for c in hdataset.depends),
+                hdataset.is_latest(),
+                hdataset.name,
             ]
             row = [str(x) if x else '' for x in row]
             print(fmt_string.format(**dict(zip(columns, row))))
