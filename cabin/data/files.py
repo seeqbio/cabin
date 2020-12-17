@@ -67,11 +67,9 @@ class LocalFile(Dataset):
         super().validate_class()
         cls.assert_class_attributes(str, 'extension')
 
-    # FIXME fix storage path
     @property
     def path(self):
-        # include source version for intelligibility
-        return 'mock_storage/downloads/{name}.{ext}'.format(
+        return 'downloads/{name}.{ext}'.format(
             name=self.name,
             ext=self.extension
         )
