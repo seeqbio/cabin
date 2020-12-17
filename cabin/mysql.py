@@ -190,6 +190,16 @@ class _MySQL:
         cursor.close()
 
     def shell(self, user):
+        """Executes mysql client in _this_ process (replaces python process
+        immediately). This is necessary; using a subprocess produces weird
+        behavior with how interrupts are handled, e.g. how ctrl+c works.
+
+        Note on `os.execvp` usage:
+            The first argument to execvp is the executable name (searched for
+            in $PATH) and the second argument is the argv list passed to the
+            process.  The latter includes another copy of the executable name
+            since that, too, is passed as argv to the executable.
+        """
         argv = ['mysql',
                 '-u', user,
                 '-D', settings.SGX_MYSQL_DB,

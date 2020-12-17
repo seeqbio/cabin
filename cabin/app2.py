@@ -67,7 +67,7 @@ class DropUsersCommand(AppCommand):
 
 class DropCommand(AppCommand):
     name = "drop"
-    help = "inverse of 'import', drops table from db and `system` table."  # FIXME: add drop to rm File
+    help = "inverse of 'import', drops table from db and `system` table."
 
     def run(self):
         MYSQL.cursor.drop_created_tables()
@@ -103,16 +103,6 @@ class ShellCommand(AppCommand):
         self.parser.add_argument('--user', '-u', default=READER, help="user to log in to MySQL")
 
     def run(self):
-        """Executes mysql client in _this_ process (replaces python process
-        immediately). This is necessary; using a subprocess produces weird
-        behavior with how interrupts are handled, e.g. how ctrl+c works.
-
-        Note on `os.execvp` usage:
-            The first argument to execvp is the executable name (searched for
-            in $PATH) and the second argument is the argv list passed to the
-            process.  The latter includes another copy of the executable name
-            since that, too, is passed as argv to the executable.
-        """
         user = self.app.args.user
         MYSQL.shell(self.app.args.user) # execvp to mysql client
 
