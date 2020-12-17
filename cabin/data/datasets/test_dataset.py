@@ -15,13 +15,13 @@ class TestDatasetOfficial(ExternalFile):
 
 class TestDatasetFile(LocalFile):
     version = '1'
-    depends = {'TestDatasetOfficial': TestDatasetOfficial}
+    depends = [TestDatasetOfficial]
     extension = 'txt'
 
 
 class TestDatasetTable(RecordByRecordImportMixin, ImportedTable):
     version = '10'
-    depends = {'TestDatasetFile': TestDatasetFile}
+    depends = [TestDatasetFile]
 
     columns = [
         'GeneID',

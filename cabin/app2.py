@@ -135,7 +135,7 @@ class StatusCommand(AppCommand):
                 dataset.name,
                 dataset.version,
                 dataset.formula_sha,
-                list(dataset.depends.keys()),
+                ', '.join(c.__name__ for c in dataset.depends)
                 # yesno(dataset.latest), # not implemented yet
             ]
             row = [str(x) if x else '' for x in row]
