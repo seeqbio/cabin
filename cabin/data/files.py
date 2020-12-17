@@ -1,15 +1,13 @@
+import boto3
+import botocore.exceptions
+
 from pathlib import Path
 from abc import abstractmethod
 
-from .core import Dataset
+from biodb import settings
+from biodb import AbstractAttribute
 from biodb.io import wget
-
-# mock, local files in mock_storage/ mock all sorts of resources in this prototype
-# (files, s3, docker images, EBS volumes, etc.)
-def touch(path):
-    path = Path(path)
-    path.parent.mkdir(exist_ok=True, parents=True)
-    path.touch()
+from biodb.data.core import Dataset
 
 
 class ExternalFile(Dataset):
@@ -39,24 +37,26 @@ class ExternalFile(Dataset):
 
 
 class FTPTimestampedFile(ExternalFile):
-    ftp_server = None
-    ftp_path = None
-
-    # mock, should look up FTP server instead
-    actually_available_ftp_version = None
-
-    @classmethod
-    def validate_class(cls):
-        super().validate_class()
-        cls.assert_class_attributes(str, 'ftp_server', 'ftp_path')
+    ftp_server = AbstractAttribute
+    ftp_path = AbstractAttribute
 
     @property
     def url(self):
+        assert self.exists()
         return 'ftp://{server}/{path}'.format(server=self.ftp_server, path=self.ftp_path)
 
     def exists(self):
-        # mock
-        return self.version == self.actually_available_ftp_version
+        assert self.current_ftp_version == self.version, \
+            'Dataset %s is not available, available version: "%s"' % (self.name, self.current_ftp_version)
+        return True
+
+    @property
+    def current_ftp_version(self):
+        from biodb.io import ftp_modify_time
+        if not hasattr(self, '_current_version'):
+            timestamp = ftp_modify_time(self.ftp_server, self.ftp_path)
+            self._current_version = str(timestamp.date())
+        return self._current_version
 
 
 class LocalFile(Dataset):
@@ -98,46 +98,55 @@ class S3MirrorFile(Dataset):
           will not be able to download it tomorrow (only 2020-09-02 is
           available tomorrow).
     """
-    extension = None
-
-    @classmethod
-    def validate_class(cls):
-        super().validate_class()
-        cls.assert_class_attributes(str, 'extension')
-
-    def drop(self):
-        # TODO: rm file or remove drop() from superclass, only for ImportedTable?
-        pass
+    extension = AbstractAttribute()
 
     @property
-    def s3_path(self):
-        # include source version for intelligibility
-        return 's3://sgx-cache/database/{name}.{ext}'.format(
+    def s3_key(self):
+        return '{prefix}/{name}.{ext}'.format(
+            prefix=settings.SGX_S3_MIRROR_PREFIX,
             name=self.name,
             ext=self.extension
         )
 
-    def produce(self):
-        # mock
-        print('$ wget {src} -O /dev/stdout | aws s3 cp - {dst}\n'.format(
-            src=self.input.url,
-            dst=self.s3_path
-        ))
+    def local_download_path(self):
+        # convenience magic: make the local path the same as downstream so we
+        # don't have to re-download this again.
+        rdepends = self.rdepends()
+        if len(rdepends) == 1:
+            return rdepends[0]().path
 
-        touch(self.s3_path.replace('s3://', 'mock_storage/s3/'))
+        return '/tmp/{name}.{ext}'.format(name=self.name, ext=self.extension)
+
+    def produce(self):
+        # download from external URL to local disk
+        local_path = self.local_download_path()
+        print(local_path)
+        wget(self.input.url, str(local_path))
+
+        # upload from local disk to S3
+        try:
+            s3 = boto3.resource('s3')
+            bucket = s3.Bucket(settings.SGX_S3_MIRROR_BUCKET)
+            bucket.upload_file(str(local_path), self.s3_key)
+        except botocore.exceptions.ClientError:
+            raise BiodbError('Upload failed!')
 
     def exists(self):
-        return Path(self.s3_path.replace('s3://', 'mock_storage/s3/')).exists()
+        try:
+            s3 = boto3.client('s3')
+            s3.head_object(Bucket=settings.SGX_S3_MIRROR_BUCKET, Key=str(self.s3_key))
+            return True
+        except botocore.exceptions.ClientError:
+            return False
 
 
 class S3MirroredLocalFile(LocalFile):
     """Local copy of an S3MirrorFile."""
 
     def produce(self):
-        # mock
-        print('$ aws s3 cp {src} {dst}\n'.format(
-            src=self.input.s3_path,
-            dst=self.path
-        ))
-        # mock download
-        touch(self.path)
+        # special case: the file might already exist, thanks to the produce()
+        # of the S3MirrorFile dependency.
+        if not self.exists():
+            s3 = boto3.resource('s3')
+            bucket = s3.Bucket(settings.SGX_S3_MIRROR_BUCKET)
+            bucket.download_file(self.input.s3_key, str(self.path))
