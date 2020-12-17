@@ -24,7 +24,7 @@ from biodb.mysql import READER
 from biodb.data import registry
 from biodb.data.registry import TestDatasetTable
 from biodb.data.registry import TestDatasetFile
-
+from biodb.data.registry import load_table_registry
 
 class AppCommand(ABC):
     name = AbstractAttribute()
@@ -77,7 +77,8 @@ class DropCommand(AppCommand):
         self.parser.add_argument('dataset')
 
     def run(self):
-        TestDatasetTable().drop()
+        ds = getattr(registry, self.app.args.dataset)()
+        ds.drop()
 
 
 class ImportCommand(AppCommand):
@@ -115,12 +116,13 @@ class StatusCommand(AppCommand):
         def yesno(val):
             return 'yes' if val else 'no'
 
+
         width_by_column = OrderedDict([
-            ('name',         45),
-            ('version',      15),
-            ('formula sha',  15),
-            ('depends',      22),
-            # ('latest',       10),  # TODO: implement this
+            ('type',         25),
+            ('version',      10),
+            ('depends',      32),
+            ('latest',       10),
+            ('Full name',    50),
         ])
         columns = width_by_column.keys()
         fmt_string = ''.join('{%s:%d}' % (col, width) for col, width in width_by_column.items())
@@ -129,14 +131,13 @@ class StatusCommand(AppCommand):
         print(fmt_string.format(**dict(zip(columns, columns))))
 
         # content lines
-        for cls in registry.TYPE_REGISTRY.values():
-            dataset = cls()
+        for _, hdataset in sorted(load_table_registry().items()):
             row = [
-                dataset.name,
-                dataset.version,
-                dataset.formula_sha,
-                ', '.join(c.__name__ for c in dataset.depends)
-                # yesno(dataset.latest), # not implemented yet
+                hdataset.type,
+                hdataset.formula['version'], # TODO: consider adding to historical dataset as atribute 
+                list(hdataset.formula['inputs'].keys()), # TODO: consider', '.join(c.__name__ for c in hdataset.depends),
+                hdataset.is_latest(),
+                hdataset.name,
             ]
             row = [str(x) if x else '' for x in row]
             print(fmt_string.format(**dict(zip(columns, row))))

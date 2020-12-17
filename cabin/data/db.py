@@ -63,19 +63,17 @@ class ImportedTable(Dataset):
         cursor.execute(query)
 
 
-def execute_sql(query):
-    with MYSQL.transaction() as cursor:
-        res = cursor.execute(query)
-        return res
-
-
 def imported_datasets(type=None):
-    query = 'SELECT name, formula, sha FROM system'
+    query = 'SELECT name, formula, sha FROM system;'
     if type:
         query += ' WHERE type = "%s"' % type
-    for name, formula_json, sha in execute_sql(query):
-        formula = json.loads(formula_json)
-        yield HistoricalDataset(formula, name=name, sha=sha)
+    with MYSQL.transaction() as cursor:
+        cursor.execute(query)
+        result = cursor.fetchall()
+
+        for name, formula_json, sha in result:
+            formula = json.loads(formula_json)
+            yield HistoricalDataset(formula, name=name, sha=sha)
 
 
 class RecordByRecordImportMixin:
