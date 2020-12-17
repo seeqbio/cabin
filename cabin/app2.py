@@ -126,7 +126,6 @@ class StatusCommand(AppCommand):
         width_by_column = OrderedDict([
             ('name',         45),
             ('version',      15),
-            ('formula sha',  15),
             ('depends',      22),
             ('latest',       10),
         ])
@@ -137,13 +136,12 @@ class StatusCommand(AppCommand):
         print(fmt_string.format(**dict(zip(columns, columns))))
 
         # content lines
-        for cls in registry.TYPE_REGISTRY.values():
-            dataset = cls()
+        for dataset in registry.TYPE_REGISTRY.values():
             row = [
-                dataset.name,
+                dataset.__name__,
                 dataset.version,
                 dataset.formula_sha,
-                ', '.join(c.__name__ for c in dataset.depends)
+                ', '.join(c.__name__ for c in dataset.depends),
                 is_latest(dataset),
             ]
             row = [str(x) if x else '' for x in row]
