@@ -133,6 +133,15 @@ class Dataset(ABC):
             sum((inp.root_versions() for _, inp in sorted(self.inputs.items())), [])
         ))
 
+    @classmethod
+    def rdepends(cls):
+        from biodb.data import registry
+        return [
+            klass
+            for klass in registry.TYPE_REGISTRY.values()
+            if cls in klass.depends
+        ]
+
     @property
     def type(self):
         return self.__class__.__name__

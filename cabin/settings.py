@@ -35,3 +35,9 @@ def _git_version(root):
 SGX_ROOT_DIR = Path(__file__).parents[1].absolute()
 SGX_GIT_VERSION = _git_version(SGX_ROOT_DIR)
 SGX_SCHEMA_DIR = SGX_ROOT_DIR / 'schema'
+
+
+# NOTE to be revised w ops, temporary solution: all biodb instances write to
+# the same S3 storage.
+SGX_S3_MIRROR_BUCKET = os.environ.get('SGX_S3_MIRROR_BUCKET', 'sgx-archives')
+SGX_S3_MIRROR_PREFIX = os.environ.get('SGX_S3_MIRROR_PREFIX', 'biodb/mirrors').rstrip('/')

@@ -2,8 +2,10 @@ import json
 import sqlite3
 from pathlib import Path
 from abc import abstractmethod
+
+from biodb import AbstractAttribute
 from biodb.mysql import MYSQL
-from .core import Dataset, HistoricalDataset
+from biodb.data.core import Dataset, HistoricalDataset
 
 
 class ImportedTable(Dataset):
@@ -43,7 +45,6 @@ class ImportedTable(Dataset):
     def sql_drop_from_system(self):
         return 'DELETE FROM system WHERE name="{table}";'.format(table=self.table_name)
 
-
     def drop(self):
         with MYSQL.transaction() as cursor:
             cursor.execute(self.sql_drop_table)
@@ -77,11 +78,15 @@ def imported_datasets(type=None):
 
 
 class RecordByRecordImportMixin:
-    from biodb import AbstractAttribute  # TODO: fix this
     columms = AbstractAttribute()
     """A list of columns as per SQL schema which is used to produce the
     `INSERT` command as well as to filter unwanted columns from the original
     source."""
+
+    field_mappings = None
+    """A dictionary of old column name (in original source) to new column name
+    (as per SQL schema) which filters and renames the columns read from
+    original source. By default no renaming or filtering is performed."""
 
     @property
     def sql_insert(self):
@@ -96,5 +101,14 @@ class RecordByRecordImportMixin:
         pass
 
     def import_table(self, cursor):
-        for record in self.read():
-            cursor.execute(self.sql_insert, record)
+        for row in self.read():
+            cursor.execute(self.sql_insert, self.transform(row))
+
+    def transform(self, record):
+        if self.field_mappings is None:
+            return record
+        else:
+            return {
+                new_col: record[old_col]
+                for old_col, new_col in self.field_mappings.items()
+            }
