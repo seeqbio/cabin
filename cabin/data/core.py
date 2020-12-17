@@ -20,9 +20,8 @@ class Dataset(ABC):
         version (str):
             The current version of this dataset, reflecting the current state
             of its internal mechanics (i.e. class code).
-        depends (dict):
-            The dataset type's named dependencies: a dictionary from dependnecy
-            key (anything for your convenience) to dependecy Dataset class.
+        depends (list):
+            The dataset type's dependencies: a list of other Dataset classes.
 
 
     Abstract methods to be implemented:
@@ -55,20 +54,11 @@ class Dataset(ABC):
             assumption about the existence of its dependencies.
     """
     version = None
-    depends = {}
-
-    def __new__(cls):
-        # for convenience allow depends to be defined as a single other Dataset
-        # (most common: single input), convert that to {'other': other} here.
-        import inspect
-        if inspect.isclass(cls.depends) and issubclass(cls.depends, Dataset):
-            cls.depends = {cls.__name__: cls.depends}
-        cls.validate_class()
-        return super(Dataset, cls).__new__(cls)
+    depends = []
 
     @classmethod
     def validate_class(cls):
-        cls.assert_class_attributes(dict, 'depends')
+        cls.assert_class_attributes(list, 'depends')
         cls.assert_class_attributes(str, 'version')
 
     @classmethod
@@ -81,7 +71,7 @@ class Dataset(ABC):
     def __init__(self):
         # NOTE all attrs are expected to be RO from outside
         self.inputs = OrderedDict([
-            (name, klass()) for name, klass in sorted(self.depends.items())
+            (klass.__name__, klass()) for klass in self.depends
         ])
         if len(self.inputs) == 1:
             # for convenience, make the sole input of a Dataset instance
@@ -104,12 +94,6 @@ class Dataset(ABC):
         """Checks whether this Dataset already exists, and hence does not need
         to be produced. This function is assumed to be relatively fast, network
         look ups to be cached if necessary."""
-        pass
-
-    @abstractmethod
-    def drop(self):
-        """ Drop this Dataset: a downloaded file will be removed, an imported
-        table will be dropped from the db."""
         pass
 
     @abstractmethod

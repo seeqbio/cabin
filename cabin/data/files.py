@@ -37,10 +37,6 @@ class ExternalFile(Dataset):
         assert self.exists(), \
             'Cannot produce external file at version %s for %s!' % (self.version, self.name)
 
-    def drop(self):
-        # TODO: ?
-        pass
-
 
 class FTPTimestampedFile(ExternalFile):
     ftp_server = None
@@ -82,10 +78,6 @@ class LocalFile(Dataset):
 
     def exists(self):
         return Path(self.path).exists()
-
-    def drop(self):
-        # TODO: rm file
-        pass
 
     def produce(self):
         wget(self.input.url, self.path)

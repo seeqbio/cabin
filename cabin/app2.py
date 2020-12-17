@@ -67,7 +67,7 @@ class DropUsersCommand(AppCommand):
 
 class DropCommand(AppCommand):
     name = "drop"
-    help = "inverse of 'import', drops table from db and `system` table."  # FIXME: add drop to rm File
+    help = "inverse of 'import', drops table from db and `system` table."
 
     def run(self):
         MYSQL.cursor.drop_created_tables()
@@ -103,16 +103,6 @@ class ShellCommand(AppCommand):
         self.parser.add_argument('--user', '-u', default=READER, help="user to log in to MySQL")
 
     def run(self):
-        """Executes mysql client in _this_ process (replaces python process
-        immediately). This is necessary; using a subprocess produces weird
-        behavior with how interrupts are handled, e.g. how ctrl+c works.
-
-        Note on `os.execvp` usage:
-            The first argument to execvp is the executable name (searched for
-            in $PATH) and the second argument is the argv list passed to the
-            process.  The latter includes another copy of the executable name
-            since that, too, is passed as argv to the executable.
-        """
         user = self.app.args.user
         MYSQL.shell(self.app.args.user) # execvp to mysql client
 
@@ -120,10 +110,6 @@ class ShellCommand(AppCommand):
 class StatusCommand(AppCommand):
     name = "status"
     help = "describe import and archive status of a dataset"
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.parser.add_argument('dataset', nargs='?')
 
     def run(self):
         def yesno(val):
@@ -133,7 +119,7 @@ class StatusCommand(AppCommand):
             ('name',         45),
             ('version',      15),
             ('formula sha',  15),
-            ('requirements', 22),
+            ('depends',      22),
             # ('latest',       10),  # TODO: implement this
         ])
         columns = width_by_column.keys()
@@ -143,16 +129,13 @@ class StatusCommand(AppCommand):
         print(fmt_string.format(**dict(zip(columns, columns))))
 
         # content lines
-        token = self.app.args.dataset
-        for cls in registry.TYPE_REGISTRY:
-            dataset = getattr(registry, cls)()
-            if token is not None and cls.name[:len(token)] != token:
-                continue
+        for cls in registry.TYPE_REGISTRY.values():
+            dataset = cls()
             row = [
                 dataset.name,
                 dataset.version,
                 dataset.formula_sha,
-                list(dataset.depends.keys()),
+                ', '.join(c.__name__ for c in dataset.depends)
                 # yesno(dataset.latest), # not implemented yet
             ]
             row = [str(x) if x else '' for x in row]
