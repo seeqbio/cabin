@@ -111,10 +111,6 @@ class StatusCommand(AppCommand):
     name = "status"
     help = "describe import and archive status of a dataset"
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.parser.add_argument('dataset', nargs='?')
-
     def run(self):
         def yesno(val):
             return 'yes' if val else 'no'
@@ -123,7 +119,7 @@ class StatusCommand(AppCommand):
             ('name',         45),
             ('version',      15),
             ('formula sha',  15),
-            ('requirements', 22),
+            ('depends',      22),
             # ('latest',       10),  # TODO: implement this
         ])
         columns = width_by_column.keys()
@@ -133,11 +129,8 @@ class StatusCommand(AppCommand):
         print(fmt_string.format(**dict(zip(columns, columns))))
 
         # content lines
-        token = self.app.args.dataset
-        for cls in registry.TYPE_REGISTRY:
-            dataset = getattr(registry, cls)()
-            if token is not None and cls.name[:len(token)] != token:
-                continue
+        for cls in registry.TYPE_REGISTRY.values():
+            dataset = cls()
             row = [
                 dataset.name,
                 dataset.version,
