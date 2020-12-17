@@ -107,12 +107,6 @@ class Dataset(ABC):
         pass
 
     @abstractmethod
-    def drop(self):
-        """ Drop this Dataset: a downloaded file will be removed, an imported
-        table will be dropped from the db."""
-        pass
-
-    @abstractmethod
     def produce(self):
         """Produces this Dataset: a downloadable file will be downloaded, an
         importable table will be imported, etc.
