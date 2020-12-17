@@ -115,7 +115,7 @@ class _MySQL:
         cnx = mysql.connector.connect(user='root',
                                             host=settings.SGX_MYSQL_HOST,
                                             password=root_password)
-        
+
         return cnx
 
     def initialize(self):
@@ -166,10 +166,11 @@ class _MySQL:
         # from local files (see biodb/datasets/pfam.py).
         # Docs: https://dev.mysql.com/doc/refman/8.0/en/persisted-system-variables.html
         # Docs: https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_local_infile
+        # NOTE this is a SQL syntax error in 5.7
         cursor.execute("SET PERSIST local_infile = 'ON';")
 
         _add_system_table()
-        
+
 
         cursor.close()
 
