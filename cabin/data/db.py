@@ -16,40 +16,6 @@ class ImportedTable(Dataset):
     def table_name(self):
         return self.name
 
-    @property # modeled after base dataset
-    def sql_drop(self):
-        return 'DROP TABLE IF EXISTS `{table}`;'.format(table=self.table_name)
-
-    @property
-    def drop_from_system(self): # FIXME: be more specific than dropping everything with that name
-        return 'DELETE FROM system WHERE name="{table}";'.format(table=self.table_name)
-
-    def drop(self):
-        with MYSQL.transaction() as cursor:
-            cursor.execute(self.sql_drop)
-            cursor.execute(self.drop_from_system)
-
-    def create_table(self):
-        with MYSQL.transaction() as cursor:
-            # Create empty table
-            query = self.schema.format(table=self.table_name).strip()
-            cursor.execute(query) ## TODO: made this into cursor.create_table()
-            # FIXME issues:
-            # 1. system table needs to be undone as well, maybe INSERT into it
-            # right after produce (not before)
-            # 2. partial info: ctrl-c in the middle of import did not undo
-            # create table even though cursor.create_table(self.table_name, query)
-
-            # instert table info into system
-            query = ("""
-                INSERT INTO system
-                (type, name, formula, sha, table_name)
-                VALUES
-                ('%s', '%s', '%s', '%s', '%s');
-            """ % (self.type, self.name, self.formula_json, self.formula_sha, self.table_name))
-            cursor.execute(query)
-
-
     def exists(self):
         with MYSQL.transaction() as cursor:
             cursor.execute("""
@@ -58,6 +24,43 @@ class ImportedTable(Dataset):
                 WHERE sha = '%s'
             """ % self.formula_sha)
             return cursor.fetchall()[0][0]
+
+    def produce(self):
+        with MYSQL.transaction() as cursor:
+            self._create_table(cursor)
+            self.import_table(cursor)
+            self._update_system_table(cursor)
+
+    @abstractmethod
+    def import_table(self, cursor):
+        pass
+
+    @property
+    def sql_drop_table(self):
+        return 'DROP TABLE IF EXISTS `{table}`;'.format(table=self.table_name)
+
+    @property
+    def sql_drop_from_system(self):
+        return 'DELETE FROM system WHERE name="{table}";'.format(table=self.table_name)
+
+
+    def drop(self):
+        with MYSQL.transaction() as cursor:
+            cursor.execute(self.sql_drop_table)
+            cursor.execute(self.sql_drop_from_system)
+
+    def _create_table(self, cursor):
+        query = self.schema.format(table=self.table_name).strip()
+        cursor.create_table(self.table_name, query)
+
+    def _update_system_table(self, cursor):
+        query = ("""
+            INSERT INTO system
+            (type, name, formula, sha, table_name)
+            VALUES
+            ('%s', '%s', '%s', '%s', '%s');
+        """ % (self.type, self.name, self.formula_json, self.formula_sha, self.table_name))
+        cursor.execute(query)
 
 
 def execute_sql(query):
@@ -74,6 +77,7 @@ def imported_datasets(type=None):
         formula = json.loads(formula_json)
         yield HistoricalDataset(formula, name=name, sha=sha)
 
+
 class RecordByRecordImportMixin:
     from biodb import AbstractAttribute  # TODO: fix this
     columms = AbstractAttribute()
@@ -89,13 +93,10 @@ class RecordByRecordImportMixin:
             vals=', '.join('%({c})s'.format(c=col) for col in self.columns)
         )
 
-
     @abstractmethod
     def read(self):
         pass
 
-    def produce(self):
-        with MYSQL.transaction() as cursor:
-            self.create_table()
-            for record in self.read():
-                cursor.execute(self.sql_insert, record)
+    def import_table(self, cursor):
+        for record in self.read():
+            cursor.execute(self.sql_insert, record)

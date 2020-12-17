@@ -125,8 +125,6 @@ class Dataset(ABC):
     # ============= Internal Mehtods ==============
     # Everything below is supposed to Just Work. Subclasses shouldn't (need to)
     # override any of them.
-
-    # FIXME: consider for @atomic_transaction()
     def produce_recursive(self, dry_run=False):
         if self.exists():
             print('--> already exists: %s' % self.description)
