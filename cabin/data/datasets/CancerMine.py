@@ -13,13 +13,13 @@ class CancerMineCollatedOfficial(ExternalFile):
 
 class CancerMineCollatedFile(LocalFile):
     version = '1'
-    depends = {'CancerMineCollatedOfficial': CancerMineCollatedOfficial}
+    depends = [CancerMineCollatedOfficial]
     extension = 'tsv'
 
 
 class CancerMineCollatedTable(RecordByRecordImportMixin, ImportedTable):
     version = '1'
-    depends = {'CancerMineCollatedFile': CancerMineCollatedFile}
+    depends = [CancerMineCollatedFile]
 
     columns = ['matching_id', 'role', 'do_id', 'cancer_normalized', 'gene_entrez_id', 'citation_count']
 
@@ -27,19 +27,19 @@ class CancerMineCollatedTable(RecordByRecordImportMixin, ImportedTable):
     def schema(self):
         return """
         CREATE TABLE `{table}` (
-    matching_id               VARCHAR(225) NOT NULL,
-    role                      VARCHAR(225) NOT NULL,
-    do_id                     VARCHAR(255) NOT NULL,    -- Disease Ontology id, eg: DOID:10747
-    cancer_normalized         VARCHAR(225) NOT NULL,    -- term used in ontologoes
-    gene_entrez_id            VARCHAR(225) NOT NULL,
-    citation_count            VARCHAR(225) NOT NULL,
-    INDEX (matching_id),
-    INDEX (gene_entrez_id)
-);
+            matching_id               VARCHAR(225) NOT NULL,
+            role                      VARCHAR(225) NOT NULL,
+            do_id                     VARCHAR(255) NOT NULL,    -- Disease Ontology id, eg: DOID:10747
+            cancer_normalized         VARCHAR(225) NOT NULL,    -- term used in ontologoes
+            gene_entrez_id            VARCHAR(225) NOT NULL,
+            citation_count            VARCHAR(225) NOT NULL,
+            INDEX (matching_id),
+            INDEX (gene_entrez_id)
+        );
     """
 
     def read(self):
-        for row in read_xsv(self.inputs['CancerMineCollatedFile'].path, header_leading_hash=False):
+        for row in read_xsv(self.input.path, header_leading_hash=False):
             row['do_id'] = row['cancer_id']
             yield row
 
@@ -53,7 +53,7 @@ class CancerMineSentencesOfficial(ExternalFile):
 
 class CancerMineSentencesFile(LocalFile):
     version = '1'
-    depends = {'CancerMineSentencesOfficial': CancerMineSentencesOfficial}
+    depends = [CancerMineSentencesOfficial]
     extension = 'tsv'
 
 
@@ -62,9 +62,9 @@ class CancerMineSentencesTable(RecordByRecordImportMixin, ImportedTable):
     # FAILING for myswl '\xCE\xB2-cat...' for column 'sentence' at row 1 error
 
     version = '1'
-    depends = {'CancerMineSentencesFile': CancerMineSentencesFile}
+    depends = [CancerMineSentencesFile]
 
-    columns = ['matching_id', 'pmid', 'predictprob', 'gene_entrez_id'] # , 'sentence']
+    columns = ['matching_id', 'pmid', 'predictprob', 'gene_entrez_id'] # FIXME: after unicode fix, add back , 'sentence']
 
     @property
     def schema(self):
@@ -80,5 +80,5 @@ class CancerMineSentencesTable(RecordByRecordImportMixin, ImportedTable):
     """
 
     def read(self):
-        for row in read_xsv(self.inputs['CancerMineSentencesFile'].path, header_leading_hash=False):
+        for row in read_xsv(self.input.path, header_leading_hash=False):
             yield row
