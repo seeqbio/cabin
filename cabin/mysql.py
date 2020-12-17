@@ -1,4 +1,5 @@
 import os
+import sys
 import types
 import getpass
 import textwrap
@@ -206,6 +207,44 @@ class _MySQL:
                 '-h', settings.SGX_MYSQL_HOST,
                 '-p' + self.passwords[user]]
         os.execvp('mysql', argv)
+
+    def compare_tables(self, first, second, using, verbose=False):
+        def get_result(cursor):
+            if verbose:
+                sys.stderr.write(cursor.statement + '\n')
+            return cursor.fetchone()[0]
+
+        with self.cursor(user='reader') as cursor:
+            cursor.execute('SELECT COUNT(*) FROM `{table}`'.format(table=first))
+            first_count = get_result(cursor)
+
+            cursor.execute('SELECT COUNT(*) FROM `{table}`'.format(table=second))
+            second_count = get_result(cursor)
+
+            cursor.execute("""
+                SELECT COUNT(*)
+                FROM `{first}` first
+                LEFT OUTER JOIN `{second}` second
+                USING ({using})
+                WHERE second.{using} IS NULL;
+            """.format(first=first, second=second, using=using))
+            not_in_second = get_result(cursor)
+
+            cursor.execute("""
+                SELECT COUNT(*)
+                FROM `{first}` first
+                RIGHT OUTER JOIN `{second}` second
+                USING ({using})
+                WHERE first.{using} IS NULL;
+            """.format(first=first, second=second, using=using))
+            not_in_first = get_result(cursor)
+
+            return {
+                '#(before)': first_count,
+                '#(after)': second_count,
+                '#(lost)': not_in_second,
+                '#(gained)': not_in_first,
+            }
 
 
 MYSQL = _MySQL(profile=settings.SGX_MYSQL_PROFILE)
