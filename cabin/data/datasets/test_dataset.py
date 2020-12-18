@@ -1,5 +1,4 @@
-from biodb.data.db import RecordByRecordImportMixin
-from biodb.data.db import ImportedTable
+from biodb.data.db import RecordByRecordImportedTable
 from biodb.data.files import LocalFile, ExternalFile
 from biodb.io import read_xsv
 
@@ -19,7 +18,7 @@ class TestDatasetFile(LocalFile):
     extension = 'txt'
 
 
-class TestDatasetTable(RecordByRecordImportMixin, ImportedTable):
+class TestDatasetTable(RecordByRecordImportedTable):
     version = '10'
     depends = [TestDatasetFile]
 

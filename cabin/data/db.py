@@ -64,20 +64,7 @@ class ImportedTable(Dataset):
         cursor.execute(query)
 
 
-def imported_datasets(type=None):
-    query = 'SELECT name, formula, sha FROM system;'
-    if type:
-        query += ' WHERE type = "%s"' % type
-    with MYSQL.transaction() as cursor:
-        cursor.execute(query)
-        result = cursor.fetchall()
-
-        for name, formula_json, sha in result:
-            formula = json.loads(formula_json)
-            yield HistoricalDataset(formula, name=name, sha=sha)
-
-
-class RecordByRecordImportMixin:
+class RecordByRecordImportedTable(ImportedTable):
     columms = AbstractAttribute()
     """A list of columns as per SQL schema which is used to produce the
     `INSERT` command as well as to filter unwanted columns from the original
@@ -96,10 +83,6 @@ class RecordByRecordImportMixin:
             vals=', '.join('%({c})s'.format(c=col) for col in self.columns)
         )
 
-    @abstractmethod
-    def read(self):
-        pass
-
     def import_table(self, cursor):
         for row in self.read():
             cursor.execute(self.sql_insert, self.transform(row))
@@ -112,3 +95,16 @@ class RecordByRecordImportMixin:
                 new_col: record[old_col]
                 for old_col, new_col in self.field_mappings.items()
             }
+
+
+def imported_datasets(type=None):
+    query = 'SELECT name, formula, sha FROM system;'
+    if type:
+        query += ' WHERE type = "%s"' % type
+    with MYSQL.transaction() as cursor:
+        cursor.execute(query)
+        result = cursor.fetchall()
+
+        for name, formula_json, sha in result:
+            formula = json.loads(formula_json)
+            yield HistoricalDataset(formula, name=name, sha=sha)
