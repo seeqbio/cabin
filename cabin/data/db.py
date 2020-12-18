@@ -28,14 +28,19 @@ class ImportedTable(Dataset):
             return cursor.fetchall()[0][0]
 
     def produce(self):
-        with MYSQL.transaction() as cursor:
+        # FIXME: is there any downside to extra arg for cursor, needed for laod data
+        with MYSQL.transaction(connection_kw={'allow_local_infile': True}) as cursor:
             self._create_table(cursor)
             self.import_table(cursor)
             self._update_system_table(cursor)
 
     @abstractmethod
     def import_table(self, cursor):
-        pass
+        cursor.execute("""
+            LOAD DATA LOCAL INFILE '{path}'
+            INTO TABLE `{table}`
+        """.format(path=temp.name, table=self.table_name)) # r"""
+
 
     @property
     def sql_drop_table(self):
