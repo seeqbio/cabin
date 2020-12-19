@@ -34,12 +34,12 @@ class ImportedTable(Dataset):
             self.import_table(cursor)
             self._update_system_table(cursor)
 
-    @abstractmethod
+    # FIXME: part of setting default to load data: rm @abstractmethod
     def import_table(self, cursor):
         cursor.execute("""
             LOAD DATA LOCAL INFILE '{path}'
             INTO TABLE `{table}`
-        """.format(path=temp.name, table=self.table_name)) # r"""
+        """.format(path=self.depends[0]().path, table=self.table_name)) # r"""
 
 
     @property
