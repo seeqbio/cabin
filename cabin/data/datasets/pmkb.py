@@ -2,34 +2,34 @@ from biodb.data.db import RecordByRecordImportedTable
 from biodb.data.files import LocalFile, ExternalFile
 from biodb.io import read_csv
 
+
 class pmkbOfficial(ExternalFile):
-    version='therapies'
+    version = 'therapies'
 
     @property
     def url(self):
         # version is always the same for drugs. Alternative urls exist but without downloadable data:
-        # eg: https://pmkb.weill.cornell.edu/variants 
+        # eg: https://pmkb.weill.cornell.edu/variants
         return 'https://pmkb.weill.cornell.edu/{version}/downloadCSV.csv'.format(version=self.version)
 
 
 class pmkbFile(LocalFile):
-    version='1'
-    depends= [pmkbOfficial]
+    version = '1'
+    depends = [pmkbOfficial]
     extension = 'csv'
 
 
 class pmkbTable(RecordByRecordImportedTable):
-    version='1'
+    version = '1'
     depends = [pmkbFile]
 
     columns = [
-    'Gene',
-    'Tumor_types',
-    'Tissue_types',
-    'Variants',
-    'Tier'
+        'Gene',
+        'Tumor_types',
+        'Tissue_types',
+        'Variants',
+        'Tier'
     ]
-
 
     @property
     def schema(self):
@@ -50,4 +50,3 @@ class pmkbTable(RecordByRecordImportedTable):
             row['Tissue_types'] = row.pop('Tissue Type(s)')
             row['Variants'] = row.pop('Variant(s)')
             yield row
-

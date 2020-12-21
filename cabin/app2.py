@@ -1,5 +1,4 @@
 import sys
-import fnmatch
 import logging
 import argparse
 from abc import ABC
@@ -22,8 +21,6 @@ from biodb.mysql import MYSQL
 from biodb.mysql import READER
 
 from biodb.data import registry
-from biodb.data.registry import TestDatasetTable
-from biodb.data.registry import TestDatasetFile
 from biodb.data.registry import load_table_registry
 
 class AppCommand(ABC):
@@ -69,9 +66,6 @@ class DropCommand(AppCommand):
     name = "drop"
     help = "inverse of 'import', drops table from db and `system` table."
 
-    def run(self):
-        MYSQL.cursor.drop_created_tables()
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.parser.add_argument('dataset')
@@ -92,29 +86,27 @@ class ImportCommand(AppCommand):
         self.parser.add_argument('--compare', default=None, help="Compare biodb to biodb2 import of the same table")
 
     def get_tables(self, ds_obj):
-        version = ds_obj.depends[0].depends[0].version  # Note the uglyness of version will fail for ftp (one more layer), could use formula 
+        version = ds_obj.depends[0].depends[0].version  # Note the uglyness of version will fail for ftp (one more layer), could use formula
         root_name = ds_obj.type.split('Table')[0]
-        import_old_cmd = ['bin/biodb', 'import', root_name, version] 
+        import_old_cmd = ['bin/biodb', 'import', root_name, version]
         after = ds_obj.table_name
-        using = self.app.args.compare
 
         # locally import before table:
         import subprocess
         print("Locally importing before table", import_old_cmd)
-        proc = subprocess.Popen(import_old_cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        proc = subprocess.Popen(import_old_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = proc.communicate()
         before_table_name = root_name + "::" + str(stderr).split("Importing ")[1].split("\\n")[0].split('"')[3]
-        msg = proc.returncode
+        # FIXME: consider proc.returncode
         return before_table_name, after
 
     def run(self):
         ds = getattr(registry, self.app.args.dataset)()
-        # Dev tool for comparison, to be removed after all datasets are ported:
+        # HACK: Dev tool for comparison, rm after all datasets are ported
         compare_on = self.app.args.compare
         ds.produce_recursive(dry_run=self.app.args.dry_run)
         if compare_on:
             before, after = self.get_tables(ds)
-            # IT IS THIS LINE THAT TRIGGERS ERROR ON L116 if verbose=args.verbose
             comparison = MYSQL.compare_tables(before, after, compare_on)
             print('* before:\t%s\n* after:\t%s\n* using:\t%s' % (before, after, compare_on))
             print('\n'.join(key + ':\t' + str(value) for key, value in comparison.items()))
@@ -129,7 +121,6 @@ class ShellCommand(AppCommand):
         self.parser.add_argument('--user', '-u', default=READER, help="user to log in to MySQL")
 
     def run(self):
-        user = self.app.args.user
         MYSQL.shell(self.app.args.user) # execvp to mysql client
 
 
@@ -140,7 +131,6 @@ class StatusCommand(AppCommand):
     def run(self):
         def yesno(val):
             return 'yes' if val else 'no'
-
 
         width_by_column = OrderedDict([
             ('type',         25),
@@ -159,7 +149,7 @@ class StatusCommand(AppCommand):
         for _, hdataset in sorted(load_table_registry().items()):
             row = [
                 hdataset.type,
-                hdataset.formula['version'], # TODO: consider adding to historical dataset as atribute 
+                hdataset.formula['version'], # TODO: consider adding to historical dataset as atribute
                 list(hdataset.formula['inputs'].keys()), # TODO: consider', '.join(c.__name__ for c in hdataset.depends),
                 hdataset.is_latest(),
                 hdataset.name,
