@@ -111,13 +111,13 @@ class ImportCommand(AppCommand):
         ds = getattr(registry, self.app.args.dataset)()
         # Dev tool for comparison, to be removed after all datasets are ported:
         compare_on = self.app.args.compare
+        ds.produce_recursive(dry_run=self.app.args.dry_run)
         if compare_on:
             before, after = self.get_tables(ds)
             # IT IS THIS LINE THAT TRIGGERS ERROR ON L116 if verbose=args.verbose
             comparison = MYSQL.compare_tables(before, after, compare_on)
         print('* before:\t%s\n* after:\t%s\n* using:\t%s' % (before, after, compare_on))
         print('\n'.join(key + ':\t' + str(value) for key, value in comparison.items()))
-        ds.produce_recursive(dry_run=self.app.args.dry_run)
 
 
 class ShellCommand(AppCommand):
