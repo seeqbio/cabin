@@ -116,8 +116,8 @@ class ImportCommand(AppCommand):
             before, after = self.get_tables(ds)
             # IT IS THIS LINE THAT TRIGGERS ERROR ON L116 if verbose=args.verbose
             comparison = MYSQL.compare_tables(before, after, compare_on)
-        print('* before:\t%s\n* after:\t%s\n* using:\t%s' % (before, after, compare_on))
-        print('\n'.join(key + ':\t' + str(value) for key, value in comparison.items()))
+            print('* before:\t%s\n* after:\t%s\n* using:\t%s' % (before, after, compare_on))
+            print('\n'.join(key + ':\t' + str(value) for key, value in comparison.items()))
 
 
 class ShellCommand(AppCommand):
