@@ -69,7 +69,8 @@ class LocalFile(Dataset):
 
     @property
     def path(self):
-        return 'downloads/{name}.{ext}'.format(
+        return '{downloads}/{name}.{ext}'.format(
+            downloads=settings.SGX_DOWNLOAD_DIR,
             name=self.name,
             ext=self.extension
         )
@@ -120,7 +121,6 @@ class S3MirrorFile(Dataset):
     def produce(self):
         # download from external URL to local disk
         local_path = self.local_download_path()
-        print(local_path)
         wget(self.input.url, str(local_path))
 
         # upload from local disk to S3

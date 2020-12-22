@@ -28,14 +28,19 @@ class ImportedTable(Dataset):
             return cursor.fetchall()[0][0]
 
     def produce(self):
-        with MYSQL.transaction() as cursor:
+        # FIXME: is there any downside to extra arg for cursor, needed for laod data
+        with MYSQL.transaction(connection_kw={'allow_local_infile': True}) as cursor:
             self._create_table(cursor)
             self.import_table(cursor)
             self._update_system_table(cursor)
 
-    @abstractmethod
+    # FIXME: part of setting default to load data: rm @abstractmethod
     def import_table(self, cursor):
-        pass
+        cursor.execute("""
+            LOAD DATA LOCAL INFILE '{path}'
+            INTO TABLE `{table}`
+        """.format(path=self.depends[0]().path, table=self.table_name)) # r"""
+
 
     @property
     def sql_drop_table(self):
@@ -64,20 +69,7 @@ class ImportedTable(Dataset):
         cursor.execute(query)
 
 
-def imported_datasets(type=None):
-    query = 'SELECT name, formula, sha FROM system;'
-    if type:
-        query += ' WHERE type = "%s"' % type
-    with MYSQL.transaction() as cursor:
-        cursor.execute(query)
-        result = cursor.fetchall()
-
-        for name, formula_json, sha in result:
-            formula = json.loads(formula_json)
-            yield HistoricalDataset(formula, name=name, sha=sha)
-
-
-class RecordByRecordImportMixin:
+class RecordByRecordImportedTable(ImportedTable):
     columms = AbstractAttribute()
     """A list of columns as per SQL schema which is used to produce the
     `INSERT` command as well as to filter unwanted columns from the original
@@ -96,10 +88,6 @@ class RecordByRecordImportMixin:
             vals=', '.join('%({c})s'.format(c=col) for col in self.columns)
         )
 
-    @abstractmethod
-    def read(self):
-        pass
-
     def import_table(self, cursor):
         for row in self.read():
             cursor.execute(self.sql_insert, self.transform(row))
@@ -112,3 +100,16 @@ class RecordByRecordImportMixin:
                 new_col: record[old_col]
                 for old_col, new_col in self.field_mappings.items()
             }
+
+
+def imported_datasets(type=None):
+    query = 'SELECT name, formula, sha FROM system;'
+    if type:
+        query += ' WHERE type = "%s"' % type
+    with MYSQL.transaction() as cursor:
+        cursor.execute(query)
+        result = cursor.fetchall()
+
+        for name, formula_json, sha in result:
+            formula = json.loads(formula_json)
+            yield HistoricalDataset(formula, name=name, sha=sha)

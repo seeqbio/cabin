@@ -221,6 +221,12 @@ class _MySQL:
             cursor.execute('SELECT COUNT(*) FROM `{table}`'.format(table=second))
             second_count = get_result(cursor)
 
+            if using == 'NA':
+                return {
+                    '#(before)': first_count,
+                    '#(after)': second_count,
+                }
+
             cursor.execute("""
                 SELECT COUNT(*)
                 FROM `{first}` first

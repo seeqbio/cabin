@@ -1,5 +1,4 @@
-from biodb.data.db import RecordByRecordImportMixin
-from biodb.data.db import ImportedTable
+from biodb.data.db import RecordByRecordImportedTable
 from biodb.data.files import LocalFile, ExternalFile
 from biodb.io import read_xsv
 
@@ -17,7 +16,7 @@ class CancerMineCollatedFile(LocalFile):
     extension = 'tsv'
 
 
-class CancerMineCollatedTable(RecordByRecordImportMixin, ImportedTable):
+class CancerMineCollatedTable(RecordByRecordImportedTable):
     version = '1'
     depends = [CancerMineCollatedFile]
 
@@ -57,7 +56,7 @@ class CancerMineSentencesFile(LocalFile):
     extension = 'tsv'
 
 
-class CancerMineSentencesTable(RecordByRecordImportMixin, ImportedTable):
+class CancerMineSentencesTable(RecordByRecordImportedTable):
     # sentence                  TEXT NOT NULL,    -- sentence in literature
     # FAILING for myswl '\xCE\xB2-cat...' for column 'sentence' at row 1 error
 

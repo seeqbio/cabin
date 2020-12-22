@@ -1,6 +1,5 @@
 from biodb.io import read_xsv
-from biodb.data.db import ImportedTable
-from biodb.data.db import RecordByRecordImportMixin
+from biodb.data.db import RecordByRecordImportedTable
 from biodb.data.files import (
     LocalFile,
     FTPTimestampedFile,
@@ -26,7 +25,7 @@ class Gene2EnsemblFile(S3MirroredLocalFile):
     extension = 'gz'
 
 
-class Gene2EnsemblTable(RecordByRecordImportMixin, ImportedTable):
+class Gene2EnsemblTable(RecordByRecordImportedTable):
     version = '1'
     depends = [Gene2EnsemblFile]
     columns = ['refseq_transcript', 'ensembl_transcript', 'gene_id', 'ensembl_gene_id']
