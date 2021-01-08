@@ -26,7 +26,7 @@ class gene_infoFile(S3MirroredLocalFile):
 
 
 class gene_infoTable(RecordByRecordImportedTable):
-    version = ' 1'
+    version = '1'
     depends = [gene_infoFile]
 
     columns = [

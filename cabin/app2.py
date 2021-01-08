@@ -23,6 +23,7 @@ from biodb.mysql import READER
 from biodb.data import registry
 from biodb.data.registry import load_table_registry
 
+
 class AppCommand(ABC):
     name = AbstractAttribute()
     help = None
@@ -86,7 +87,7 @@ class ImportCommand(AppCommand):
         self.parser.add_argument('--compare', default=None, help="Compare biodb to biodb2 import of the same table")
 
     def get_tables(self, ds_obj):
-        version = ds_obj.depends[0].depends[0].depends[0].version  # Note the uglyness of version will fail for ftp (one more layer), could use formula
+        version = ds_obj.root_versions()[0]
         root_name = ds_obj.type.split('Table')[0]
         import_old_cmd = ['bin/biodb', 'import', root_name, version]
         after = ds_obj.table_name

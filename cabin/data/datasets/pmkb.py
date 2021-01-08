@@ -4,13 +4,13 @@ from biodb.io import read_csv
 
 
 class pmkbOfficial(ExternalFile):
-    version = 'therapies'
+    version = '1'  # Note: not used in url
 
     @property
     def url(self):
         # version is always the same for drugs. Alternative urls exist but without downloadable data:
         # eg: https://pmkb.weill.cornell.edu/variants
-        return 'https://pmkb.weill.cornell.edu/{version}/downloadCSV.csv'.format(version=self.version)
+        return 'https://pmkb.weill.cornell.edu/therapies/downloadCSV.csv'
 
 
 class pmkbFile(LocalFile):

@@ -1,6 +1,4 @@
 import json
-import sqlite3
-from pathlib import Path
 from abc import abstractmethod
 
 from biodb import AbstractAttribute
@@ -28,19 +26,14 @@ class ImportedTable(Dataset):
             return cursor.fetchall()[0][0]
 
     def produce(self):
-        # FIXME: is there any downside to extra arg for cursor, needed for laod data
         with MYSQL.transaction(connection_kw={'allow_local_infile': True}) as cursor:
             self._create_table(cursor)
             self.import_table(cursor)
             self._update_system_table(cursor)
 
-    # FIXME: part of setting default to load data: rm @abstractmethod
+    @abstractmethod
     def import_table(self, cursor):
-        cursor.execute("""
-            LOAD DATA LOCAL INFILE '{path}'
-            INTO TABLE `{table}`
-        """.format(path=self.depends[0]().path, table=self.table_name)) # r"""
-
+        pass
 
     @property
     def sql_drop_table(self):

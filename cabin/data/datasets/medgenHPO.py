@@ -27,7 +27,7 @@ class medgenHPOFile(S3MirroredLocalFile):
 
 
 class medgenHPOTable(RecordByRecordImportedTable):
-    version = ' 1'
+    version = '1'
     depends = [medgenHPOFile]
 
     @property

@@ -27,7 +27,7 @@ class refseq_summaryFile(S3MirroredLocalFile):
 
 
 class refseq_summaryTable(RecordByRecordImportedTable):
-    version = ' 1'
+    version = '1'
     depends = [refseq_summaryFile]
 
     columns = ['refseq_transcript', 'summary']

@@ -31,7 +31,7 @@ class medgenDefnTable(RecordByRecordImportedTable):
         Some odd RFF formating for sentences, as-is import with `\r`, affecting terminal display. (eg: C0001529)
         for more format information, see https://ftp.ncbi.nlm.nih.gov/pub/medgen/README.txt
         and https://www.ncbi.nlm.nih.gov/books/NBK9685/"""
-    version = ' 1'
+    version = '1'
     depends = [medgenDefnFile]
 
     @property

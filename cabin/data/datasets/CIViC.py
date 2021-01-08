@@ -1,9 +1,8 @@
-import os
-
 from biodb.data.db import RecordByRecordImportedTable
 from biodb.data.files import LocalFile, ExternalFile
 from pyliftover import LiftOver
 from biodb.io import read_xsv
+from biodb import settings
 
 
 class CIViCOfficial(ExternalFile):
@@ -21,7 +20,7 @@ class CIViCFile(LocalFile):
 
 
 class CIViCTable(RecordByRecordImportedTable):
-    version = ' 1'
+    version = '1'
     depends = [CIViCFile]
 
     columns = [
@@ -87,11 +86,9 @@ class CIViCTable(RecordByRecordImportedTable):
         """
 
     def read(self):
-        fileDir = os.path.dirname(os.path.abspath(__file__))
-        # FIXME: update to biodb has extra layer
-        parentDir = os.path.dirname(os.path.dirname(fileDir))  # commited path, in biodb repo is: repo/biodb/chainfiles/assemblies.chain
-        lo_to19 = LiftOver(parentDir + '/chainfiles/b37tohg19.chain')
-        lo_to38 = LiftOver(parentDir + '/chainfiles/hg19tohg38.chain')
+        chains_dir = settings.SGX_ROOT_DIR / 'biodb/data/chainfiles'
+        lo_to19 = LiftOver(str(chains_dir) + '/b37tohg19.chain')
+        lo_to38 = LiftOver(str(chains_dir) + '/hg19tohg38.chain')
 
         for row in read_xsv(self.input.path, header_leading_hash=False):
             if not row['chromosome'] or not row['start']:  # it can have a start but not chr, ex: VHL-L158fs (c.473insT)

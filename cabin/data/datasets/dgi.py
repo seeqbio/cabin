@@ -37,3 +37,9 @@ class dgiTable(ImportedTable):
                 INDEX (entrez_id)
             );
         """
+
+    def import_table(self, cursor):
+        cursor.execute("""
+            LOAD DATA LOCAL INFILE '{path}'
+            INTO TABLE `{table}`
+        """.format(path=self.input.path, table=self.table_name)) # r"""

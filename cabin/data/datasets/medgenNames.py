@@ -27,7 +27,7 @@ class medgenNamesFile(S3MirroredLocalFile):
 
 
 class medgenNamesTable(RecordByRecordImportedTable):
-    version = ' 1'
+    version = '1'
     depends = [medgenNamesFile]
 
     @property

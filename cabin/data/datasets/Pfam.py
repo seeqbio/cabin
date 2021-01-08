@@ -34,7 +34,7 @@ class PfamTable(ImportedTable):
 
     def import_table(self, cursor):
         with NamedTemporaryFile('w') as temp:
-            gunzip(self.depends[0]().path, temp.name)
+            gunzip(self.input.path, temp.name)
             cursor.execute("""
                 LOAD DATA LOCAL INFILE '{path}'
                 INTO TABLE `{table}`

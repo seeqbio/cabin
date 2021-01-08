@@ -28,7 +28,7 @@ class gene2refseqFile(S3MirroredLocalFile):
 
 
 class gene2refseqTable(RecordByRecordImportedTable):
-    version = ' 1'
+    version = '1'
     depends = [gene2refseqFile]
 
     columns = [
