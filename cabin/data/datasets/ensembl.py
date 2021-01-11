@@ -44,13 +44,12 @@ class EnsemblExternalFile(ExternalFile):
 
 
 class EnsemblTable(ImportedTable):
-    file_extension = 'txt.gz'
     ensembl_table = AbstractAttribute()
 
     @property
-    def sql_create(self):
+    def schema(self):
         # ensembl schemas are dynamically built on the fly by parsing the
-        # master ensembl schema
+        # master ensembl schema. Difference from other dataset schemas.
         schema_sql = ensembl_schema(self.depends[0].depends[0].version)
         for sql in sqlparse.split(schema_sql):
             statement, = sqlparse.parse(sql)
@@ -82,8 +81,6 @@ class EnsemblTable(ImportedTable):
         else:
             raise BiodbError('Failed to find table "%s" in Ensembl schema!' % self.ensembl_table)
 
-    def schema(self):
-        pass
 
     def produce(self):
         # replcates produce of ImportedTable to create table based on schem specifications???????
@@ -94,7 +91,7 @@ class EnsemblTable(ImportedTable):
             # LOAD DATA LOCAL INFILE needs allow_local_infile=True
             # https://dev.mysql.com/doc/connector-python/en/connector-python-connectargs.html
             with MYSQL.transaction(connection_kw={'allow_local_infile': True}) as cursor:
-                cursor.create_table(self.table_name, self.sql_create)
+                cursor.create_table(self.table_name, self.schema)
                 cursor.execute(r"""
                     LOAD DATA LOCAL INFILE '{path}'
                     INTO TABLE `{table}`
@@ -111,7 +108,6 @@ class ensembl_exonFile(LocalFile):
     version = '1'
     depends = [ensembl_exonOfficial]
     extension = 'txt.gz'
-    ensembl_table = 'exon'
 
 
 class ensembl_exonTable(EnsemblTable):
