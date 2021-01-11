@@ -1,6 +1,7 @@
 import sys
 import logging
 import argparse
+import fnmatch
 from abc import ABC
 from abc import abstractmethod
 from collections import OrderedDict
@@ -102,15 +103,25 @@ class ImportCommand(AppCommand):
         return before_table_name, after
 
     def run(self):
-        ds = getattr(registry, self.app.args.dataset)()
-        # HACK: Dev tool for comparison, rm after all datasets are ported
-        compare_on = self.app.args.compare
-        ds.produce_recursive(dry_run=self.app.args.dry_run)
-        if compare_on:
-            before, after = self.get_tables(ds)
-            comparison = MYSQL.compare_tables(before, after, compare_on)
-            print('* before:\t%s\n* after:\t%s\n* using:\t%s' % (before, after, compare_on))
-            print('\n'.join(key + ':\t' + str(value) for key, value in comparison.items()))
+
+        classes = [ds_class for ds_class in registry.TYPE_REGISTRY.keys()
+                    if fnmatch.fnmatch(ds_class, self.app.args.dataset)]
+
+        if not classes:
+            print("No Tables in registry matching %s." % self.app.args.dataset)
+            # FIXME: exit with note to logger
+        else:
+            print("Tables to import: ", classes)
+        for ds_name in classes:
+            ds = getattr(registry, ds_name)()
+            # HACK: Dev tool for comparison, rm after all datasets are ported
+            compare_on = self.app.args.compare
+            ds.produce_recursive(dry_run=self.app.args.dry_run)
+            if compare_on:
+                before, after = self.get_tables(ds)
+                comparison = MYSQL.compare_tables(before, after, compare_on)
+                print('* before:\t%s\n* after:\t%s\n* using:\t%s' % (before, after, compare_on))
+                print('\n'.join(key + ':\t' + str(value) for key, value in comparison.items()))
 
 
 class ShellCommand(AppCommand):
