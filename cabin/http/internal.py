@@ -21,6 +21,8 @@ def print_version():
         return f.read().strip()
 
 
+#FIXME: Remove the below functions (assuming we can deploy
+#       without them) after debugging is done.
 @bp.route("/snapshot_id")
 def print_snapshot_id():
     with open('snapshot.txt') as f:
