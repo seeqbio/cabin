@@ -81,6 +81,8 @@ class EnsemblTable(ImportedTable):
         else:
             raise BiodbError('Failed to find table "%s" in Ensembl schema!' % self.ensembl_table)
 
+    def import_table(self, cursor):
+        pass
 
     def produce(self):
         # replcates produce of ImportedTable to create table based on schem specifications???????
@@ -114,3 +116,173 @@ class ensembl_exonTable(EnsemblTable):
     version = '1'
     depends = [ensembl_exonFile]
     ensembl_table = 'exon'
+
+
+class ensembl_analysisOfficial(EnsemblExternalFile):
+    ensembl_table = 'analysis'
+    pass
+
+
+class ensembl_analysisFile(LocalFile):
+    version = '1'
+    depends = [ensembl_analysisOfficial]
+    extension = 'txt.gz'
+
+
+class ensembl_analysisTable(EnsemblTable):
+    version = '1'
+    depends = [ensembl_analysisFile]
+    ensembl_table = 'analysis'
+
+
+class ensembl_exon_transcriptOfficial(EnsemblExternalFile):
+    ensembl_table = 'exon_transcript'
+    pass
+
+
+class ensembl_exon_transcriptFile(LocalFile):
+    version = '1'
+    depends = [ensembl_exon_transcriptOfficial]
+    extension = 'txt.gz'
+
+
+class ensembl_exon_transcriptTable(EnsemblTable):
+    version = '1'
+    depends = [ensembl_exon_transcriptFile]
+    ensembl_table = 'exon_transcript'
+
+
+class ensembl_transcriptOfficial(EnsemblExternalFile):
+    ensembl_table = 'transcript'
+    pass
+
+
+class ensembl_transcriptFile(LocalFile):
+    version = '1'
+    depends = [ensembl_transcriptOfficial]
+    extension = 'txt.gz'
+
+
+class ensembl_transcriptTable(EnsemblTable):
+    version = '1'
+    depends = [ensembl_transcriptFile]
+    ensembl_table = 'transcript'
+
+
+class ensembl_translationOfficial(EnsemblExternalFile):
+    ensembl_table = 'translation'
+    pass
+
+
+class ensembl_translationFile(LocalFile):
+    version = '1'
+    depends = [ensembl_translationOfficial]
+    extension = 'txt.gz'
+
+
+class ensembl_translationTable(EnsemblTable):
+    version = '1'
+    depends = [ensembl_translationFile]
+    ensembl_table = 'translation'
+
+
+class ensembl_protein_featureOfficial(EnsemblExternalFile):
+    ensembl_table = 'protein_feature'
+    pass
+
+
+class ensembl_protein_featureFile(LocalFile):
+    version = '1'
+    depends = [ensembl_protein_featureOfficial]
+    extension = 'txt.gz'
+
+
+class ensembl_protein_featureTable(EnsemblTable):
+    version = '1'
+    depends = [ensembl_protein_featureFile]
+    ensembl_table = 'protein_feature'
+
+
+class ensembl_transcript_attribOfficial(EnsemblExternalFile):
+    ensembl_table = 'transcript_attrib'
+    pass
+
+
+class ensembl_transcript_attribFile(LocalFile):
+    version = '1'
+    depends = [ensembl_transcript_attribOfficial]
+    extension = 'txt.gz'
+
+
+class ensembl_transcript_attribTable(EnsemblTable):
+    version = '1'
+    depends = [ensembl_transcript_attribFile]
+    ensembl_table = 'transcript_attrib'
+
+
+class ensembl_gene_attribOfficial(EnsemblExternalFile):
+    ensembl_table = 'gene_attrib'
+    pass
+
+
+class ensembl_gene_attribFile(LocalFile):
+    version = '1'
+    depends = [ensembl_gene_attribOfficial]
+    extension = 'txt.gz'
+
+
+class ensembl_gene_attribTable(EnsemblTable):
+    version = '1'
+    depends = [ensembl_gene_attribFile]
+    ensembl_table = 'gene_attrib'
+
+
+class ensembl_attrib_typeOfficial(EnsemblExternalFile):
+    ensembl_table = 'attrib_type'
+    pass
+
+
+class ensembl_attrib_typeFile(LocalFile):
+    version = '1'
+    depends = [ensembl_attrib_typeOfficial]
+    extension = 'txt.gz'
+
+
+class ensembl_attrib_typeTable(EnsemblTable):
+    version = '1'
+    depends = [ensembl_attrib_typeFile]
+    ensembl_table = 'attrib_type'
+
+
+class ensembl_seq_regionOfficial(EnsemblExternalFile):
+    ensembl_table = 'seq_region'
+    pass
+
+
+class ensembl_seq_regionFile(LocalFile):
+    version = '1'
+    depends = [ensembl_seq_regionOfficial]
+    extension = 'txt.gz'
+
+
+class ensembl_seq_regionTable(EnsemblTable):
+    version = '1'
+    depends = [ensembl_seq_regionFile]
+    ensembl_table = 'seq_region'
+
+
+class ensembl_geneOfficial(EnsemblExternalFile):
+    ensembl_table = 'gene'
+    pass
+
+
+class ensembl_geneFile(LocalFile):
+    version = '1'
+    depends = [ensembl_geneOfficial]
+    extension = 'txt.gz'
+
+
+class ensembl_geneTable(EnsemblTable):
+    version = '1'
+    depends = [ensembl_geneFile]
+    ensembl_table = 'gene'
