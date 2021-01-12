@@ -73,8 +73,19 @@ class DropCommand(AppCommand):
         self.parser.add_argument('dataset')
 
     def run(self):
-        ds = getattr(registry, self.app.args.dataset)()
-        ds.drop()
+        classes = [ds_class for ds_class in registry.TYPE_REGISTRY.keys()
+                    if fnmatch.fnmatch(ds_class, self.app.args.dataset)
+                    if ('Table' in ds_class)] # reasonable to drop glob Tables
+
+        if not classes:
+            print("No Tables in registry matching %s." % self.app.args.dataset)
+            # FIXME: exit with note to logger
+        else:
+            print("Tables to drop: ", classes)
+            for ds_name in classes:
+                ds = getattr(registry, ds_name)()
+                ds.drop()
+                print("Dropped %s" % ds_name)
 
 
 class ImportCommand(AppCommand):
@@ -105,7 +116,8 @@ class ImportCommand(AppCommand):
     def run(self):
 
         classes = [ds_class for ds_class in registry.TYPE_REGISTRY.keys()
-                    if fnmatch.fnmatch(ds_class, self.app.args.dataset)]
+                    if fnmatch.fnmatch(ds_class, self.app.args.dataset)
+                    if ('Table' in ds_class)] # reasonable to import glob Tables
 
         if not classes:
             print("No Tables in registry matching %s." % self.app.args.dataset)
@@ -140,6 +152,10 @@ class StatusCommand(AppCommand):
     name = "status"
     help = "describe import and archive status of a dataset"
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.parser.add_argument('dataset', nargs='?')
+
     def run(self):
         def yesno(val):
             return 'yes' if val else 'no'
@@ -158,7 +174,12 @@ class StatusCommand(AppCommand):
         print(fmt_string.format(**dict(zip(columns, columns))))
 
         # content lines
+        token = self.app.args.dataset
+        classes = [ds_class for ds_class in registry.TYPE_REGISTRY.keys()
+                    if token if fnmatch.fnmatch(ds_class, token) if ('Table' in ds_class)]
         for _, hdataset in sorted(load_table_registry().items()):
+            if token is not None and hdataset.type not in classes:
+                continue
             row = [
                 hdataset.type,
                 hdataset.formula['version'], # TODO: consider adding to historical dataset as atribute
