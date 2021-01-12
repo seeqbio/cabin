@@ -8,8 +8,9 @@ from biodb import AbstractAttribute
 from biodb.io import logger
 from biodb.io import wget
 from biodb.io import gunzip
+from biodb.io import read_fasta
 
-from biodb.data.db import ImportedTable
+from biodb.data.db import RecordByRecordImportedTable, ImportedTable
 from biodb.data.files import LocalFile, ExternalFile
 from biodb.mysql import MYSQL
 
@@ -286,3 +287,39 @@ class ensembl_geneTable(EnsemblTable):
     version = '1'
     depends = [ensembl_geneFile]
     ensembl_table = 'gene'
+
+
+class ensembl_cdnaOfficial(ExternalFile):
+    version = '94'
+
+    @property
+    def url(self):
+        return 'ftp://ftp.ensembl.org/pub/release-{v}/fasta/homo_sapiens/cdna/Homo_sapiens.GRCh38.cdna.all.fa.gz'.format(v=self.version)
+
+
+class ensembl_cdnaFile(LocalFile):
+    version = '1'
+    depends = [ensembl_cdnaOfficial]
+    extension = 'gz'
+
+
+class ensembl_cdnaTable(RecordByRecordImportedTable):
+    version = '1'
+    depends = [ensembl_cdnaFile]
+
+    columns = ['ensembl_transcript', 'cdna']
+
+    @property
+    def schema(self):
+        return """
+            CREATE TABLE `{table}` (
+                ensembl_transcript VARCHAR(255) NOT NULL UNIQUE,
+                cdna               LONGTEXT NOT NULL
+            );
+        """
+
+    def read(self):
+        for name, sequence in read_fasta(self.input.path, gzipped=True):
+            # drop the ".X" version
+            yield {'ensembl_transcript': name.split('.')[0],
+                   'cdna': sequence}
