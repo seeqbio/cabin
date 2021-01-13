@@ -22,7 +22,17 @@ from biodb.mysql import MYSQL
 from biodb.mysql import READER
 
 from biodb.data import registry
+from biodb.data.db import ImportedTable
 from biodb.data.registry import load_table_registry
+
+
+def glob_matching_classes(dataset):
+    matching_classes = []
+    for ds_class in registry.TYPE_REGISTRY:
+        if (issubclass(registry.TYPE_REGISTRY[ds_class], ImportedTable)):
+            if fnmatch.fnmatch(ds_class, dataset):
+                matching_classes.append(ds_class)
+    return matching_classes
 
 
 class AppCommand(ABC):
@@ -73,19 +83,16 @@ class DropCommand(AppCommand):
         self.parser.add_argument('dataset')
 
     def run(self):
-        classes = [ds_class for ds_class in registry.TYPE_REGISTRY.keys()
-                    if fnmatch.fnmatch(ds_class, self.app.args.dataset)
-                    if ('Table' in ds_class)] # reasonable to drop glob Tables
 
         if not classes:
-            print("No Tables in registry matching %s." % self.app.args.dataset)
-            # FIXME: exit with note to logger
+            logger.error("No Tables in registry matching %s." % self.app.args.dataset)
+            return 1
         else:
-            print("Tables to drop: ", classes)
+            logger.info("Tables to drop: ", classes)
             for ds_name in classes:
                 ds = getattr(registry, ds_name)()
                 ds.drop()
-                print("Dropped %s" % ds_name)
+                logger.info("Dropped %s" % ds_name)
 
 
 class ImportCommand(AppCommand):
@@ -115,9 +122,7 @@ class ImportCommand(AppCommand):
 
     def run(self):
 
-        classes = [ds_class for ds_class in registry.TYPE_REGISTRY.keys()
-                    if fnmatch.fnmatch(ds_class, self.app.args.dataset)
-                    if ('Table' in ds_class)] # reasonable to import glob Tables
+        classes = glob_matching_classes(self.app.args.dataset)
 
         if not classes:
             print("No Tables in registry matching %s." % self.app.args.dataset)
@@ -174,11 +179,10 @@ class StatusCommand(AppCommand):
         print(fmt_string.format(**dict(zip(columns, columns))))
 
         # content lines
-        token = self.app.args.dataset
-        classes = [ds_class for ds_class in registry.TYPE_REGISTRY.keys()
-                    if token if fnmatch.fnmatch(ds_class, token) if ('Table' in ds_class)]
+        classes = glob_matching_classes(self.app.args.dataset)
+
         for _, hdataset in sorted(load_table_registry().items()):
-            if token is not None and hdataset.type not in classes:
+            if self.app.args.dataset is not None and hdataset.type not in classes:
                 continue
             row = [
                 hdataset.type,
