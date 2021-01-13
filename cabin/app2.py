@@ -1,6 +1,7 @@
 import sys
 import logging
 import argparse
+import fnmatch
 from abc import ABC
 from abc import abstractmethod
 from collections import OrderedDict
@@ -21,7 +22,17 @@ from biodb.mysql import MYSQL
 from biodb.mysql import READER
 
 from biodb.data import registry
+from biodb.data.db import ImportedTable
 from biodb.data.registry import load_table_registry
+
+
+def glob_matching_classes(dataset):
+    matching_classes = []
+    for ds_class in registry.TYPE_REGISTRY:
+        if (issubclass(registry.TYPE_REGISTRY[ds_class], ImportedTable)):
+            if fnmatch.fnmatch(ds_class, dataset):
+                matching_classes.append(ds_class)
+    return matching_classes
 
 
 class AppCommand(ABC):
@@ -72,8 +83,16 @@ class DropCommand(AppCommand):
         self.parser.add_argument('dataset')
 
     def run(self):
-        ds = getattr(registry, self.app.args.dataset)()
-        ds.drop()
+
+        if not classes:
+            logger.error("No Tables in registry matching %s." % self.app.args.dataset)
+            return 1
+        else:
+            logger.info("Tables to drop: ", classes)
+            for ds_name in classes:
+                ds = getattr(registry, ds_name)()
+                ds.drop()
+                logger.info("Dropped %s" % ds_name)
 
 
 class ImportCommand(AppCommand):
@@ -102,15 +121,24 @@ class ImportCommand(AppCommand):
         return before_table_name, after
 
     def run(self):
-        ds = getattr(registry, self.app.args.dataset)()
-        # HACK: Dev tool for comparison, rm after all datasets are ported
-        compare_on = self.app.args.compare
-        ds.produce_recursive(dry_run=self.app.args.dry_run)
-        if compare_on:
-            before, after = self.get_tables(ds)
-            comparison = MYSQL.compare_tables(before, after, compare_on)
-            print('* before:\t%s\n* after:\t%s\n* using:\t%s' % (before, after, compare_on))
-            print('\n'.join(key + ':\t' + str(value) for key, value in comparison.items()))
+
+        classes = glob_matching_classes(self.app.args.dataset)
+
+        if not classes:
+            print("No Tables in registry matching %s." % self.app.args.dataset)
+            # FIXME: exit with note to logger
+        else:
+            print("Tables to import: ", classes)
+        for ds_name in classes:
+            ds = getattr(registry, ds_name)()
+            # HACK: Dev tool for comparison, rm after all datasets are ported
+            compare_on = self.app.args.compare
+            ds.produce_recursive(dry_run=self.app.args.dry_run)
+            if compare_on:
+                before, after = self.get_tables(ds)
+                comparison = MYSQL.compare_tables(before, after, compare_on)
+                print('* before:\t%s\n* after:\t%s\n* using:\t%s' % (before, after, compare_on))
+                print('\n'.join(key + ':\t' + str(value) for key, value in comparison.items()))
 
 
 class ShellCommand(AppCommand):
@@ -128,6 +156,10 @@ class ShellCommand(AppCommand):
 class StatusCommand(AppCommand):
     name = "status"
     help = "describe import and archive status of a dataset"
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.parser.add_argument('dataset', nargs='?')
 
     def run(self):
         def yesno(val):
@@ -147,7 +179,11 @@ class StatusCommand(AppCommand):
         print(fmt_string.format(**dict(zip(columns, columns))))
 
         # content lines
+        classes = glob_matching_classes(self.app.args.dataset)
+
         for _, hdataset in sorted(load_table_registry().items()):
+            if self.app.args.dataset is not None and hdataset.type not in classes:
+                continue
             row = [
                 hdataset.type,
                 hdataset.formula['version'], # TODO: consider adding to historical dataset as atribute
