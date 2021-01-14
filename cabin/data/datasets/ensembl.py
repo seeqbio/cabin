@@ -34,8 +34,7 @@ def ensembl_schema(version):
 
 
 class EnsemblExternalFile(ExternalFile):
-    version = '94'  # TODO: do we want to keep this here or in indiv. subclasses
-    # depends definied in subclasses bc name specific
+    version = '94'
 
     @property
     def url(self):
@@ -83,10 +82,6 @@ class EnsemblTable(ImportedTable):
             raise BiodbError('Failed to find table "%s" in Ensembl schema!' % self.ensembl_table)
 
     def import_table(self, cursor):
-        pass
-
-    def produce(self):
-        # replcates produce of ImportedTable to create table based on schem specifications???????
         with NamedTemporaryFile('w') as temp:
             # NOTE if you don't unzip LOAD DATA does not complain and just puts
             # seemingly OK junk in the table!
@@ -94,17 +89,15 @@ class EnsemblTable(ImportedTable):
             # LOAD DATA LOCAL INFILE needs allow_local_infile=True
             # https://dev.mysql.com/doc/connector-python/en/connector-python-connectargs.html
             with MYSQL.transaction(connection_kw={'allow_local_infile': True}) as cursor:
-                cursor.create_table(self.table_name, self.schema)
                 cursor.execute(r"""
                     LOAD DATA LOCAL INFILE '{path}'
                     INTO TABLE `{table}`
                 """.format(path=temp.name, table=self.table_name))
-                self._update_system_table(cursor)  # This is the only changed line from old ensembl base class
 
 
+# ========    exon    ========
 class ensembl_exonOfficial(EnsemblExternalFile):
     ensembl_table = 'exon'
-    pass
 
 
 class ensembl_exonFile(LocalFile):
@@ -119,9 +112,9 @@ class ensembl_exonTable(EnsemblTable):
     ensembl_table = 'exon'
 
 
+# =======   analysis     =======
 class ensembl_analysisOfficial(EnsemblExternalFile):
     ensembl_table = 'analysis'
-    pass
 
 
 class ensembl_analysisFile(LocalFile):
@@ -136,9 +129,9 @@ class ensembl_analysisTable(EnsemblTable):
     ensembl_table = 'analysis'
 
 
+# =====  exon_transcript   =====
 class ensembl_exon_transcriptOfficial(EnsemblExternalFile):
     ensembl_table = 'exon_transcript'
-    pass
 
 
 class ensembl_exon_transcriptFile(LocalFile):
@@ -153,9 +146,9 @@ class ensembl_exon_transcriptTable(EnsemblTable):
     ensembl_table = 'exon_transcript'
 
 
+# ======   transcript   ======
 class ensembl_transcriptOfficial(EnsemblExternalFile):
     ensembl_table = 'transcript'
-    pass
 
 
 class ensembl_transcriptFile(LocalFile):
@@ -170,9 +163,9 @@ class ensembl_transcriptTable(EnsemblTable):
     ensembl_table = 'transcript'
 
 
+# ======   translation   ======
 class ensembl_translationOfficial(EnsemblExternalFile):
     ensembl_table = 'translation'
-    pass
 
 
 class ensembl_translationFile(LocalFile):
@@ -187,9 +180,9 @@ class ensembl_translationTable(EnsemblTable):
     ensembl_table = 'translation'
 
 
+# =====  protein_feauture   ======
 class ensembl_protein_featureOfficial(EnsemblExternalFile):
     ensembl_table = 'protein_feature'
-    pass
 
 
 class ensembl_protein_featureFile(LocalFile):
@@ -204,9 +197,9 @@ class ensembl_protein_featureTable(EnsemblTable):
     ensembl_table = 'protein_feature'
 
 
+# =====  transcripti_attrib   =====
 class ensembl_transcript_attribOfficial(EnsemblExternalFile):
     ensembl_table = 'transcript_attrib'
-    pass
 
 
 class ensembl_transcript_attribFile(LocalFile):
@@ -221,9 +214,9 @@ class ensembl_transcript_attribTable(EnsemblTable):
     ensembl_table = 'transcript_attrib'
 
 
+# ======    gene_attrib    ======
 class ensembl_gene_attribOfficial(EnsemblExternalFile):
     ensembl_table = 'gene_attrib'
-    pass
 
 
 class ensembl_gene_attribFile(LocalFile):
@@ -238,9 +231,9 @@ class ensembl_gene_attribTable(EnsemblTable):
     ensembl_table = 'gene_attrib'
 
 
+# ======   attrib_type   ======
 class ensembl_attrib_typeOfficial(EnsemblExternalFile):
     ensembl_table = 'attrib_type'
-    pass
 
 
 class ensembl_attrib_typeFile(LocalFile):
@@ -255,9 +248,9 @@ class ensembl_attrib_typeTable(EnsemblTable):
     ensembl_table = 'attrib_type'
 
 
+# ======   seq_region    ======
 class ensembl_seq_regionOfficial(EnsemblExternalFile):
     ensembl_table = 'seq_region'
-    pass
 
 
 class ensembl_seq_regionFile(LocalFile):
@@ -272,9 +265,9 @@ class ensembl_seq_regionTable(EnsemblTable):
     ensembl_table = 'seq_region'
 
 
+# ======     gene     ======
 class ensembl_geneOfficial(EnsemblExternalFile):
     ensembl_table = 'gene'
-    pass
 
 
 class ensembl_geneFile(LocalFile):
@@ -289,6 +282,7 @@ class ensembl_geneTable(EnsemblTable):
     ensembl_table = 'gene'
 
 
+# ======     cdna     ======
 class ensembl_cdnaOfficial(ExternalFile):
     version = '94'
 
