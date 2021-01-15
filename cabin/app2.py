@@ -84,6 +84,7 @@ class DropCommand(AppCommand):
 
     def run(self):
 
+        classes = glob_matching_classes(self.app.args.dataset)
         if not classes:
             logger.error("No Tables in registry matching %s." % self.app.args.dataset)
             return 1
@@ -125,8 +126,8 @@ class ImportCommand(AppCommand):
         classes = glob_matching_classes(self.app.args.dataset)
 
         if not classes:
-            print("No Tables in registry matching %s." % self.app.args.dataset)
-            # FIXME: exit with note to logger
+            logger.error("No Tables in registry matching %s." % self.app.args.dataset)
+            return 1
         else:
             print("Tables to import: ", classes)
         for ds_name in classes:
@@ -137,8 +138,8 @@ class ImportCommand(AppCommand):
             if compare_on:
                 before, after = self.get_tables(ds)
                 comparison = MYSQL.compare_tables(before, after, compare_on)
-                print('* before:\t%s\n* after:\t%s\n* using:\t%s' % (before, after, compare_on))
-                print('\n'.join(key + ':\t' + str(value) for key, value in comparison.items()))
+                logger.info('* before:\t%s\n* after:\t%s\n* using:\t%s' % (before, after, compare_on))
+                logger.info('\n'.join(key + ':\t' + str(value) for key, value in comparison.items()))
 
 
 class ShellCommand(AppCommand):
@@ -179,7 +180,10 @@ class StatusCommand(AppCommand):
         print(fmt_string.format(**dict(zip(columns, columns))))
 
         # content lines
-        classes = glob_matching_classes(self.app.args.dataset)
+        if self.app.args.dataset is not None:
+            classes = glob_matching_classes(self.app.args.dataset)
+        else:
+            classes = []
 
         for _, hdataset in sorted(load_table_registry().items()):
             if self.app.args.dataset is not None and hdataset.type not in classes:
