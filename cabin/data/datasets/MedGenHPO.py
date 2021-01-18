@@ -8,27 +8,27 @@ from biodb.data.files import (
 )
 
 
-class medgenHPOOfficial(FTPTimestampedFile):
-    version = '2020-12-23'
+class MedGenHPOOfficial(FTPTimestampedFile):
+    version = '2021-01-13'
     ftp_server = 'ftp.ncbi.nlm.nih.gov'
     ftp_path = '/pub/medgen/MedGen_HPO_Mapping.txt.gz'  # Note: despite .txt, file is still RRF, ie: `|` seperated
 
 
-class medgenHPOS3Mirror(S3MirrorFile):
+class MedGenHPOS3Mirror(S3MirrorFile):
     version = '1'
-    depends = [medgenHPOOfficial]
+    depends = [MedGenHPOOfficial]
     extension = 'gz'
 
 
-class medgenHPOFile(S3MirroredLocalFile):
+class MedGenHPOFile(S3MirroredLocalFile):
     version = '1'
-    depends = [medgenHPOS3Mirror]
+    depends = [MedGenHPOS3Mirror]
     extension = 'gz'
 
 
-class medgenHPOTable(RecordByRecordImportedTable):
+class MedGenHPOTable(RecordByRecordImportedTable):
     version = '1'
-    depends = [medgenHPOFile]
+    depends = [MedGenHPOFile]
 
     @property
     def schema(self):

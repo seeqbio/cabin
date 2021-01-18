@@ -8,27 +8,27 @@ from biodb.data.files import (
 )
 
 
-class medgenNamesOfficial(FTPTimestampedFile):
-    version = '2020-12-23'
+class MedGenNamesOfficial(FTPTimestampedFile):
+    version = '2021-01-13'
     ftp_server = 'ftp.ncbi.nlm.nih.gov'
     ftp_path = '/pub/medgen/NAMES.RRF.gz'
 
 
-class medgenNamesS3Mirror(S3MirrorFile):
+class MedGenNamesS3Mirror(S3MirrorFile):
     version = '1'
-    depends = [medgenNamesOfficial]
+    depends = [MedGenNamesOfficial]
     extension = 'gz'
 
 
-class medgenNamesFile(S3MirroredLocalFile):
+class MedGenNamesFile(S3MirroredLocalFile):
     version = '1'
-    depends = [medgenNamesS3Mirror]
+    depends = [MedGenNamesS3Mirror]
     extension = 'gz'
 
 
-class medgenNamesTable(RecordByRecordImportedTable):
+class MedGenNamesTable(RecordByRecordImportedTable):
     version = '1'
-    depends = [medgenNamesFile]
+    depends = [MedGenNamesFile]
 
     @property
     def schema(self):

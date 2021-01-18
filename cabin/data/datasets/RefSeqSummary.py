@@ -7,28 +7,28 @@ from biodb.data.files import (
 )
 
 
-class refseq_summaryOfficial(FTPTimestampedFile):
+class RefSeqSummaryOfficial(FTPTimestampedFile):
     version = '2020-08-18'  # Not updated daily
 
     ftp_server = 'hgdownload.soe.ucsc.edu'
     ftp_path = '/goldenPath/hgFixed/database/refSeqSummary.txt.gz'
 
 
-class refseq_summaryS3Mirror(S3MirrorFile):
+class RefSeqSummaryS3Mirror(S3MirrorFile):
     version = '1'
-    depends = [refseq_summaryOfficial]
+    depends = [RefSeqSummaryOfficial]
     extension = 'gz'
 
 
-class refseq_summaryFile(S3MirroredLocalFile):
+class RefSeqSummaryFile(S3MirroredLocalFile):
     version = '1'
-    depends = [refseq_summaryS3Mirror]
+    depends = [RefSeqSummaryS3Mirror]
     extension = 'gz'
 
 
-class refseq_summaryTable(RecordByRecordImportedTable):
+class RefSeqSummaryTable(RecordByRecordImportedTable):
     version = '1'
-    depends = [refseq_summaryFile]
+    depends = [RefSeqSummaryFile]
 
     columns = ['refseq_transcript', 'summary']
 

@@ -96,53 +96,53 @@ class EnsemblTable(ImportedTable):
 
 
 # ========    exon    ========
-class ensembl_exonOfficial(EnsemblExternalFile):
+class EnsemblExonOfficial(EnsemblExternalFile):
     ensembl_table = 'exon'
 
 
-class ensembl_exonFile(LocalFile):
+class EnsemblExonFile(LocalFile):
     version = '1'
-    depends = [ensembl_exonOfficial]
+    depends = [EnsemblExonOfficial]
     extension = 'txt.gz'
 
 
-class ensembl_exonTable(EnsemblTable):
+class EnsemblExonTable(EnsemblTable):
     version = '1'
-    depends = [ensembl_exonFile]
+    depends = [EnsemblExonFile]
     ensembl_table = 'exon'
 
 
 # =======   analysis     =======
-class ensembl_analysisOfficial(EnsemblExternalFile):
+class EnsemblAnalysisOfficial(EnsemblExternalFile):
     ensembl_table = 'analysis'
 
 
-class ensembl_analysisFile(LocalFile):
+class EnsemblAnalysisFile(LocalFile):
     version = '1'
-    depends = [ensembl_analysisOfficial]
+    depends = [EnsemblAnalysisOfficial]
     extension = 'txt.gz'
 
 
-class ensembl_analysisTable(EnsemblTable):
+class EnsemblAnalysisTable(EnsemblTable):
     version = '1'
-    depends = [ensembl_analysisFile]
+    depends = [EnsemblAnalysisFile]
     ensembl_table = 'analysis'
 
 
 # =====  exon_transcript   =====
-class ensembl_exon_transcriptOfficial(EnsemblExternalFile):
+class EnsemblExon_transcriptOfficial(EnsemblExternalFile):
     ensembl_table = 'exon_transcript'
 
 
-class ensembl_exon_transcriptFile(LocalFile):
+class EnsemblExon_transcriptFile(LocalFile):
     version = '1'
-    depends = [ensembl_exon_transcriptOfficial]
+    depends = [EnsemblExon_transcriptOfficial]
     extension = 'txt.gz'
 
 
-class ensembl_exon_transcriptTable(EnsemblTable):
+class EnsemblExon_transcriptTable(EnsemblTable):
     version = '1'
-    depends = [ensembl_exon_transcriptFile]
+    depends = [EnsemblExon_transcriptFile]
     ensembl_table = 'exon_transcript'
 
 
@@ -232,58 +232,58 @@ class ensembl_gene_attribTable(EnsemblTable):
 
 
 # ======   attrib_type   ======
-class ensembl_attrib_typeOfficial(EnsemblExternalFile):
+class EnsemblAttrib_typeOfficial(EnsemblExternalFile):
     ensembl_table = 'attrib_type'
 
 
-class ensembl_attrib_typeFile(LocalFile):
+class EnsemblAttrib_typeFile(LocalFile):
     version = '1'
-    depends = [ensembl_attrib_typeOfficial]
+    depends = [EnsemblAttrib_typeOfficial]
     extension = 'txt.gz'
 
 
-class ensembl_attrib_typeTable(EnsemblTable):
+class EnsemblAttrib_typeTable(EnsemblTable):
     version = '1'
-    depends = [ensembl_attrib_typeFile]
+    depends = [EnsemblAttrib_typeFile]
     ensembl_table = 'attrib_type'
 
 
 # ======   seq_region    ======
-class ensembl_seq_regionOfficial(EnsemblExternalFile):
+class EnsemblSeq_regionOfficial(EnsemblExternalFile):
     ensembl_table = 'seq_region'
 
 
-class ensembl_seq_regionFile(LocalFile):
+class EnsemblSeq_regionFile(LocalFile):
     version = '1'
-    depends = [ensembl_seq_regionOfficial]
+    depends = [EnsemblSeq_regionOfficial]
     extension = 'txt.gz'
 
 
-class ensembl_seq_regionTable(EnsemblTable):
+class EnsemblSeq_regionTable(EnsemblTable):
     version = '1'
-    depends = [ensembl_seq_regionFile]
+    depends = [EnsemblSeq_regionFile]
     ensembl_table = 'seq_region'
 
 
 # ======     gene     ======
-class ensembl_geneOfficial(EnsemblExternalFile):
+class EnsemblGeneOfficial(EnsemblExternalFile):
     ensembl_table = 'gene'
 
 
-class ensembl_geneFile(LocalFile):
+class EnsemblGeneFile(LocalFile):
     version = '1'
-    depends = [ensembl_geneOfficial]
+    depends = [EnsemblGeneOfficial]
     extension = 'txt.gz'
 
 
-class ensembl_geneTable(EnsemblTable):
+class EnsemblGeneTable(EnsemblTable):
     version = '1'
-    depends = [ensembl_geneFile]
+    depends = [EnsemblGeneFile]
     ensembl_table = 'gene'
 
 
 # ======     cdna     ======
-class ensembl_cdnaOfficial(ExternalFile):
+class EnsemblCdnaOfficial(ExternalFile):
     version = '94'
 
     @property
@@ -291,15 +291,15 @@ class ensembl_cdnaOfficial(ExternalFile):
         return 'ftp://ftp.ensembl.org/pub/release-{v}/fasta/homo_sapiens/cdna/Homo_sapiens.GRCh38.cdna.all.fa.gz'.format(v=self.version)
 
 
-class ensembl_cdnaFile(LocalFile):
+class EnsemblCdnaFile(LocalFile):
     version = '1'
-    depends = [ensembl_cdnaOfficial]
+    depends = [EnsemblCdnaOfficial]
     extension = 'gz'
 
 
-class ensembl_cdnaTable(RecordByRecordImportedTable):
+class EnsemblCdnaTable(RecordByRecordImportedTable):
     version = '1'
-    depends = [ensembl_cdnaFile]
+    depends = [EnsemblCdnaFile]
 
     columns = ['ensembl_transcript', 'cdna']
 
