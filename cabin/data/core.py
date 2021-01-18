@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from collections import OrderedDict
 
 from biodb.mysql import MYSQL
+from biodb import logger
 
 
 def calculate_sha(obj, num_chars=8):
@@ -113,16 +114,16 @@ class Dataset(ABC):
     # override any of them.
     def produce_recursive(self, dry_run=False):
         if self.exists():
-            print('--> already exists: %s' % self.description)
+            logger.error('--> already exists: %s' % self.description)
         else:
-            print('--> to be produced: %s' % self.description)
+            logger.info('--> to be produced: %s' % self.description)
 
             for inp in self.inputs.values():
                 # recurse
                 inp.produce_recursive(dry_run=dry_run)
 
             if not dry_run:
-                print('--> producing:      %s' % self.description)
+                logger.info('--> producing:      %s' % self.description)
                 self.produce()
 
     def root_versions(self):

@@ -91,7 +91,7 @@ class _MySQL:
                         idx, time_s, query = row
                         time_ms = '{t} ms'.format(t=round(time_s * 1000, 2)).ljust(10)
                         query = '\n\t\t\t'.join(textwrap.wrap(query, 80))
-                        print('  {time}{query}'.format(idx=idx, time=time_ms, query=query))
+                        logger.info('  {time}{query}'.format(idx=idx, time=time_ms, query=query))
                 cursor.close()
 
         cnx.cursor = cursor_wrapper
@@ -141,7 +141,7 @@ class _MySQL:
             logger.info('granted "%s" on "%s" to user "%s"' % (grant, database, user))
 
         def _add_system_table():
-            print('--> initializing database')
+            logger.info('--> initializing database')
             query = ("""
                 USE {db};
                 CREATE TABLE IF NOT EXISTS system (

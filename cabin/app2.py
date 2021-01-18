@@ -63,7 +63,7 @@ class ListCommand(AppCommand):
     help = "list all datasets for which a handler exists"
 
     def run(self):
-        print('\n'.join(c for c in registry.TYPE_REGISTRY))
+        logger.info('\n'.join(c for c in registry.TYPE_REGISTRY))
 
 
 class DropUsersCommand(AppCommand):
@@ -106,7 +106,7 @@ class ImportCommand(AppCommand):
             logger.error("No Tables in registry matching %s." % self.app.args.dataset)
             return 1
         else:
-            print("Tables to import: ", classes)
+            logger.info("Tables to import: %s" % classes)
         for ds_name in classes:
             ds = getattr(registry, ds_name)()
             ds.produce_recursive(dry_run=self.app.args.dry_run)
@@ -136,9 +136,9 @@ class StatusCommand(AppCommand):
             return 'yes' if val else 'no'
 
         width_by_column = OrderedDict([
-            ('type',         25),
-            ('version',      10),
-            ('depends',      32),
+            ('type',         32),
+            ('version',      9),
+            ('depends',      38),
             ('latest',       10),
             ('Full name',    50),
         ])
@@ -146,7 +146,7 @@ class StatusCommand(AppCommand):
         fmt_string = ''.join('{%s:%d}' % (col, width) for col, width in width_by_column.items())
 
         # header line
-        print(fmt_string.format(**dict(zip(columns, columns))))
+        logger.info(fmt_string.format(**dict(zip(columns, columns))))
 
         # content lines
         if self.app.args.dataset is not None:
@@ -165,7 +165,7 @@ class StatusCommand(AppCommand):
                 hdataset.name,
             ]
             row = [str(x) if x else '' for x in row]
-            print(fmt_string.format(**dict(zip(columns, row))))
+            logger.info(fmt_string.format(**dict(zip(columns, row))))
 
 
 class App:
