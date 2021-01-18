@@ -97,22 +97,6 @@ class ImportCommand(AppCommand):
         super().__init__(**kwargs)
         self.parser.add_argument('dataset')
         self.parser.add_argument('-n', '--dry-run', action='store_true', help="do not actually import, just show a synopsis")
-        self.parser.add_argument('--compare', default=None, help="Compare biodb to biodb2 import of the same table")
-
-    def get_tables(self, ds_obj):
-        version = ds_obj.root_versions()[0]
-        root_name = ds_obj.type.split('Table')[0]
-        import_old_cmd = ['bin/biodb', 'import', root_name, version]
-        after = ds_obj.table_name
-
-        # locally import before table:
-        import subprocess
-        print("Locally importing before table", import_old_cmd)
-        proc = subprocess.Popen(import_old_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = proc.communicate()
-        before_table_name = root_name + "::" + str(stderr).split("Importing ")[1].split("\\n")[0].split('"')[3]
-        # FIXME: consider proc.returncode
-        return before_table_name, after
 
     def run(self):
 
@@ -125,15 +109,7 @@ class ImportCommand(AppCommand):
             print("Tables to import: ", classes)
         for ds_name in classes:
             ds = getattr(registry, ds_name)()
-            # HACK: Dev tool for comparison, rm after all datasets are ported
-            compare_on = self.app.args.compare
             ds.produce_recursive(dry_run=self.app.args.dry_run)
-            if compare_on:
-                before, after = self.get_tables(ds)
-                comparison = MYSQL.compare_tables(before, after, compare_on)
-                logger.info('* before:\t%s\n* after:\t%s\n* using:\t%s' % (before, after, compare_on))
-                logger.info('\n'.join(key + ':\t' + str(value) for key, value in comparison.items()))
-
 
 class ShellCommand(AppCommand):
     name = "shell"
