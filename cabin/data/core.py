@@ -3,6 +3,8 @@ import hashlib
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 
+from biodb.mysql import MYSQL
+
 
 def calculate_sha(obj, num_chars=8):
     m = hashlib.sha256()
@@ -212,3 +214,16 @@ class HistoricalDataset:
         cls = TYPE_REGISTRY[type_]
         latest = cls()
         return latest.formula_sha == self.formula_sha
+
+    # Copied from biodb.db for ImportedTable
+    def sql_drop_table(self):
+        return 'DROP TABLE IF EXISTS `{table}`;'.format(table=self.name)
+
+    @property
+    def sql_drop_from_system(self):
+        return 'DELETE FROM system WHERE name="{table}";'.format(table=self.name)
+
+    def drop(self):
+        with MYSQL.transaction() as cursor:
+            cursor.execute(self.sql_drop_table())
+            cursor.execute(self.sql_drop_from_system)
