@@ -83,20 +83,17 @@ class DropCommand(AppCommand):
         self.parser.add_argument('dataset')
 
     def run(self):
-        # select classes that match glob, registry only (not table names)
-        classes = glob_matching_classes(self.app.args.dataset)
-        if not classes:
+        if "*" not in self.app.args.dataset:
             table_name = self.app.args.dataset
             ds_name = table_name.split(":")[0]
-            logger.info("Table to drop: %s." % table_name)
+            logger.info("Table to drop matching wildcard: %s." % table_name)
             ds = getattr(registry, ds_name)()
             ds.drop()
-            logger.info("Dropped %s" % table_name)
+            logger.info("Dropping table: %s" % table_name)
         else:
-            logger.info("Datasets matching wildcard: %s " % classes)
-            for _, hdataset in sorted(load_table_registry().items()):
-                if hdataset.type in classes or hdataset.name == self.app.args.dataset:
-                    logger.info("Dropping table: %s." % hdataset.name)
+            for _, hdataset in load_table_registry().items():
+                if fnmatch.fnmatch(hdataset.type, self.app.args.dataset):
+                    logger.info("Dropping table: %s" % hdataset.name)
                     hdataset.drop()
 
 
