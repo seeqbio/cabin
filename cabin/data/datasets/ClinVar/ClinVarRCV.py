@@ -46,7 +46,7 @@ class ClinVarRCVTable(RecordByRecordImportedTable):
                 rcv_accession              VARCHAR(255)   PRIMARY KEY,
                 rcv_clinsig                VARCHAR(1023)  NOT NULL,
                 variation_id               VARCHAR(255)   NOT NULL,
-                evidence_pmids             VARCHAR(5844)  NULL,
+                evidence_pmids             VARCHAR(5844)  NOT NULL,
                 rcv_traits                 LONGTEXT       NOT NULL,
                 mesh_ids                   VARCHAR(255)   NOT NULL,  -- eg: MESH:D008375|MESH:D008376
                 medgen_ids                 VARCHAR(2555)  NOT NULL,  -- eg: MedGen:C0024776|MedGen:CN51720
@@ -71,8 +71,6 @@ class ClinVarRCVTable(RecordByRecordImportedTable):
                     variation_id = rcv.xpath('./MeasureSet')[0].get('ID')
                 except IndexError:
                     continue
-                finally:
-                    xml_element_clear_memory(rcv)
 
                 try:
                     evidence_pmids = set(e.text for e in rcv.xpath('./ObservedIn/ObservedData/Citation/ID[@Source="PubMed"]'))
