@@ -83,17 +83,10 @@ class DropCommand(AppCommand):
         self.parser.add_argument('dataset')
 
     def run(self):
-
-        classes = glob_matching_classes(self.app.args.dataset)
-        if not classes:
-            logger.error("No Tables in registry matching %s." % self.app.args.dataset)
-            return 1
-        else:
-            logger.info("Tables to drop: ", classes)
-            for ds_name in classes:
-                ds = getattr(registry, ds_name)()
-                ds.drop()
-                logger.info("Dropped %s" % ds_name)
+        for _, hdataset in load_table_registry().items():
+            if fnmatch.fnmatch(hdataset.name, self.app.args.dataset):
+                logger.info("Dropping table: %s" % hdataset.name)
+                hdataset.drop()
 
 
 class ImportCommand(AppCommand):
