@@ -26,13 +26,13 @@ from biodb.data.db import ImportedTable
 from biodb.data.registry import load_table_registry
 
 
-def glob_matching_classes(dataset):
-    matching_classes = []
-    for ds_class in registry.TYPE_REGISTRY:
-        if (issubclass(registry.TYPE_REGISTRY[ds_class], ImportedTable)):
-            if fnmatch.fnmatch(ds_class, dataset):
-                matching_classes.append(ds_class)
-    return matching_classes
+def glob_matching_classes(glob):
+    classes = []
+    for cls in registry.TYPE_REGISTRY.values():
+        if (issubclass(cls, ImportedTable)):
+            if fnmatch.fnmatch(cls.__name__, glob):
+                classes.append(cls)
+    return classes
 
 
 class AppCommand(ABC):
@@ -101,14 +101,12 @@ class ImportCommand(AppCommand):
     def run(self):
 
         classes = glob_matching_classes(self.app.args.dataset)
-
         if not classes:
             logger.error("No Tables in registry matching %s." % self.app.args.dataset)
             return 1
-        else:
-            logger.info("Tables to import: %s" % classes)
-        for ds_name in classes:
-            ds = getattr(registry, ds_name)()
+
+        for cls in classes:
+            ds = cls()
             ds.produce_recursive(dry_run=self.app.args.dry_run)
 
 
@@ -130,7 +128,7 @@ class StatusCommand(AppCommand):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.parser.add_argument('dataset', nargs='?')
+        self.parser.add_argument('dataset', nargs='?', default='*')
 
     def run(self):
         def yesno(val):
@@ -147,16 +145,13 @@ class StatusCommand(AppCommand):
         fmt_string = ''.join('{%s:%d}' % (col, width) for col, width in width_by_column.items())
 
         # header line
-        logger.info(fmt_string.format(**dict(zip(columns, columns))))
+        print(fmt_string.format(**dict(zip(columns, columns))))
 
         # content lines
-        if self.app.args.dataset is not None:
-            classes = glob_matching_classes(self.app.args.dataset)
-        else:
-            classes = []
+        class_names = [cls.__name__ for cls in glob_matching_classes(self.app.args.dataset)]
 
         for _, hdataset in sorted(load_table_registry().items()):
-            if self.app.args.dataset is not None and hdataset.type not in classes:
+            if hdataset.type not in class_names:
                 continue
             row = [
                 hdataset.type,
@@ -166,7 +161,7 @@ class StatusCommand(AppCommand):
                 hdataset.name,
             ]
             row = [str(x) if x else '' for x in row]
-            logger.info(fmt_string.format(**dict(zip(columns, row))))
+            print(fmt_string.format(**dict(zip(columns, row))))
 
 
 class App:
