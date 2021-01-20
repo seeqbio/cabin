@@ -45,12 +45,12 @@ class ClinVarSCVTable(RecordByRecordImportedTable):
                 scv_accession              VARCHAR(255)   PRIMARY KEY,
                 variation_id               VARCHAR(255)   NOT NULL,
                 rcv_accession              VARCHAR(255)   NOT NULL,
-                scv_clinsig                VARCHAR(255)  NULL,
-                scv_traits                 LONGTEXT  NOT NULL,
-                evidence_pmids             VARCHAR(5844)   NULL,
-                mesh_ids                   VARCHAR(255)  NOT NULL,  -- eg: MESH:D008375|MESH:D008376
+                scv_clinsig                VARCHAR(255)   NULL,
+                scv_traits                 LONGTEXT       NOT NULL,
+                evidence_pmids             VARCHAR(5844)  NOT NULL,
+                mesh_ids                   VARCHAR(255)   NOT NULL,  -- eg: MESH:D008375|MESH:D008376
                 medgen_ids                 VARCHAR(2555)  NOT NULL,  -- eg: MedGen:C0024776|MedGen:CN51720
-                omim_ids                   VARCHAR(255)  NOT NULL,  -- eg: OMIM:248600|OMIM:PS248600
+                omim_ids                   VARCHAR(255)   NOT NULL,  -- eg: OMIM:248600|OMIM:PS248600
                 hpo_ids                    VARCHAR(1255)  NOT NULL,  -- eg: HP:0010862|HP:0010864
                 INDEX (variation_id)
             );
