@@ -60,11 +60,6 @@ class Dataset(ABC):
     depends = []
 
     @classmethod
-    def validate_class(cls):
-        cls.assert_class_attributes(list, 'depends')
-        cls.assert_class_attributes(str, 'version')
-
-    @classmethod
     def assert_class_attributes(cls, type_, *attrs):
         # TODO make this a class decorator
         for attr in attrs:
