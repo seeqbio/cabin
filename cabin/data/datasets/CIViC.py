@@ -1,8 +1,10 @@
+from pyliftover import LiftOver
+
 from biodb.data.db import RecordByRecordImportedTable
 from biodb.data.files import LocalFile, ExternalFile
-from pyliftover import LiftOver
 from biodb.io import read_xsv
 from biodb import settings
+from biodb import logger
 
 
 class CIViCOfficial(ExternalFile):
@@ -92,13 +94,13 @@ class CIViCTable(RecordByRecordImportedTable):
 
         for row in read_xsv(self.input.path, header_leading_hash=False):
             if not row['chromosome'] or not row['start']:  # it can have a start but not chr, ex: VHL-L158fs (c.473insT)
-                print('Skipping {gene}-{variant}: no genomic coordinates'.format(gene=row['gene'], variant=row['variant']))
+                logger.info('Skipping {gene}-{variant}: no genomic coordinates'.format(gene=row['gene'], variant=row['variant']))
                 continue
             hg19_coor = lo_to19.convert_coordinate(row['chromosome'], int(row['start']))
             hg38_coor = lo_to38.convert_coordinate(hg19_coor[0][0], hg19_coor[0][1])
 
             if not hg38_coor:  # skip if liftover fails, ex: NCOA2 chr8:80
-                print('Skipping {gene}-{variant}: failed to liftover to GRCh38'.format(gene=row['gene'], variant=row['variant']))
+                logger.info('Skipping {gene}-{variant}: failed to liftover to GRCh38'.format(gene=row['gene'], variant=row['variant']))
                 continue
             row['chromosome_37'] = row.pop('chromosome')
             row['start_37'] = row.pop('start')

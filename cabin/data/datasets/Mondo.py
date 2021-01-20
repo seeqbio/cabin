@@ -3,7 +3,7 @@ from biodb.data.files import LocalFile, ExternalFile
 from biodb.io import read_obo
 
 
-class mondoOfficial(ExternalFile):
+class MondoOfficial(ExternalFile):
     version = 'v2020-09-14'
 
     @property
@@ -12,15 +12,15 @@ class mondoOfficial(ExternalFile):
         return 'https://github.com/monarch-initiative/mondo/releases/download/{v}/mondo.obo'.format(v=self.version)
 
 
-class mondoFile(LocalFile):
+class MondoFile(LocalFile):
     version = '1'
-    depends = [mondoOfficial]
+    depends = [MondoOfficial]
     extension = 'obo'
 
 
-class mondoTable(RecordByRecordImportedTable):
+class MondoTable(RecordByRecordImportedTable):
     version = '1'
-    depends = [mondoFile]
+    depends = [MondoFile]
 
     columns = ['name', 'id', 'children', 'parents', 'hpo_ids', 'do_ids', 'omim_ids', 'mesh_ids']
 

@@ -3,7 +3,7 @@ from biodb.data.files import LocalFile, ExternalFile
 from biodb.io import read_obo
 
 
-class hpoOfficial(ExternalFile):
+class HPOOfficial(ExternalFile):
     version = 'v2020-08-11'
 
     @property
@@ -12,15 +12,15 @@ class hpoOfficial(ExternalFile):
         return 'https://raw.githubusercontent.com/obophenotype/human-phenotype-ontology/{v}/hp.obo'.format(v=self.version)
 
 
-class hpoFile(LocalFile):
+class HPOFile(LocalFile):
     version = '1'
-    depends = [hpoOfficial]
+    depends = [HPOOfficial]
     extension = 'obo'
 
 
-class hpoTable(RecordByRecordImportedTable):
+class HPOTable(RecordByRecordImportedTable):
     version = '1'
-    depends = [hpoFile]
+    depends = [HPOFile]
 
     columns = ['name', 'id', 'children', 'parents', 'do_ids']
 

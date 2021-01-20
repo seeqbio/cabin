@@ -9,27 +9,27 @@ from biodb.data.files import (
 )
 
 
-class gene2refseqOfficial(FTPTimestampedFile):
-    version = '2020-12-22'
+class Gene2RefSeqOfficial(FTPTimestampedFile):
+    version = '2021-01-18'
     ftp_server = 'ftp.ncbi.nih.gov'
     ftp_path = '/gene/DATA/gene2refseq.gz'
 
 
-class gene2refseqS3Mirror(S3MirrorFile):
+class Gene2RefSeqS3Mirror(S3MirrorFile):
     version = '1'
-    depends = [gene2refseqOfficial]
+    depends = [Gene2RefSeqOfficial]
     extension = 'gz'
 
 
-class gene2refseqFile(S3MirroredLocalFile):
+class Gene2RefSeqFile(S3MirroredLocalFile):
     version = '1'
-    depends = [gene2refseqS3Mirror]
+    depends = [Gene2RefSeqS3Mirror]
     extension = 'gz'
 
 
-class gene2refseqTable(RecordByRecordImportedTable):
+class Gene2RefSeqTable(RecordByRecordImportedTable):
     version = '1'
-    depends = [gene2refseqFile]
+    depends = [Gene2RefSeqFile]
 
     columns = [
         'refseq_transcript',

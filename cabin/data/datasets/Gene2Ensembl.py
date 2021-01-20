@@ -1,14 +1,14 @@
 from biodb.io import read_xsv
 from biodb.data.db import RecordByRecordImportedTable
 from biodb.data.files import (
-    LocalFile,
     FTPTimestampedFile,
     S3MirrorFile,
     S3MirroredLocalFile
 )
 
+
 class Gene2EnsemblOfficial(FTPTimestampedFile):
-    version = '2020-12-17'
+    version = '2021-01-18'
     ftp_server = 'ftp.ncbi.nih.gov'
     ftp_path = '/gene/DATA/gene2ensembl.gz'
 

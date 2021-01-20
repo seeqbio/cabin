@@ -8,31 +8,31 @@ from biodb.data.files import (
 )
 
 
-class medgenDefnOfficial(FTPTimestampedFile):
-    version = '2020-12-23'
+class MedGenDefnOfficial(FTPTimestampedFile):
+    version = '2021-01-13'
     ftp_server = 'ftp.ncbi.nlm.nih.gov'
     ftp_path = '/pub/medgen/MGDEF.RRF.gz'
 
 
-class medgenDefnS3Mirror(S3MirrorFile):
+class MedGenDefnS3Mirror(S3MirrorFile):
     version = '1'
-    depends = [medgenDefnOfficial]
+    depends = [MedGenDefnOfficial]
     extension = 'gz'
 
 
-class medgenDefnFile(S3MirroredLocalFile):
+class MedGenDefnFile(S3MirroredLocalFile):
     version = '1'
-    depends = [medgenDefnS3Mirror]
+    depends = [MedGenDefnS3Mirror]
     extension = 'gz'
 
 
-class medgenDefnTable(RecordByRecordImportedTable):
+class MedGenDefnTable(RecordByRecordImportedTable):
     """ Medgen definitions.
         Some odd RFF formating for sentences, as-is import with `\r`, affecting terminal display. (eg: C0001529)
         for more format information, see https://ftp.ncbi.nlm.nih.gov/pub/medgen/README.txt
         and https://www.ncbi.nlm.nih.gov/books/NBK9685/"""
     version = '1'
-    depends = [medgenDefnFile]
+    depends = [MedGenDefnFile]
 
     @property
     def schema(self):

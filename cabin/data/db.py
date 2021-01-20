@@ -2,6 +2,7 @@ import json
 from abc import abstractmethod
 
 from biodb import AbstractAttribute
+from biodb import logger
 from biodb.mysql import MYSQL
 from biodb.data.core import Dataset, HistoricalDataset
 
@@ -30,6 +31,7 @@ class ImportedTable(Dataset):
             self._create_table(cursor)
             self.import_table(cursor)
             self._update_system_table(cursor)
+            logger.info("Imported %s rows to table: %s " % (self.get_nrows(cursor), self.table_name))
 
     @abstractmethod
     def import_table(self, cursor):
@@ -61,6 +63,11 @@ class ImportedTable(Dataset):
         """ % (self.type, self.name, self.formula_json, self.formula_sha, self.table_name))
         cursor.execute(query)
 
+    def get_nrows(self, cursor):
+        query = "SELECT COUNT(*) FROM `{table}`;".format(table=self.table_name)
+        cursor.execute(query)
+        result = cursor.fetchall()[0][0]
+        return result
 
 class RecordByRecordImportedTable(ImportedTable):
     columms = AbstractAttribute()

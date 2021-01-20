@@ -3,7 +3,7 @@ from biodb.data.files import LocalFile, ExternalFile
 from biodb.io import read_csv
 
 
-class pmkbOfficial(ExternalFile):
+class PMKBOfficial(ExternalFile):
     version = '1'  # Note: not used in url
 
     @property
@@ -13,15 +13,15 @@ class pmkbOfficial(ExternalFile):
         return 'https://pmkb.weill.cornell.edu/therapies/downloadCSV.csv'
 
 
-class pmkbFile(LocalFile):
+class PMKBFile(LocalFile):
     version = '1'
-    depends = [pmkbOfficial]
+    depends = [PMKBOfficial]
     extension = 'csv'
 
 
-class pmkbTable(RecordByRecordImportedTable):
+class PMKBTable(RecordByRecordImportedTable):
     version = '1'
-    depends = [pmkbFile]
+    depends = [PMKBFile]
 
     columns = [
         'Gene',
@@ -45,7 +45,7 @@ class pmkbTable(RecordByRecordImportedTable):
     """
 
     def read(self):
-        for row in read_csv(self.inputs['pmkbFile'].path):
+        for row in read_csv(self.inputs['PMKBFile'].path):
             row['Tumor_types'] = row.pop('Tumor Type(s)')
             row['Tissue_types'] = row.pop('Tissue Type(s)')
             row['Variants'] = row.pop('Variant(s)')
