@@ -62,11 +62,6 @@ class FTPTimestampedFile(ExternalFile):
 class LocalFile(Dataset):
     extension = None
 
-    @classmethod
-    def validate_class(cls):
-        super().validate_class()
-        cls.assert_class_attributes(str, 'extension')
-
     @property
     def path(self):
         return '{downloads}/{name}.{ext}'.format(
