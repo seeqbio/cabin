@@ -83,18 +83,10 @@ class DropCommand(AppCommand):
         self.parser.add_argument('dataset')
 
     def run(self):
-        if "*" not in self.app.args.dataset:
-            table_name = self.app.args.dataset
-            ds_name = table_name.split(":")[0]
-            logger.info("Table to drop matching wildcard: %s." % table_name)
-            ds = getattr(registry, ds_name)()
-            ds.drop()
-            logger.info("Dropping table: %s" % table_name)
-        else:
-            for _, hdataset in load_table_registry().items():
-                if fnmatch.fnmatch(hdataset.type, self.app.args.dataset):
-                    logger.info("Dropping table: %s" % hdataset.name)
-                    hdataset.drop()
+        for _, hdataset in load_table_registry().items():
+            if fnmatch.fnmatch(hdataset.name, self.app.args.dataset):
+                logger.info("Dropping table: %s" % hdataset.name)
+                hdataset.drop()
 
 
 class ImportCommand(AppCommand):
