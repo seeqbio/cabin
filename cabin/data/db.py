@@ -21,8 +21,9 @@ class ImportedTable(Dataset):
         with MYSQL.transaction() as cursor:
             cursor.execute("""
                 SELECT COUNT(*)
-                FROM system
-                WHERE sha = '%s';""" % self.formula_sha)
+                FROM `system`
+                WHERE sha = '%s';
+            """ % self.formula_sha)
             return cursor.fetchall()[0][0]
 
     def produce(self):
