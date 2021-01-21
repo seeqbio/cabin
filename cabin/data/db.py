@@ -43,7 +43,7 @@ class ImportedTable(Dataset):
 
     @property
     def sql_drop_from_system(self):
-        return 'DELETE FROM system WHERE name="{table}";'.format(table=self.table_name)
+        return 'DELETE FROM `system` WHERE name="{table}";'.format(table=self.table_name)
 
     def drop(self):
         with MYSQL.transaction() as cursor:
@@ -56,7 +56,7 @@ class ImportedTable(Dataset):
 
     def _update_system_table(self, cursor):
         query = ("""
-            INSERT INTO system
+            INSERT INTO `system`
             (type, name, formula, sha, table_name)
             VALUES
             ('%s', '%s', '%s', '%s', '%s');
@@ -103,7 +103,7 @@ class RecordByRecordImportedTable(ImportedTable):
 
 
 def imported_datasets(type=None):
-    query = 'SELECT name, formula, sha FROM system;'
+    query = 'SELECT name, formula, sha FROM `system`;'
     if type:
         query += ' WHERE type = "%s"' % type
     with MYSQL.transaction() as cursor:

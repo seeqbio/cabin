@@ -215,7 +215,7 @@ class HistoricalDataset:
         return 'DROP TABLE IF EXISTS `{table}`;'.format(table=self.name)
 
     def sql_drop_from_system(self):
-        return 'DELETE FROM system WHERE name="{table}";'.format(table=self.name)
+        return 'DELETE FROM `system` WHERE name="{table}";'.format(table=self.name)
 
     def drop(self):
         with MYSQL.transaction() as cursor:

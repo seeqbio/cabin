@@ -144,7 +144,7 @@ class _MySQL:
             logger.info('--> initializing database')
             query = ("""
                 USE {db};
-                CREATE TABLE IF NOT EXISTS system (
+                CREATE TABLE IF NOT EXISTS `system` (
                     sha         VARCHAR(64)  PRIMARY KEY,
                     type        VARCHAR(128),
                     name        VARCHAR(255),
