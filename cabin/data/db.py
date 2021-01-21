@@ -22,8 +22,7 @@ class ImportedTable(Dataset):
             cursor.execute("""
                 SELECT COUNT(*)
                 FROM system
-                WHERE sha = '%s';
-            """ % self.formula_sha)
+                WHERE sha = '%s';""" % self.formula_sha)
             return cursor.fetchall()[0][0]
 
     def produce(self):
