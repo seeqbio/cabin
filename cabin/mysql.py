@@ -63,6 +63,36 @@ class _MySQL:
                     cnx.rollback()
                     raise
 
+    def wait_for_connection(self, retry_every=1, timeout=30, **cnx_kw):
+        """Creates a connection to MySQL with the given connection kwargs, but
+        retires a number of times if it fails.
+
+        Args:
+            retry_every (int): # of seconds to wait between trials to connect.
+            timout      (int): # of seconds after which aborts retrying.
+        """
+        last_exception = None
+        time_left = timeout
+        while time_left > 0:
+            try:
+                cnx = mysql.connector.connect(**cnx_kw)
+                if last_exception is not None:
+                    sys.stderr.write('\n')
+                return cnx
+            except Exception as e:
+                if last_exception is None:
+                    sys.stderr.write('Waiting for MySQL server to accept connections .')
+                else:
+                    sys.stderr.write('.')
+                sys.stderr.flush()
+
+                last_exception = e
+                sleep(retry_every)
+                time_left -= retry_every)
+
+        sys.stderr.write('\n%s\n' % str(last_exception))
+        raise BiodbError('Failed to connect to MySQL after %d seconds!' % timeout)
+
     @contextmanager
     def connection(self, user, **kw):
         cnx_kw = {
@@ -72,7 +102,7 @@ class _MySQL:
             'database': settings.SGX_MYSQL_DB,
         }
         cnx_kw.update(**kw)
-        cnx = mysql.connector.connect(**cnx_kw)
+        cnx = self.wait_for_connection(**cnx_kw)
         real_cursor = cnx.cursor
 
         @contextmanager
@@ -113,11 +143,12 @@ class _MySQL:
         else:
             root_password = getpass.getpass("Enter root password (given to you): ")
 
-        cnx = mysql.connector.connect(user='root',
-                                            host=settings.SGX_MYSQL_HOST,
-                                            password=root_password)
+        return self.wait_for_connection(
+            user='root',
+            host=settings.SGX_MYSQL_HOST,
+            password=root_password
+        )
 
-        return cnx
 
     def initialize(self):
         database = settings.SGX_MYSQL_DB
