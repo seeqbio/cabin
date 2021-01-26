@@ -149,9 +149,18 @@ class _MySQL:
             password=root_password
         )
 
+    def seems_initialized(self):
+        cnx = self._get_root_connection()
+        cursor = cnx.cursor()
+        cursor.execute('SELECT user FROM mysql.user WHERE user = "%s"' % READER)
+        return bool(cursor.fetchone())
 
     def initialize(self):
         database = settings.SGX_MYSQL_DB
+
+        if self.seems_initialized():
+            raise BiodbError('Database `%s` seems to be already initialized!' % database)
+
         cnx = self._get_root_connection()
 
         cursor = cnx.cursor()
@@ -159,6 +168,9 @@ class _MySQL:
         logger.info('created database "%s"' % database)
 
         def _create(user):
+            # intentionally not using `CREATE USER IF NOT EXISTS` since that
+            # would mislead the user into thinking they can reset the passwords
+            # if they just re-initialized.
             cursor.execute("""
                 CREATE USER '{user}'@'%'
                 IDENTIFIED BY '{password}';
