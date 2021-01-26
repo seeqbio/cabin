@@ -64,8 +64,8 @@ class _MySQL:
                     raise
 
     def wait_for_connection(self, retry_every=1, timeout=30, **cnx_kw):
-        """Creates a connection to MySQL with the given connection kwargs, but
-        retires a number of times if it fails.
+        """Returns a connection to MySQL with the given connection kwargs, but
+        retries a number of times before raising an exception.
 
         Args:
             retry_every (int): # of seconds to wait between trials to connect.
@@ -88,7 +88,7 @@ class _MySQL:
 
                 last_exception = e
                 sleep(retry_every)
-                time_left -= retry_every)
+                time_left -= retry_every
 
         sys.stderr.write('\n%s\n' % str(last_exception))
         raise BiodbError('Failed to connect to MySQL after %d seconds!' % timeout)
