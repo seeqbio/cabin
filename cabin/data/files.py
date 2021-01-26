@@ -74,6 +74,7 @@ class LocalFile(Dataset):
         return Path(self.path).exists()
 
     def produce(self):
+        Path(settings.SGX_DOWNLOAD_DIR).mkdir(exist_ok=True, parents=True)
         wget(self.input.url, self.path)
 
 
