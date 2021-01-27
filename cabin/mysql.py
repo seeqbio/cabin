@@ -69,7 +69,7 @@ class _MySQL:
 
         Args:
             retry_every (int): # of seconds to wait between trials to connect.
-            timout      (int): # of seconds after which aborts retrying.
+            timeout     (int): # of seconds after which aborts retrying.
         """
         last_exception = None
         time_left = timeout
