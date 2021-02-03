@@ -21,9 +21,7 @@ def print_version():
         return f.read().strip()
 
 
-#FIXME: Remove the below functions (assuming we can deploy
-#       without them) after debugging is done.
 @bp.route("/snapshot_id")
 def print_snapshot_id():
-    with open('snapshot.txt') as f:
+    with open('/sgx/biodb/snapshot_id.txt') as f:
         return f.read().strip()
