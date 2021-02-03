@@ -200,6 +200,7 @@ class _MySQL:
             query = ("""
                 USE {db};
                 CREATE TABLE IF NOT EXISTS `system` (
+                    instance_id VARCHAR(64),
                     sha         VARCHAR(64)  PRIMARY KEY,
                     type        VARCHAR(128),
                     name        VARCHAR(255),
