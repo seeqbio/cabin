@@ -15,9 +15,9 @@ def list_tables():
         return jsonify(results)
 
 
-@bp.route("/version")
+@bp.route("/rc_id")
 def print_version():
-    with open('version.txt') as f:
+    with open('rc_id.txt') as f:
         return f.read().strip()
 
 
