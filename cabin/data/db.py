@@ -3,6 +3,7 @@ from abc import abstractmethod
 
 from biodb import AbstractAttribute
 from biodb import logger
+from biodb import settings
 from biodb.mysql import MYSQL
 from biodb.data.core import Dataset, HistoricalDataset
 
@@ -55,12 +56,14 @@ class ImportedTable(Dataset):
         cursor.create_table(self.table_name, query)
 
     def _update_system_table(self, cursor):
+        instance_id = settings.SGX_INSTANCE_ID
+        assert instance_id, 'Unset SGX_INSTANCE_ID'
         query = ("""
             INSERT INTO `system`
-            (type, name, formula, sha, table_name)
+            (type, name, formula, sha, table_name, instance_id)
             VALUES
-            ('%s', '%s', '%s', '%s', '%s');
-        """ % (self.type, self.name, self.formula_json, self.formula_sha, self.table_name))
+            ('%s', '%s', '%s', '%s', '%s', '%s');
+        """ % (self.type, self.name, self.formula_json, self.formula_sha, self.table_name, instance_id))
         cursor.execute(query)
 
     def get_nrows(self, cursor):

@@ -136,18 +136,29 @@ class _MySQL:
             with cnx.cursor(**kwargs) as cursor:
                 yield cursor
 
-
     def _get_root_connection(self):
-        if 'SGX_MYSQL_ROOT_PASSWORD' in os.environ:
-            root_password = os.environ['SGX_MYSQL_ROOT_PASSWORD']
-        else:
-            root_password = getpass.getpass("Enter root password (given to you): ")
-
         return self.wait_for_connection(
             user='root',
             host=settings.SGX_MYSQL_HOST,
-            password=root_password
+            password=self._password_for('root')
         )
+
+    def _password_for(self, user):
+        if user == READER:
+            assert settings.SGX_MYSQL_READER_PASSWORD, 'Unset password SGX_MYSQL_READER_PASSWORD'
+            return settings.SGX_MYSQL_READER_PASSWORD
+
+        if user == WRITER:
+            assert settings.SGX_MYSQL_WRITER_PASSWORD, 'Unset password SGX_MYSQL_WRITER_PASSWORD'
+            return settings.SGX_MYSQL_WRITER_PASSWORD
+
+        if user == 'root':
+            pwd = os.environ.get('SGX_MYSQL_ROOT_PASSWORD')
+            if not pwd:
+                pwd = getpass.getpass("Enter root password (given to you): ")
+
+            assert pwd, 'Invalid root password'
+            return pwd
 
     def seems_initialized(self):
         cnx = self._get_root_connection()
@@ -157,6 +168,7 @@ class _MySQL:
 
     def initialize(self):
         database = settings.SGX_MYSQL_DB
+        logger.info('initialiazing database "%s"' % database)
 
         if self.seems_initialized():
             raise BiodbError('Database `%s` seems to be already initialized!' % database)
@@ -165,29 +177,30 @@ class _MySQL:
 
         cursor = cnx.cursor()
         cursor.execute('CREATE DATABASE IF NOT EXISTS {db};'.format(db=database))
-        logger.info('created database "%s"' % database)
 
-        def _create(user):
+        def _create(user, host, grant):
+            password = self._password_for(user)
+
+            logger.info("creating user '%s'@'%s' and granting %s" % (user, host, grant))
             # intentionally not using `CREATE USER IF NOT EXISTS` since that
             # would mislead the user into thinking they can reset the passwords
             # if they just re-initialized.
             cursor.execute("""
-                CREATE USER '{user}'@'%'
-                IDENTIFIED BY '{password}';
-            """.format(user=user, password=self.passwords[user]))
-            logger.info('created user "%s"' % user)
+                CREATE USER '{user}'@'{host}' IDENTIFIED BY '{password}';
+            """.format(user=user, host=host, password=password))
 
-        def _grant(grant, user):
             cursor.execute("""
-                GRANT {grant} ON `{db}`.* TO "{user}"@"%"
-            """.format(grant=grant, db=database, user=user))
-            logger.info('granted "%s" on "%s" to user "%s"' % (grant, database, user))
+                GRANT {grant} ON `{db}`.* TO "{user}"@"{host}"
+            """.format(grant=grant, db=database, user=user, host=host))
+
+            cursor.execute('FLUSH PRIVILEGES;')
 
         def _add_system_table():
-            logger.info('--> initializing database')
+            logger.info('creating system table')
             query = ("""
                 USE {db};
                 CREATE TABLE IF NOT EXISTS `system` (
+                    instance_id VARCHAR(64),
                     sha         VARCHAR(64)  PRIMARY KEY,
                     type        VARCHAR(128),
                     name        VARCHAR(255),
@@ -197,14 +210,8 @@ class _MySQL:
             """).format(db=database)
             cursor.execute(query)
 
-
-        _create(READER)
-        _grant('SELECT', READER)
-
-        _create(WRITER)
-        _grant('ALL PRIVILEGES', WRITER)
-
-        cursor.execute('FLUSH PRIVILEGES;')
+        _create(user=READER, host='%', grant='SELECT')
+        _create(user=WRITER, host='%', grant='ALL PRIVILEGES')
 
         # Set global system variable to allow loading data into tables
         # from local files (see biodb/datasets/pfam.py).
