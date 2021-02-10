@@ -19,13 +19,15 @@ class TestDatasetFile(LocalFile):
 
 
 class TestDatasetTable(RecordByRecordImportedTable):
-    version = '10'
+    version = '11'
     depends = [TestDatasetFile]
 
     columns = [
         'GeneID',
         'Symbol',
     ]
+
+    tags = ['active']
 
     @property
     def schema(self):

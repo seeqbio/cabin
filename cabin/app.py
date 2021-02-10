@@ -26,7 +26,18 @@ from biodb.data.db import ImportedTable
 from biodb.data.registry import load_table_registry
 
 
-def glob_matching_classes(glob):
+
+def all_table_datasets(tag):
+    # Returns all table datasets with specified tag. If tag is None, returns all
+    classes = []
+    for cls in registry.TYPE_REGISTRY.values():
+        if (issubclass(cls, ImportedTable)):
+            if tag is None or tag in cls.tags:
+                classes.append(cls)
+    return classes
+
+
+def glob_table_datasets(glob):
     classes = []
     for cls in registry.TYPE_REGISTRY.values():
         if (issubclass(cls, ImportedTable)):
@@ -95,12 +106,19 @@ class ImportCommand(AppCommand):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.parser.add_argument('dataset')
+        self.parser.add_argument('dataset', nargs='?')
+        self.parser.add_argument('--all', action='store_true', help="import all table datasets")
+        self.parser.add_argument('--tag', help="only import datasets with TAG, only valid with --all")
         self.parser.add_argument('-n', '--dry-run', action='store_true', help="do not actually import, just show a synopsis")
 
     def run(self):
+        if self.app.args.all:
+            classes = all_table_datasets(tag=self.app.args.tag)
+        else:
+            if self.app.args.tag:
+                raise BiodbError('--tag is only valid with --all')
+            classes = glob_table_datasets(self.app.args.dataset)
 
-        classes = glob_matching_classes(self.app.args.dataset)
         if not classes:
             logger.error("No Tables in registry matching %s." % self.app.args.dataset)
             return 1
@@ -148,7 +166,7 @@ class StatusCommand(AppCommand):
         print(fmt_string.format(**dict(zip(columns, columns))))
 
         # content lines
-        class_names = [cls.__name__ for cls in glob_matching_classes(self.app.args.dataset)]
+        class_names = [cls.__name__ for cls in glob_table_datasets(self.app.args.dataset)]
 
         for _, hdataset in sorted(load_table_registry().items()):
             if hdataset.type not in class_names:
