@@ -1,0 +1,32 @@
+#!/usr/bin/env python3
+import os
+import sys
+import argparse
+from pathlib import Path
+
+sys.path.append(os.environ['SGX_BIODB_ROOT'])
+
+from biodb.mysql import MYSQL
+
+
+def main(args):
+    before, after, using = args.before, args.after, args.using
+    comparison = MYSQL.compare_tables(before, after, using, verbose=args.verbose)
+
+    if args.verbose:
+        print('-' * 30)
+
+    print('* before:\t%s\n* after:\t%s\n* using:\t%s' % (before, after, using))
+    print('\n'.join(key + ':\t' + str(value) for key, value in comparison.items()))
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="""
+        Compares two tables with identical schema
+    """)
+    parser.add_argument('before', help='name of the old table')
+    parser.add_argument('after', help='name of the new table')
+    parser.add_argument('--using', required=True, help='a single UNIQUE column used for JOIN')
+    parser.add_argument('-v', '--verbose', action='store_true', help='print SQL statements')
+    args = parser.parse_args()
+    main(args)
