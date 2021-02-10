@@ -20,6 +20,9 @@ class pharmGKBFile(LocalFile):
 
     @property
     def path(self):
+        # FIXME this is not ok because:
+        # 1. tries to unzip on every access to .path
+        # 2. tries to unzip a non-existent file in --dry-run
         expanded_dir = unzip('{downloads}/{name}.{ext}'.format(
             downloads=settings.SGX_DOWNLOAD_DIR,
             name=self.name,
