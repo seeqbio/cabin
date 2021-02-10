@@ -59,6 +59,8 @@ class Dataset(ABC):
     version = None
     depends = []
 
+    tags = []
+
     @classmethod
     def assert_class_attributes(cls, type_, *attrs):
         # TODO make this a class decorator
