@@ -1,7 +1,6 @@
 import os
 import sys
 import types
-import getpass
 import textwrap
 from time import sleep
 import mysql.connector
@@ -154,9 +153,6 @@ class _MySQL:
 
         if user == 'root':
             pwd = os.environ.get('SGX_MYSQL_ROOT_PASSWORD')
-            if not pwd:
-                pwd = getpass.getpass("Enter root password (given to you): ")
-
             assert pwd, 'Invalid root password'
             return pwd
 
