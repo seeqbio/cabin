@@ -79,5 +79,5 @@ class CancerMineSentencesTable(RecordByRecordImportedTable):
     """
 
     def read(self):
-        for row in read_xsv(self.input.path, header_leading_hash=False):
+        for row in read_xsv(self.input.path, header_leading_hash=False, encoding='utf-8'):
             yield row

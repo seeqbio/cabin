@@ -2,7 +2,7 @@ from pyliftover import LiftOver
 
 from biodb.data.db import RecordByRecordImportedTable
 from biodb.data.files import LocalFile, ExternalFile
-from biodb.io import read_xsv
+from biodb.io import read_xsv, read_csv
 from biodb import settings
 from biodb import logger
 
@@ -43,6 +43,7 @@ class CIViCTable(RecordByRecordImportedTable):
         'rating',
         'evidence_direction',
         'clinical_significance',
+        'evidence_statement',
         'representative_transcript',
         'ensembl_version',
         'reference_build',
@@ -75,6 +76,7 @@ class CIViCTable(RecordByRecordImportedTable):
                 rating                     VARCHAR(225),                       -- Aggregate score 1-5 of curator's confidence in evidence (5=strong)
                 evidence_direction         VARCHAR(225) NOT NULL,
                 clinical_significance      VARCHAR(225) NOT NULL,
+                evidence_statement         LONGTEXT     CHARACTER SET utf8mb4,
                 representative_transcript  VARCHAR(225) NOT NULL,
                 ensembl_version            VARCHAR(225) NOT NULL,
                 reference_build            VARCHAR(225) NOT NULL,
@@ -92,7 +94,8 @@ class CIViCTable(RecordByRecordImportedTable):
         lo_to19 = LiftOver(str(chains_dir) + '/b37tohg19.chain')
         lo_to38 = LiftOver(str(chains_dir) + '/hg19tohg38.chain')
 
-        for row in read_xsv(self.input.path, header_leading_hash=False):
+        for row in read_xsv(self.input.path, header_leading_hash=False, encoding='utf-8'):
+        #for row in read_csv(self.input.path, delimiter='\t'):
             if not row['chromosome'] or not row['start']:  # it can have a start but not chr, ex: VHL-L158fs (c.473insT)
                 logger.info('Skipping {gene}-{variant}: no genomic coordinates'.format(gene=row['gene'], variant=row['variant']))
                 continue
