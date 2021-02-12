@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from biodb.data.db import ImportedTable
 from biodb.data.files import LocalFile, ExternalFile
 
@@ -13,34 +15,32 @@ class pharmGKBOfficial(ExternalFile):
         return 'https://api.pharmgkb.org/{version}/download/file/data/relationships.zip'.format(version=self.version)
 
 
-class pharmGKBFile(LocalFile):
+class pharmGKBZipFile(LocalFile):
     version = '1'
     depends = [pharmGKBOfficial]
     extension = 'zip'
 
+
+class pharmGKBTsvFile(LocalFile):
+    version = '1'
+    depends = [pharmGKBZipFile]
+    extension = 'zip'
+
     @property
     def path(self):
-        # FIXME this is not ok because:
-        # 1. tries to unzip on every access to .path
-        # 2. tries to unzip a non-existent file in --dry-run
-        expanded_dir = unzip('{downloads}/{name}.{ext}'.format(
-            downloads=settings.SGX_DOWNLOAD_DIR,
-            name=self.name,
-            ext=self.extension
-        ))
-        return '{downloads}/{expanded_dir_name}/relationships.tsv'.format(
-            downloads=settings.SGX_DOWNLOAD_DIR,
-            expanded_dir_name=expanded_dir.name
-        )
+        return self.input.path[:-len('.zip')] + '/relationships.tsv'
+
+    def produce(self):
+        unzip(self.input.path, extract_dir=Path(self.path).parent)
 
 
 class pharmGKBTable(ImportedTable):
     version = '1'
-    depends = [pharmGKBFile]
+    depends = [pharmGKBTsvFile]
 
     @property
     def schema(self):
-    	return """
+        return """
           CREATE TABLE `{table}` (
             Entity1_id	               VARCHAR(225),         -- Entities are disease, gene, drugs by PharmGKB ID. mappings to names are in seperate files
             Entity1_name               VARCHAR(225),         -- Eg: Carcinoma, imatinib, BRAF, rs119774 or CYP3A4 14200T>G, c.1777G>A or CYP2D6*4
