@@ -31,6 +31,7 @@ class ClinVarRCVTable(RecordByRecordImportedTable):
         'rcv_clinsig',
         'variation_id',
         'evidence_pmids',
+        'evidence_descriptions',
         'rcv_traits',
         'mesh_ids',
         'medgen_ids',
@@ -47,6 +48,7 @@ class ClinVarRCVTable(RecordByRecordImportedTable):
                 rcv_clinsig                VARCHAR(1023)  NOT NULL,
                 variation_id               VARCHAR(255)   NOT NULL,
                 evidence_pmids             VARCHAR(5844)  NOT NULL,
+                evidence_descriptions      LONGTEXT       NOT NULL,  -- description of observations / sumamry of literature findings
                 rcv_traits                 LONGTEXT       NOT NULL,
                 mesh_ids                   VARCHAR(255)   NOT NULL,  -- eg: MESH:D008375|MESH:D008376
                 medgen_ids                 VARCHAR(2555)  NOT NULL,  -- eg: MedGen:C0024776|MedGen:CN51720
@@ -77,11 +79,17 @@ class ClinVarRCVTable(RecordByRecordImportedTable):
                 except IndexError:
                     evidence_pmids = None
 
+                try:
+                    evidence_descriptions = set(e.text for e in rcv.xpath('./ObservedIn/ObservedData/Attribute[@Type="Description"]'))
+                except IndexError:
+                    evidence_descriptions = None
+
                 rec = {
                     'rcv_accession': rcv_accession,
                     'rcv_clinsig': rcv_clinsig,
                     'variation_id': variation_id,
                     'evidence_pmids': '|'.join(evidence_pmids),
+                    'evidence_descriptions': '|'.join(evidence_descriptions),
                     'rcv_traits': '|'.join(rcv_traits),
                     'mesh_ids': '|'.join(xref_by_db['MeSH']),
                     'medgen_ids': '|'.join(xref_by_db['MedGen']),
