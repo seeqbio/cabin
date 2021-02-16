@@ -21,6 +21,7 @@ class PfamFile(LocalFile):
 class PfamTable(ImportedTable):
     version = '1'
     depends = [PfamFile]
+    tags = ['active']
 
     @property
     def schema(self):
