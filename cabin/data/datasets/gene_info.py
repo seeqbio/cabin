@@ -28,6 +28,7 @@ class gene_infoFile(S3MirroredLocalFile):
 class gene_infoTable(RecordByRecordImportedTable):
     version = '1'
     depends = [gene_infoFile]
+    tags = ['active']
 
     columns = [
         'gene_id',

@@ -21,6 +21,7 @@ class DiseaseOntologyFile(LocalFile):
 class DiseaseOntologyTable(RecordByRecordImportedTable):
     version = '1'
     depends = [DiseaseOntologyFile]
+    tags = ['active']
 
     columns = ['name', 'id', 'children', 'parents', 'omim_ids', 'mesh_ids']
 
