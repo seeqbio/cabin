@@ -29,6 +29,7 @@ class MedGenNamesFile(S3MirroredLocalFile):
 class MedGenNamesTable(RecordByRecordImportedTable):
     version = '1'
     depends = [MedGenNamesFile]
+    tags = ['active']
 
     @property
     def schema(self):

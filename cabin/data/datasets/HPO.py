@@ -21,6 +21,7 @@ class HPOFile(LocalFile):
 class HPOTable(RecordByRecordImportedTable):
     version = '1'
     depends = [HPOFile]
+    tags = ['active']
 
     columns = ['name', 'id', 'children', 'parents', 'do_ids']
 
