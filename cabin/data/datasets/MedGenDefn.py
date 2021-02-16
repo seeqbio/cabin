@@ -33,6 +33,7 @@ class MedGenDefnTable(RecordByRecordImportedTable):
         and https://www.ncbi.nlm.nih.gov/books/NBK9685/"""
     version = '1'
     depends = [MedGenDefnFile]
+    tags = ['active']
 
     @property
     def schema(self):

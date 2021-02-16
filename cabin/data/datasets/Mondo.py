@@ -21,6 +21,7 @@ class MondoFile(LocalFile):
 class MondoTable(RecordByRecordImportedTable):
     version = '1'
     depends = [MondoFile]
+    tags = ['active']
 
     columns = ['name', 'id', 'children', 'parents', 'hpo_ids', 'do_ids', 'omim_ids', 'mesh_ids']
 
@@ -31,7 +32,7 @@ class MondoTable(RecordByRecordImportedTable):
             name       VARCHAR(255)   NOT NULL,         -- human readable disease name
             id         VARCHAR(255)   PRIMARY KEY,      -- unique identifier, eg: MONDO:0004355
             parents    VARCHAR(255)   NOT NULL,         -- pipe separated immediate parent
-            children   VARCHAR(32768) NOT NULL,         -- pipe separated immediate children
+            children   TEXT           NOT NULL,         -- pipe separated immediate children
             hpo_ids    VARCHAR(255)   NOT NULL,         -- xrefs to Human Phenotype Ontology
             do_ids     VARCHAR(255)   NOT NULL,         -- xrefs to Disease Ontology
             omim_ids   VARCHAR(255)   NOT NULL,         -- xrefs to Online Mendelian Inheritance in Man
