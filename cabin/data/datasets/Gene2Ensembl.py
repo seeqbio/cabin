@@ -28,6 +28,8 @@ class Gene2EnsemblFile(S3MirroredLocalFile):
 class Gene2EnsemblTable(RecordByRecordImportedTable):
     version = '1'
     depends = [Gene2EnsemblFile]
+    tags = ['active']
+
     columns = ['refseq_transcript', 'ensembl_transcript', 'gene_id', 'ensembl_gene_id']
     field_mappings = {
         'RNA_nucleotide_accession.version': 'refseq_transcript',

@@ -30,6 +30,7 @@ class Gene2RefSeqFile(S3MirroredLocalFile):
 class Gene2RefSeqTable(RecordByRecordImportedTable):
     version = '1'
     depends = [Gene2RefSeqFile]
+    tags = ['active']
 
     columns = [
         'refseq_transcript',
