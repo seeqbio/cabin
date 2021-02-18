@@ -10,7 +10,7 @@ MAX_VARIANT_LENGTH = 250
 
 
 class ClinVarH4VOfficial(FTPTimestampedFile):
-    version = '2020-12-19'  # Not updated daily
+    version = '2021-02-13'  # Typically updates with same frequence as VCF, check ftp date
     ftp_server = 'ftp.ncbi.nih.gov'
     ftp_path = '/pub/clinvar/tab_delimited/hgvs4variation.txt.gz'
 
@@ -30,6 +30,7 @@ class ClinVarH4VFile(S3MirroredLocalFile):
 class ClinVarH4VTable(RecordByRecordImportedTable):
     version = '1'
     depends = [ClinVarH4VFile]
+    tags = ['active']
 
     columns = [
         'gene_symbol',
