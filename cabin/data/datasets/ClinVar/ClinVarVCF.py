@@ -8,7 +8,7 @@ MAX_VARIANT_LENGTH = 250  # biologically relevant to remove large structural var
 
 
 class ClinVarVCFOfficial(ExternalFile):
-    version = '20201219'
+    version = '20210213'
 
     @property
     def url(self):
@@ -24,6 +24,7 @@ class ClinVarVCFFile(LocalFile):
 class ClinVarVCFTable(RecordByRecordImportedTable):
     version = '1'
     depends = [ClinVarVCFFile]
+    tags = ['active']
 
     columns = [
         'chr',
