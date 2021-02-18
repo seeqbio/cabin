@@ -10,6 +10,7 @@ class CancerMineCollatedOfficial(ExternalFile):
     def url(self):
         return 'https://zenodo.org/record/{v}/files/cancermine_collated.tsv?download=1'.format(v=self.version)
 
+
 class CancerMineCollatedFile(LocalFile):
     version = '1'
     depends = [CancerMineCollatedOfficial]
@@ -50,6 +51,7 @@ class CancerMineSentencesOfficial(ExternalFile):
     def url(self):
         return 'https://zenodo.org/record/{v}/files/cancermine_sentences.tsv?download=1'.format(v=self.version)
 
+
 class CancerMineSentencesFile(LocalFile):
     version = '1'
     depends = [CancerMineSentencesOfficial]
@@ -57,13 +59,10 @@ class CancerMineSentencesFile(LocalFile):
 
 
 class CancerMineSentencesTable(RecordByRecordImportedTable):
-    # sentence                  TEXT NOT NULL,    -- sentence in literature
-    # FAILING for myswl '\xCE\xB2-cat...' for column 'sentence' at row 1 error
-
     version = '1'
     depends = [CancerMineSentencesFile]
 
-    columns = ['matching_id', 'pmid', 'predictprob', 'gene_entrez_id'] # FIXME: after unicode fix, add back , 'sentence']
+    columns = ['matching_id', 'pmid', 'predictprob', 'gene_entrez_id', 'sentence']
 
     @property
     def schema(self):
@@ -73,6 +72,7 @@ class CancerMineSentencesTable(RecordByRecordImportedTable):
     pmid                      VARCHAR(225) NOT NULL,
     predictprob               VARCHAR(225) NOT NULL,
     gene_entrez_id            VARCHAR(225) NOT NULL,
+    sentence                  TEXT         NOT NULL,
     INDEX (matching_id),
     INDEX (gene_entrez_id)
 );
