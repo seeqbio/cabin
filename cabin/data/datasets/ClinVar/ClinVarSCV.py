@@ -32,6 +32,7 @@ class ClinVarSCVTable(RecordByRecordImportedTable):
         'scv_clinsig',
         'scv_traits',
         'evidence_pmids',
+        'evidence_descriptions',
         'mesh_ids',
         'medgen_ids',
         'omim_ids',
@@ -48,6 +49,7 @@ class ClinVarSCVTable(RecordByRecordImportedTable):
                 scv_clinsig                VARCHAR(255)   NULL,
                 scv_traits                 LONGTEXT       NOT NULL,
                 evidence_pmids             VARCHAR(5844)  NOT NULL,
+                evidence_descriptions      LONGTEXT       NOT NULL,  -- description of observations / sumamry of literature findings
                 mesh_ids                   VARCHAR(255)   NOT NULL,  -- eg: MESH:D008375|MESH:D008376
                 medgen_ids                 VARCHAR(2555)  NOT NULL,  -- eg: MedGen:C0024776|MedGen:CN51720
                 omim_ids                   VARCHAR(255)   NOT NULL,  -- eg: OMIM:248600|OMIM:PS248600
@@ -84,6 +86,12 @@ class ClinVarSCVTable(RecordByRecordImportedTable):
                         evidence_pmids = '|'.join(set(e.text for e in scv.xpath('./ObservedIn/ObservedData/Citation/ID[@Source="PubMed"]')))
                     except IndexError:
                         evidence_pmids = None
+
+                    try:
+                        evidence_descriptions = set(e.text for e in scv.xpath('./ObservedIn/ObservedData/Attribute[@Type="Description"]'))
+                    except IndexError:
+                        evidence_descriptions = None
+
                     xml_element_clear_memory(scv)
                     rec = {
                         'variation_id': variation_id,
@@ -92,6 +100,7 @@ class ClinVarSCVTable(RecordByRecordImportedTable):
                         'scv_clinsig': scv_clinsig,
                         'scv_traits': scv_trait_joined,
                         'evidence_pmids': evidence_pmids,
+                        'evidence_descriptions': '|'.join(evidence_descriptions),
                         'mesh_ids': '|'.join(xref_by_db['MeSH']),
                         'medgen_ids': '|'.join(xref_by_db['MedGen']),
                         'omim_ids': '|'.join(xref_by_db['OMIM']),

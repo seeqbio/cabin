@@ -2,7 +2,7 @@ from pyliftover import LiftOver
 
 from biodb.data.db import RecordByRecordImportedTable
 from biodb.data.files import LocalFile, ExternalFile
-from biodb.io import read_xsv, read_csv
+from biodb.io import read_xsv
 from biodb import settings
 from biodb import logger
 
@@ -95,7 +95,6 @@ class CIViCTable(RecordByRecordImportedTable):
         lo_to38 = LiftOver(str(chains_dir) + '/hg19tohg38.chain')
 
         for row in read_xsv(self.input.path, header_leading_hash=False, encoding='utf-8'):
-        #for row in read_csv(self.input.path, delimiter='\t'):
             if not row['chromosome'] or not row['start']:  # it can have a start but not chr, ex: VHL-L158fs (c.473insT)
                 logger.info('Skipping {gene}-{variant}: no genomic coordinates'.format(gene=row['gene'], variant=row['variant']))
                 continue
