@@ -83,12 +83,12 @@ class ClinVarSCVTable(RecordByRecordImportedTable):
 
                     scv_trait_joined = '|'.join(elem.text for elem in scv.xpath('./TraitSet/Trait/Name/ElementValue'))
                     try:
-                        evidence_pmids = '|'.join(set(e.text for e in scv.xpath('./ObservedIn/ObservedData/Citation/ID[@Source="PubMed"]')))
+                        evidence_pmids = '|'.join(list(e.text for e in scv.xpath('./ObservedIn/ObservedData/Citation/ID[@Source="PubMed"]')))
                     except IndexError:
                         evidence_pmids = None
 
                     try:
-                        evidence_descriptions = set(e.text for e in scv.xpath('./ObservedIn/ObservedData/Attribute[@Type="Description"]'))
+                        evidence_descriptions = list(e.text for e in scv.xpath('./ObservedIn/ObservedData/Attribute[@Type="Description"]'))
                     except IndexError:
                         evidence_descriptions = None
 

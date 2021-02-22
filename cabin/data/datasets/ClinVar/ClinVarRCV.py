@@ -75,12 +75,12 @@ class ClinVarRCVTable(RecordByRecordImportedTable):
                     continue
 
                 try:
-                    evidence_pmids = set(e.text for e in rcv.xpath('./ObservedIn/ObservedData/Citation/ID[@Source="PubMed"]'))
+                    evidence_pmids = list(e.text for e in rcv.xpath('./ObservedIn/ObservedData/Citation/ID[@Source="PubMed"]'))
                 except IndexError:
                     evidence_pmids = None
 
                 try:
-                    evidence_descriptions = set(e.text for e in rcv.xpath('./ObservedIn/ObservedData/Attribute[@Type="Description"]'))
+                    evidence_descriptions = list(e.text for e in rcv.xpath('./ObservedIn/ObservedData/Attribute[@Type="Description"]'))
                 except IndexError:
                     evidence_descriptions = None
 

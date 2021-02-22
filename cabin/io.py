@@ -29,7 +29,7 @@ def read_xsv(path, delimiter='\t', columns=None, header_leading_hash=True, ignor
         gzipped (bool):         Whether the given file is gzipped.
     """
     path = str(path)
-    f = gzip.open(path, 'rt') if gzipped else open(path, 'r', encoding=encoding)#'utf-8')
+    f = gzip.open(path, 'rt') if gzipped else open(path, 'r', encoding=encoding)
 
     logger.info('reading records from "{p}"'.format(p=f.name))
 
