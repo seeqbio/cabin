@@ -12,6 +12,8 @@ class ClinVarVCFOfficial(ExternalFile):
 
     @property
     def url(self):
+        # FIXME bad url, need archive_2.0/ subdir
+        # FIXME wget silently fails!
         return 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar_{version}.vcf.gz'.format(version=self.version)
 
 
