@@ -12,7 +12,7 @@ from biodb import logger
 from biodb import BiodbError
 
 
-def read_xsv(path, delimiter='\t', columns=None, header_leading_hash=True, ignore_leading_hash=False, gzipped=False):
+def read_xsv(path, delimiter='\t', columns=None, header_leading_hash=True, ignore_leading_hash=False, gzipped=False, encoding=None):
     """
     Parses a delimiter separated text file and yields rows as dictionaries.
 
@@ -29,7 +29,7 @@ def read_xsv(path, delimiter='\t', columns=None, header_leading_hash=True, ignor
         gzipped (bool):         Whether the given file is gzipped.
     """
     path = str(path)
-    f = gzip.open(path, 'rt') if gzipped else open(path, 'r')
+    f = gzip.open(path, 'rt') if gzipped else open(path, 'r', encoding=encoding)
 
     logger.info('reading records from "{p}"'.format(p=f.name))
 
