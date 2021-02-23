@@ -145,7 +145,11 @@ def wget(source, destination):
     cmd = ['wget', '-q', '--show-progress', str(source), '-O', str(destination)]
     proc = subprocess.Popen(cmd)
     proc.communicate()
-    return proc.returncode
+    if proc.returncode == 0:
+        logger.info('Successfully downloaded to %s' % destination)
+    else:
+        subprocess.call(['rm', destination])  # remove empty file
+        logger.error('Failed to download to %s' % destination)
 
 
 def ftp_modify_time(ftp_server, ftp_path):
