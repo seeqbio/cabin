@@ -110,11 +110,13 @@ class EnsemblExonTable(EnsemblTable):
     version = '1'
     depends = [EnsemblExonFile]
     ensembl_table = 'exon'
+    tags = ['active']
 
 
 # =======   analysis     =======
 class EnsemblAnalysisOfficial(EnsemblExternalFile):
     ensembl_table = 'analysis'
+    tags = ['active']
 
 
 class EnsemblAnalysisFile(LocalFile):
@@ -127,11 +129,13 @@ class EnsemblAnalysisTable(EnsemblTable):
     version = '1'
     depends = [EnsemblAnalysisFile]
     ensembl_table = 'analysis'
+    tags = ['active']
 
 
 # =====  exon_transcript   =====
 class EnsemblExon_transcriptOfficial(EnsemblExternalFile):
     ensembl_table = 'exon_transcript'
+    tags = ['active']
 
 
 class EnsemblExon_transcriptFile(LocalFile):
@@ -144,11 +148,13 @@ class EnsemblExon_transcriptTable(EnsemblTable):
     version = '1'
     depends = [EnsemblExon_transcriptFile]
     ensembl_table = 'exon_transcript'
+    tags = ['active']
 
 
 # ======   transcript   ======
 class ensembl_transcriptOfficial(EnsemblExternalFile):
     ensembl_table = 'transcript'
+    tags = ['active']
 
 
 class ensembl_transcriptFile(LocalFile):
@@ -161,11 +167,13 @@ class ensembl_transcriptTable(EnsemblTable):
     version = '1'
     depends = [ensembl_transcriptFile]
     ensembl_table = 'transcript'
+    tags = ['active']
 
 
 # ======   translation   ======
 class ensembl_translationOfficial(EnsemblExternalFile):
     ensembl_table = 'translation'
+    tags = ['active']
 
 
 class ensembl_translationFile(LocalFile):
@@ -178,11 +186,13 @@ class ensembl_translationTable(EnsemblTable):
     version = '1'
     depends = [ensembl_translationFile]
     ensembl_table = 'translation'
+    tags = ['active']
 
 
 # =====  protein_feauture   ======
 class ensembl_protein_featureOfficial(EnsemblExternalFile):
     ensembl_table = 'protein_feature'
+    tags = ['active']
 
 
 class ensembl_protein_featureFile(LocalFile):
@@ -195,11 +205,13 @@ class ensembl_protein_featureTable(EnsemblTable):
     version = '1'
     depends = [ensembl_protein_featureFile]
     ensembl_table = 'protein_feature'
+    tags = ['active']
 
 
 # =====  transcripti_attrib   =====
 class ensembl_transcript_attribOfficial(EnsemblExternalFile):
     ensembl_table = 'transcript_attrib'
+    tags = ['active']
 
 
 class ensembl_transcript_attribFile(LocalFile):
@@ -212,11 +224,13 @@ class ensembl_transcript_attribTable(EnsemblTable):
     version = '1'
     depends = [ensembl_transcript_attribFile]
     ensembl_table = 'transcript_attrib'
+    tags = ['active']
 
 
 # ======    gene_attrib    ======
 class ensembl_gene_attribOfficial(EnsemblExternalFile):
     ensembl_table = 'gene_attrib'
+    tags = ['active']
 
 
 class ensembl_gene_attribFile(LocalFile):
@@ -229,11 +243,13 @@ class ensembl_gene_attribTable(EnsemblTable):
     version = '1'
     depends = [ensembl_gene_attribFile]
     ensembl_table = 'gene_attrib'
+    tags = ['active']
 
 
 # ======   attrib_type   ======
 class EnsemblAttrib_typeOfficial(EnsemblExternalFile):
     ensembl_table = 'attrib_type'
+    tags = ['active']
 
 
 class EnsemblAttrib_typeFile(LocalFile):
@@ -246,11 +262,13 @@ class EnsemblAttrib_typeTable(EnsemblTable):
     version = '1'
     depends = [EnsemblAttrib_typeFile]
     ensembl_table = 'attrib_type'
+    tags = ['active']
 
 
 # ======   seq_region    ======
 class EnsemblSeq_regionOfficial(EnsemblExternalFile):
     ensembl_table = 'seq_region'
+    tags = ['active']
 
 
 class EnsemblSeq_regionFile(LocalFile):
@@ -263,11 +281,13 @@ class EnsemblSeq_regionTable(EnsemblTable):
     version = '1'
     depends = [EnsemblSeq_regionFile]
     ensembl_table = 'seq_region'
+    tags = ['active']
 
 
 # ======     gene     ======
 class EnsemblGeneOfficial(EnsemblExternalFile):
     ensembl_table = 'gene'
+    tags = ['active']
 
 
 class EnsemblGeneFile(LocalFile):
@@ -280,6 +300,7 @@ class EnsemblGeneTable(EnsemblTable):
     version = '1'
     depends = [EnsemblGeneFile]
     ensembl_table = 'gene'
+    tags = ['active']
 
 
 # ======     cdna     ======

@@ -8,11 +8,11 @@ MAX_VARIANT_LENGTH = 250  # biologically relevant to remove large structural var
 
 
 class ClinVarVCFOfficial(ExternalFile):
-    version = '20201219'
+    version = '20210213'  # first 4 digits are the year
 
     @property
     def url(self):
-        return 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar_{version}.vcf.gz'.format(version=self.version)
+        return 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/archive_2.0/{year}/clinvar_{version}.vcf.gz'.format(year=self.version[:4], version=self.version)
 
 
 class ClinVarVCFFile(LocalFile):
@@ -24,6 +24,7 @@ class ClinVarVCFFile(LocalFile):
 class ClinVarVCFTable(RecordByRecordImportedTable):
     version = '1'
     depends = [ClinVarVCFFile]
+    tags = ['active']
 
     columns = [
         'chr',

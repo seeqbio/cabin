@@ -19,6 +19,7 @@ class DGIFile(LocalFile):
 class DGITable(ImportedTable):
     version = '1'
     depends = [DGIFile]
+    tags = ['active']
 
     @property
     def schema(self):

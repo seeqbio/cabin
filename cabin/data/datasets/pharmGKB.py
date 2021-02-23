@@ -37,6 +37,7 @@ class pharmGKBTsvFile(LocalFile):
 class pharmGKBTable(ImportedTable):
     version = '1'
     depends = [pharmGKBTsvFile]
+    tags = ['active']
 
     @property
     def schema(self):

@@ -29,6 +29,7 @@ class MedGenHPOFile(S3MirroredLocalFile):
 class MedGenHPOTable(RecordByRecordImportedTable):
     version = '1'
     depends = [MedGenHPOFile]
+    tags = ['active']
 
     @property
     def schema(self):

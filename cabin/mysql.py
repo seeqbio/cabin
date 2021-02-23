@@ -62,7 +62,7 @@ class _MySQL:
                     cnx.rollback()
                     raise
 
-    def wait_for_connection(self, retry_every=1, timeout=30, **cnx_kw):
+    def wait_for_connection(self, retry_every=1, timeout=settings.SGX_MYSQL_CNX_TIMEOUT, **cnx_kw):
         """Returns a connection to MySQL with the given connection kwargs, but
         retries a number of times before raising an exception.
 
