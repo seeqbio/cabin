@@ -20,6 +20,7 @@ class CancerMineCollatedFile(LocalFile):
 class CancerMineCollatedTable(RecordByRecordImportedTable):
     version = '1'
     depends = [CancerMineCollatedFile]
+    tags = ['active']
 
     columns = ['matching_id', 'role', 'do_id', 'cancer_normalized', 'gene_entrez_id', 'citation_count']
 

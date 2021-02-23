@@ -24,6 +24,7 @@ class ClinVarSCVFile(LocalFile):
 class ClinVarSCVTable(RecordByRecordImportedTable):
     version = '1'
     depends = [ClinVarSCVFile]
+    tags = ['active']
 
     columns = [
         'variation_id',

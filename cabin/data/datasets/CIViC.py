@@ -24,6 +24,7 @@ class CIViCFile(LocalFile):
 class CIViCTable(RecordByRecordImportedTable):
     version = '1'
     depends = [CIViCFile]
+    tags = ['active']
 
     columns = [
         'gene',

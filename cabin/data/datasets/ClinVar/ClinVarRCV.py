@@ -25,6 +25,7 @@ class ClinVarRCVFile(LocalFile):
 class ClinVarRCVTable(RecordByRecordImportedTable):
     version = '1'
     depends = [ClinVarRCVFile]
+    tags = ['active']
 
     columns = [
         'rcv_accession',
