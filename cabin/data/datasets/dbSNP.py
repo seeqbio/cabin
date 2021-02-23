@@ -21,6 +21,7 @@ class dbSNPFile(LocalFile):
 class dbSNPTable(RecordByRecordImportedTable):
     version = ' 1'
     depends = [dbSNPFile]
+    tags = ['active']
 
     columns = [
         'gene_symbol',
