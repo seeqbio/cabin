@@ -121,7 +121,12 @@ class Dataset(ABC):
 
             if not dry_run:
                 logger.info('--> producing:      %s' % self.description)
-                self.produce()
+                if all([value.exists() for value in self.inputs.values()]):
+                    self.produce()
+                else:
+                    for dependancy in self.inputs.values():
+                        if not dependancy.exists():
+                            logger.error('--> dependancy missing, requires %s' % self.input.description)
 
     def root_versions(self):
         # returns a list of versions of all root ancestors. Root ancestors are
