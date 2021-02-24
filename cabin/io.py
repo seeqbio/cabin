@@ -1,3 +1,4 @@
+import os
 import csv
 import gzip
 import pysam
@@ -142,15 +143,16 @@ def read_fasta(path, gzipped=False):
 
 
 def wget(source, destination):
-    cmd = ['wget', '-q', '--show-progress', str(source), '-O', str(destination)]
+    cmd = ['wget', '-q', str(source), '-O', str(destination)]
+    if not os.environ.get('CI_PIPELINE_ID'):
+        cmd = cmd + ['--show-progress']
     proc = subprocess.Popen(cmd)
     proc.communicate()
     if proc.returncode == 0:
         logger.info('Successfully downloaded to %s' % destination)
     else:
-        subprocess.call(['rm', destination])  # remove empty file
-        logger.error('Failed to download to %s' % destination)
-
+        os.remove(destination)
+        raise BiodbError('Failed to download to %s' % destination)
 
 def ftp_modify_time(ftp_server, ftp_path):
     """Returns a datetime object containing the modification time of a given
