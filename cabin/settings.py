@@ -18,3 +18,5 @@ SGX_SCHEMA_DIR = SGX_ROOT_DIR / 'schema'
 
 SGX_S3_MIRROR_BUCKET = os.environ.get('SGX_S3_MIRROR_BUCKET', 'sgx-archives')
 SGX_S3_MIRROR_PREFIX = os.environ.get('SGX_S3_MIRROR_PREFIX', 'biodb/mirrors').rstrip('/')
+
+SGX_NON_INTERACTIVE = 'CI_PIPELINE_ID' in os.environ

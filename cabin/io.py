@@ -11,6 +11,7 @@ from pathlib import Path
 
 from biodb import logger
 from biodb import BiodbError
+from biodb import settings
 
 
 def read_xsv(path, delimiter='\t', columns=None, header_leading_hash=True, ignore_leading_hash=False, gzipped=False, encoding=None):
@@ -144,7 +145,7 @@ def read_fasta(path, gzipped=False):
 
 def wget(source, destination):
     cmd = ['wget', '-q', str(source), '-O', str(destination)]
-    if not os.environ.get('CI_PIPELINE_ID'):
+    if not settings.SGX_NON_INTERACTIVE:
         cmd = cmd + ['--show-progress']
     proc = subprocess.Popen(cmd)
     proc.communicate()
