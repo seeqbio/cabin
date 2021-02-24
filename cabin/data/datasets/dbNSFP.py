@@ -1,3 +1,6 @@
+import os
+import zipfile
+
 from biodb import logger
 from biodb.io import unzip
 from biodb.data.db import ImportedTable
@@ -117,7 +120,8 @@ class dbNSFPTable(ImportedTable):
         """
 
     def import_table(self, cursor):
-        extract_dir = unzip(self.input.path)
+        extract_dir = self.input.path
+        dbzipped = zipfile.ZipFile(extract_dir)
 
         # cf. ensembl for more on LOAD DATA
         # cf. https://dev.mysql.com/doc/refman/8.0/en/load-data.html
@@ -131,8 +135,9 @@ class dbNSFPTable(ImportedTable):
         """
         for chrom in [str(x) for x in range(1, 23)] + ['M', 'X', 'Y']:
             logger.info('Processing dbNSFP data for chromsome "%s"' % chrom)
-            path = extract_dir / 'dbNSFP{v}_variant.chr{c}'.format(v=self.version, c=chrom)
-            with path.open() as f:
+            chr_sub = 'dbNSFP{v}_variant.chr{c}'.format(v=self.root_versions()[0], c=chrom)
+            path = dbzipped.extract(chr_sub)
+            with open(path) as f:
                 header = f.readline().strip()[1:].split()
             sql_cols = []
             for col in header:
@@ -155,3 +160,5 @@ class dbNSFPTable(ImportedTable):
                 set_nulls=set_nulls
             )
             cursor.execute(query)
+            os.remove(path)
+        dbzipped.close()
