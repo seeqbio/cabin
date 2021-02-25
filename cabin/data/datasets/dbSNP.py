@@ -15,13 +15,13 @@ class dbSNPOfficial(ExternalFile):
 class dbSNPFile(LocalFile):
     version = '1'
     depends = [dbSNPOfficial]
-    extension = 'txt'
+    extension = 'vcf.gz'
 
 
 class dbSNPTable(RecordByRecordImportedTable):
     version = ' 1'
     depends = [dbSNPFile]
-    tags = ['active']
+    # tags = ['active']
 
     columns = [
         'gene_symbol',
