@@ -3,7 +3,7 @@ from datetime import datetime
 import logging
 logging.basicConfig(
     level=logging.WARNING,
-    format='[{t}] %(message)s'.format(t=datetime.now().strftime('%H:%M:%S'))
+    format="[%(asctime)s] %(levelname)s %(message)s"
 )
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
