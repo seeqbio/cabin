@@ -13,7 +13,6 @@ from biodb import logger
 from biodb import BiodbError
 from biodb import settings
 
-
 def read_xsv(path, delimiter='\t', columns=None, header_leading_hash=True, ignore_leading_hash=False, gzipped=False, encoding=None):
     """
     Parses a delimiter separated text file and yields rows as dictionaries.
@@ -155,6 +154,7 @@ def wget(source, destination):
         os.remove(destination)
         raise BiodbError('Failed to download to %s' % destination)
 
+
 def ftp_modify_time(ftp_server, ftp_path):
     """Returns a datetime object containing the modification time of a given
     FTP path."""
@@ -169,6 +169,15 @@ def ftp_modify_time(ftp_server, ftp_path):
     else:
         ftp_url = 'ftp://{s}{p}'.format(s=ftp_server, p=ftp_path)
         raise BiodbError('Failed to get FTP file modification time for: ' + ftp_url)
+
+
+def cut_tsv_with_zcat(src, dst):
+    """ creates a file with first 5 columns only, eg: partial vcf for dbSNP"""
+    command = 'zcat {src} | cut -f 1-5,8 > {dst}'.format(src=src, dst=dst)
+    proc = subprocess.Popen(command, shell=True)
+    proc.communicate()
+    if proc.returncode:
+        raise BiodbError('Failed to cut: ' + str(src))
 
 
 def gunzip(src, dst):
