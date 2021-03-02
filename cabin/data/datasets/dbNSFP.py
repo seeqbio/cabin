@@ -2,7 +2,6 @@ import os
 import zipfile
 
 from biodb import logger
-from biodb.io import unzip
 from biodb.data.db import ImportedTable
 from biodb.data.files import (
     ExternalFile,
@@ -36,6 +35,7 @@ class dbNSFPFile(S3MirroredLocalFile):
 class dbNSFPTable(ImportedTable):
     version = '1'
     depends = [dbNSFPFile]
+    tags = ['active']
 
     columns = [
         'chr',
