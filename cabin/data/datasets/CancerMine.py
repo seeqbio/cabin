@@ -62,6 +62,8 @@ class CancerMineSentencesFile(LocalFile):
 class CancerMineSentencesTable(RecordByRecordImportedTable):
     version = '1'
     depends = [CancerMineSentencesFile]
+    tags = ['active']
+
 
     columns = ['matching_id', 'pmid', 'predictprob', 'gene_entrez_id', 'sentence']
 
