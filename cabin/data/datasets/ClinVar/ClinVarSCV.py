@@ -8,7 +8,7 @@ from biodb.io import xml_element_clear_memory
 
 
 class ClinVarSCVOfficial(ExternalFile):
-    version = '2020-12'
+    version = '2020-06'
 
     @property
     def url(self):
@@ -22,7 +22,7 @@ class ClinVarSCVFile(LocalFile):
 
 
 class ClinVarSCVTable(RecordByRecordImportedTable):
-    version = '1'
+    version = '2'
     depends = [ClinVarSCVFile]
     tags = ['active']
 

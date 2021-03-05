@@ -9,7 +9,7 @@ from biodb.data.datasets.ClinVar.common import get_xrefs_by_db
 
 
 class ClinVarRCVOfficial(ExternalFile):
-    version = '2020-12'
+    version = '2020-06'
 
     @property
     def url(self):
@@ -23,7 +23,7 @@ class ClinVarRCVFile(LocalFile):
 
 
 class ClinVarRCVTable(RecordByRecordImportedTable):
-    version = '1'
+    version = '2'
     depends = [ClinVarRCVFile]
     tags = ['active']
 
@@ -55,8 +55,9 @@ class ClinVarRCVTable(RecordByRecordImportedTable):
                 medgen_ids                 VARCHAR(2555)  NOT NULL,  -- eg: MedGen:C0024776|MedGen:CN51720
                 omim_ids                   VARCHAR(255)   NOT NULL,  -- eg: OMIM:248600|OMIM:PS248600
                 hpo_ids                    VARCHAR(1255)  NOT NULL,  -- eg: HP:0010862|HP:0010864
-                mondo_ids                  VARCHAR(955)   NOT NULL,  -- eg: MONDO:0015280|MONDO:0018997
-                INDEX (variation_id)
+                mondo_ids                  VARCHAR(255)   NOT NULL,  -- eg: MONDO:0015280|MONDO:0018997
+                INDEX (variation_id),
+                INDEX (mondo_ids)
             );
         """
 

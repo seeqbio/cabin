@@ -1,4 +1,4 @@
-from biodb.io import read_vcf, read_xsv
+from biodb.io import read_vcf
 
 from biodb.data.db import RecordByRecordImportedTable
 from biodb.data.files import LocalFile, ExternalFile
@@ -8,7 +8,7 @@ MAX_VARIANT_LENGTH = 250  # biologically relevant to remove large structural var
 
 
 class ClinVarVCFOfficial(ExternalFile):
-    version = '20210213'  # first 4 digits are the year
+    version = '20200622'  # first 4 digits are the year
 
     @property
     def url(self):
@@ -22,7 +22,7 @@ class ClinVarVCFFile(LocalFile):
 
 
 class ClinVarVCFTable(RecordByRecordImportedTable):
-    version = '1'
+    version = '2'
     depends = [ClinVarVCFFile]
     tags = ['active']
 
