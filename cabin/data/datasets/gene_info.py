@@ -7,27 +7,27 @@ from biodb.data.files import (
 )
 
 
-class gene_infoOfficial(FTPTimestampedFile):
-    version = '2020-12-23'
+class GeneInfoOfficial(FTPTimestampedFile):
+    version = '2021-03-08'
     ftp_server = 'ftp.ncbi.nih.gov'
     ftp_path = '/gene/DATA/GENE_INFO/Mammalia/Homo_sapiens.gene_info.gz'
 
 
-class gene_infoS3Mirror(S3MirrorFile):
+class GeneInfoS3Mirror(S3MirrorFile):
     version = '1'
-    depends = [gene_infoOfficial]
+    depends = [GeneInfoOfficial]
     extension = 'gz'
 
 
-class gene_infoFile(S3MirroredLocalFile):
+class GeneInfoFile(S3MirroredLocalFile):
     version = '1'
-    depends = [gene_infoS3Mirror]
+    depends = [GeneInfoS3Mirror]
     extension = 'gz'
 
 
-class gene_infoTable(RecordByRecordImportedTable):
+class GeneInfoTable(RecordByRecordImportedTable):
     version = '1'
-    depends = [gene_infoFile]
+    depends = [GeneInfoFile]
     tags = ['active']
 
     columns = [
