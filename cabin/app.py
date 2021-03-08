@@ -26,7 +26,6 @@ from biodb.data.db import ImportedTable
 from biodb.data.registry import load_table_registry
 
 
-
 def all_table_datasets(tag):
     # Returns all table datasets with specified tag. If tag is None, returns all
     classes = []
@@ -97,6 +96,20 @@ class DropCommand(AppCommand):
         for _, hdataset in load_table_registry().items():
             if fnmatch.fnmatch(hdataset.name, self.app.args.dataset):
                 logger.info("Dropping table: %s" % hdataset.name)
+                hdataset.drop()
+
+
+class PruneCommand(AppCommand):
+    name = "prune"
+    help = "for all not 'latests', drops tables from db and `system` table."
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def run(self):
+        for _, hdataset in load_table_registry().items():
+            if not hdataset.is_latest():
+                logger.info("Pruning outdated table: %s" % hdataset.name)
                 hdataset.drop()
 
 
@@ -203,6 +216,7 @@ class App:
             'drop-users':       DropUsersCommand(app=self),
             'import':           ImportCommand(app=self),
             'drop':             DropCommand(app=self),
+            'prune':            PruneCommand(app=self),
             'status':           StatusCommand(app=self)
 
         }
