@@ -91,12 +91,17 @@ class DropCommand(AppCommand):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.parser.add_argument('dataset')
+        self.parser.add_argument('-n', '--dry-run', action='store_true', help="show what would be dropped")
 
     def run(self):
         for _, hdataset in load_table_registry().items():
             if fnmatch.fnmatch(hdataset.name, self.app.args.dataset):
-                logger.info("Dropping table: %s" % hdataset.name)
-                hdataset.drop()
+                if (self.app.args.dry_run):
+                    logger.info("Dropping table: %s (dry-run)" % hdataset.name)
+                else:
+                    logger.info("Dropping table: %s" % hdataset.name)
+                    hdataset.drop()
+                    logger.info("Dropped table.")
 
 
 class PruneCommand(AppCommand):
@@ -105,12 +110,17 @@ class PruneCommand(AppCommand):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.parser.add_argument('-n', '--dry-run', action='store_true', help="show what would be pruned")
 
     def run(self):
         for _, hdataset in load_table_registry().items():
             if not hdataset.is_latest():
-                logger.info("Pruning outdated table: %s" % hdataset.name)
-                hdataset.drop()
+                if (self.app.args.dry_run):
+                    logger.info("Pruning outdated table: %s (dry-run)" % hdataset.name)
+                else:
+                    logger.info("Pruning outdated table: %s" % hdataset.name)
+                    hdataset.drop()
+                    logger.info("Pruned outdated table.")
 
 
 class ImportCommand(AppCommand):
