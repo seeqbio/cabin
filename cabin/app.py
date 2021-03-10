@@ -97,7 +97,7 @@ class DropCommand(AppCommand):
         for hdataset in load_table_registry():
             if fnmatch.fnmatch(hdataset.name, self.app.args.dataset):
                 if (self.app.args.dry_run):
-                    logger.info("Dropping table: %s (dry-run)" % hdataset.name)
+                    logger.info("(dry-run) Dropping table: %s" % hdataset.name)
                 else:
                     logger.info("Dropping table: %s" % hdataset.name)
                     hdataset.drop()
@@ -116,7 +116,7 @@ class PruneCommand(AppCommand):
         for hdataset in load_table_registry():
             if not hdataset.is_latest():
                 if (self.app.args.dry_run):
-                    logger.info("Pruning outdated table: %s (dry-run)" % hdataset.name)
+                    logger.info("(dry-run) Pruning outdated table: %s" % hdataset.name)
                 else:
                     logger.info("Pruning outdated table: %s" % hdataset.name)
                     hdataset.drop()
