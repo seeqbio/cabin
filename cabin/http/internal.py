@@ -2,22 +2,18 @@ from flask import Blueprint
 from flask import jsonify
 from biodb import settings
 from biodb.data.registry import load_table_registry
+from biodb.mysql import READER
 
 bp = Blueprint("internal", __name__, url_prefix="/internal")
 
 
 @bp.route("/tables")
 def print_type_to_tablename():
-    tables = {}
-    for _, hdataset in sorted(load_table_registry().items()):
-        if hdataset.is_latest():
-            tables[hdataset.type] = hdataset.name
-
     return jsonify({
-        'user': 'reader',
+        'user': READER,
         'password': settings.SGX_MYSQL_READER_PASSWORD,
         'database': settings.SGX_MYSQL_DB,
-        'tables': tables
+        'tables': {hd.type: hd.name for hd in load_table_registry(latest_only=True)}
     })
 
 
