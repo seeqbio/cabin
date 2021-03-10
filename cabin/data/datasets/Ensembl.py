@@ -107,7 +107,7 @@ class EnsemblExonFile(LocalFile):
 
 
 class EnsemblExonTable(EnsemblTable):
-    version = '1'
+    version = '2'
     depends = [EnsemblExonFile]
     ensembl_table = 'exon'
     tags = ['active']
@@ -126,160 +126,160 @@ class EnsemblAnalysisFile(LocalFile):
 
 
 class EnsemblAnalysisTable(EnsemblTable):
-    version = '1'
+    version = '2'
     depends = [EnsemblAnalysisFile]
     ensembl_table = 'analysis'
     tags = ['active']
 
 
 # =====  exon_transcript   =====
-class EnsemblExon_transcriptOfficial(EnsemblExternalFile):
+class EnsemblExonTranscriptOfficial(EnsemblExternalFile):
     ensembl_table = 'exon_transcript'
     tags = ['active']
 
 
-class EnsemblExon_transcriptFile(LocalFile):
+class EnsemblExonTranscriptFile(LocalFile):
     version = '1'
-    depends = [EnsemblExon_transcriptOfficial]
+    depends = [EnsemblExonTranscriptOfficial]
     extension = 'txt.gz'
 
 
-class EnsemblExon_transcriptTable(EnsemblTable):
-    version = '1'
-    depends = [EnsemblExon_transcriptFile]
+class EnsemblExonTranscriptTable(EnsemblTable):
+    version = '2'
+    depends = [EnsemblExonTranscriptFile]
     ensembl_table = 'exon_transcript'
     tags = ['active']
 
 
 # ======   transcript   ======
-class ensembl_transcriptOfficial(EnsemblExternalFile):
+class EnsemblTranscriptOfficial(EnsemblExternalFile):
     ensembl_table = 'transcript'
     tags = ['active']
 
 
-class ensembl_transcriptFile(LocalFile):
+class EnsemblTranscriptFile(LocalFile):
     version = '1'
-    depends = [ensembl_transcriptOfficial]
+    depends = [EnsemblTranscriptOfficial]
     extension = 'txt.gz'
 
 
-class ensembl_transcriptTable(EnsemblTable):
-    version = '1'
-    depends = [ensembl_transcriptFile]
+class EnsemblTranscriptTable(EnsemblTable):
+    version = '2'
+    depends = [EnsemblTranscriptFile]
     ensembl_table = 'transcript'
     tags = ['active']
 
 
 # ======   translation   ======
-class ensembl_translationOfficial(EnsemblExternalFile):
+class EnsemblTranslationOfficial(EnsemblExternalFile):
     ensembl_table = 'translation'
     tags = ['active']
 
 
-class ensembl_translationFile(LocalFile):
+class EnsemblTranslationFile(LocalFile):
     version = '1'
-    depends = [ensembl_translationOfficial]
+    depends = [EnsemblTranslationOfficial]
     extension = 'txt.gz'
 
 
-class ensembl_translationTable(EnsemblTable):
-    version = '1'
-    depends = [ensembl_translationFile]
+class EnsemblTranslationTable(EnsemblTable):
+    version = '2'
+    depends = [EnsemblTranslationFile]
     ensembl_table = 'translation'
     tags = ['active']
 
 
 # =====  protein_feauture   ======
-class ensembl_protein_featureOfficial(EnsemblExternalFile):
+class EnsemblProteinFeatureOfficial(EnsemblExternalFile):
     ensembl_table = 'protein_feature'
     tags = ['active']
 
 
-class ensembl_protein_featureFile(LocalFile):
+class EnsemblProteinFeatureFile(LocalFile):
     version = '1'
-    depends = [ensembl_protein_featureOfficial]
+    depends = [EnsemblProteinFeatureOfficial]
     extension = 'txt.gz'
 
 
-class ensembl_protein_featureTable(EnsemblTable):
-    version = '1'
-    depends = [ensembl_protein_featureFile]
+class EnsemblProteinFeatureTable(EnsemblTable):
+    version = '2'
+    depends = [EnsemblProteinFeatureFile]
     ensembl_table = 'protein_feature'
     tags = ['active']
 
 
 # =====  transcripti_attrib   =====
-class ensembl_transcript_attribOfficial(EnsemblExternalFile):
+class EnsemblTranscriptAttribOfficial(EnsemblExternalFile):
     ensembl_table = 'transcript_attrib'
     tags = ['active']
 
 
-class ensembl_transcript_attribFile(LocalFile):
+class EnsemblTranscriptAttribFile(LocalFile):
     version = '1'
-    depends = [ensembl_transcript_attribOfficial]
+    depends = [EnsemblTranscriptAttribOfficial]
     extension = 'txt.gz'
 
 
-class ensembl_transcript_attribTable(EnsemblTable):
-    version = '1'
-    depends = [ensembl_transcript_attribFile]
+class EnsemblTranscriptAttribTable(EnsemblTable):
+    version = '2'
+    depends = [EnsemblTranscriptAttribFile]
     ensembl_table = 'transcript_attrib'
     tags = ['active']
 
 
 # ======    gene_attrib    ======
-class ensembl_gene_attribOfficial(EnsemblExternalFile):
+class EnsemblGeneAttribOfficial(EnsemblExternalFile):
     ensembl_table = 'gene_attrib'
     tags = ['active']
 
 
-class ensembl_gene_attribFile(LocalFile):
+class EnsemblGeneAttribFile(LocalFile):
     version = '1'
-    depends = [ensembl_gene_attribOfficial]
+    depends = [EnsemblGeneAttribOfficial]
     extension = 'txt.gz'
 
 
-class ensembl_gene_attribTable(EnsemblTable):
-    version = '1'
-    depends = [ensembl_gene_attribFile]
+class EnsemblGeneAttribTable(EnsemblTable):
+    version = '2'
+    depends = [EnsemblGeneAttribFile]
     ensembl_table = 'gene_attrib'
     tags = ['active']
 
 
 # ======   attrib_type   ======
-class EnsemblAttrib_typeOfficial(EnsemblExternalFile):
+class EnsemblAttribTypeOfficial(EnsemblExternalFile):
     ensembl_table = 'attrib_type'
     tags = ['active']
 
 
-class EnsemblAttrib_typeFile(LocalFile):
+class EnsemblAttribTypeFile(LocalFile):
     version = '1'
-    depends = [EnsemblAttrib_typeOfficial]
+    depends = [EnsemblAttribTypeOfficial]
     extension = 'txt.gz'
 
 
-class EnsemblAttrib_typeTable(EnsemblTable):
-    version = '1'
-    depends = [EnsemblAttrib_typeFile]
+class EnsemblAttribTypeTable(EnsemblTable):
+    version = '2'
+    depends = [EnsemblAttribTypeFile]
     ensembl_table = 'attrib_type'
     tags = ['active']
 
 
 # ======   seq_region    ======
-class EnsemblSeq_regionOfficial(EnsemblExternalFile):
+class EnsemblSeqRegionOfficial(EnsemblExternalFile):
     ensembl_table = 'seq_region'
     tags = ['active']
 
 
-class EnsemblSeq_regionFile(LocalFile):
+class EnsemblSeqRegionFile(LocalFile):
     version = '1'
-    depends = [EnsemblSeq_regionOfficial]
+    depends = [EnsemblSeqRegionOfficial]
     extension = 'txt.gz'
 
 
-class EnsemblSeq_regionTable(EnsemblTable):
-    version = '1'
-    depends = [EnsemblSeq_regionFile]
+class EnsemblSeqRegionTable(EnsemblTable):
+    version = '2'
+    depends = [EnsemblSeqRegionFile]
     ensembl_table = 'seq_region'
     tags = ['active']
 
@@ -297,7 +297,7 @@ class EnsemblGeneFile(LocalFile):
 
 
 class EnsemblGeneTable(EnsemblTable):
-    version = '1'
+    version = '2'
     depends = [EnsemblGeneFile]
     ensembl_table = 'gene'
     tags = ['active']
@@ -319,9 +319,9 @@ class EnsemblCdnaFile(LocalFile):
 
 
 class EnsemblCdnaTable(RecordByRecordImportedTable):
-    version = '1'
+    version = '2'
     depends = [EnsemblCdnaFile]
-
+    tags = ['active']
     columns = ['ensembl_transcript', 'cdna']
 
     @property

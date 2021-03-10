@@ -28,7 +28,7 @@ class ClinVarH4VFile(S3MirroredLocalFile):
 
 
 class ClinVarH4VTable(RecordByRecordImportedTable):
-    version = '1'
+    version = '2'
     depends = [ClinVarH4VFile]
     tags = ['active']
 
@@ -57,7 +57,9 @@ class ClinVarH4VTable(RecordByRecordImportedTable):
               refseq_protein         VARCHAR(255) NULL,            -- substring of ProteinExpression containing the refseq identifier (NP, XP, etc)
               hgvs_p                 VARCHAR(255) NULL,
               INDEX (refseq_transcript),
-              INDEX (variation_id)
+              INDEX (variation_id),
+              INDEX (gene_symbol),
+              INDEX (gene_id)
             );
     """
 
