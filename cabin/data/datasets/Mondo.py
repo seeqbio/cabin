@@ -1,3 +1,6 @@
+import networkx as nx
+
+from biodb.mysql import MYSQL
 from biodb.data.db import RecordByRecordImportedTable
 from biodb.data.files import LocalFile, ExternalFile
 from biodb.io import read_obo
@@ -53,3 +56,51 @@ class MondoTable(RecordByRecordImportedTable):
                 'mesh_ids': '|'.join(xref for xref in term['xrefs'] if xref.startswith('MESH:'))
 
             }
+
+class MondoAncestryTable(RecordByRecordImportedTable):
+    """Calculates all ancestor-descendant relationships in mondo by traversing
+    the is-a DAG, as per the "parents" column of Mondo.
+
+    Motivating use case: queries against various sources (e.g. ClinVar) where
+    the user-specified disease id is allowed to be a descendant of diseases of
+    interest.
+
+    Example: give me variants associated with Leukemia, also include variants
+    associated with subtypes like AML."""
+    version = '3'
+    depends = [MondoTable]
+    tags = ['active']
+
+    columns = ['descendant_id', 'ancestor_id']
+
+    @property
+    def schema(self):
+        return """
+            CREATE TABLE `{table}` (
+                descendant_id  VARCHAR(255) NOT NULL,
+                ancestor_id    VARCHAR(255) NOT NULL,
+                INDEX (descendant_id),
+                INDEX (ancestor_id)
+            );
+        """
+
+    def read(self):
+        dag = nx.DiGraph()
+
+        with MYSQL.cursor() as cursor:
+            cursor.execute('SELECT id, parents FROM `{mondo}`'.format(mondo=self.input.table_name))
+            for disease_id, parents in cursor:
+                dag.add_node(disease_id)
+                if parents:
+                    dag.add_edges_from([(parent, disease_id) for parent in parents.split('|')])
+
+        # Naive traversal logic using nx.ancestors on every node. This means
+        # traversing each edge many times over which takes time, can be
+        # improved at the expense of writing a more involved traversal algo and
+        # more memory usage.
+        # This also doesn't have the ability to easily calculate the
+        # edge-distance between each pair of nodes, no use case for this yet.
+        for node in dag.nodes:
+            yield {'descendant_id': node, 'ancestor_id': node}
+            for ancestor in nx.ancestors(dag, node):
+                yield {'descendant_id': node, 'ancestor_id': ancestor}
