@@ -1,3 +1,4 @@
+from biodb.mysql import MYSQL
 from biodb.data.db import RecordByRecordImportedTable
 from biodb.data.files import LocalFile, ExternalFile
 from biodb.io import read_xsv
@@ -42,3 +43,9 @@ class TestDatasetTable(RecordByRecordImportedTable):
     def read(self):
         for row in read_xsv(self.inputs['TestDatasetFile'].path):
             yield row
+
+    def check(self):
+        with MYSQL.cursor() as cursor:
+            cursor.execute('SELECT COUNT(*) FROM `{table}`'.format(table=self.table_name))
+            count = cursor.fetchone()[0]
+            assert count == 9

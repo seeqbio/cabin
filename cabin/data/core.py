@@ -36,6 +36,12 @@ class Dataset(ABC):
             Produce a copy of this Dataset instance; assumes all its
             dependencies already exist().
 
+    Optional methods:
+
+        check():
+            Performs any kind of consistency check when the dataset is
+            produced. Expected to raise in case of errors.
+
     -----------------
 
     Available attributes and methods:
@@ -120,9 +126,13 @@ class Dataset(ABC):
                 inp.produce_recursive(dry_run=dry_run)
 
             if not dry_run:
-                logger.info('producing:      %s' % self.description)
+                logger.info('producing:'.ljust(30) + self.description)
                 self.produce()
-                logger.info('produced:       %s' % self.description)
+                logger.info('produced:'.ljust(30) + self.description)
+
+                if hasattr(self, 'check'):
+                    logger.info('check:'.ljust(30) + self.description)
+                    self.check()
 
     def root_versions(self):
         # returns a list of versions of all root ancestors. Root ancestors are
