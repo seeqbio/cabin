@@ -104,3 +104,17 @@ class MondoAncestryTable(RecordByRecordImportedTable):
             yield {'descendant_id': node, 'ancestor_id': node}
             for ancestor in nx.ancestors(dag, node):
                 yield {'descendant_id': node, 'ancestor_id': ancestor}
+
+    def check(self):
+        # every mondo entry should have one and only one row in the ancestry
+        # table where the descendant and ancestor is itself, see read().
+        with MYSQL.cursor() as cursor:
+            cursor.execute('SELECT COUNT(*) FROM `{table}`'.format(table=self.input.table_name))
+            mondo_count = cursor.fetchone()[0]
+
+            cursor.execute('SELECT COUNT(*) FROM `{table}` WHERE descendant_id = ancestor_id'.format(table=self.table_name))
+            matching_count = cursor.fetchone()[0]
+
+            assert matching_count == mondo_count, \
+                'Unexpected number of rows with matching descendant_id and ' \
+                'ancestor_id. Expected %d, got %d' % (mondo_count, matching_count)
