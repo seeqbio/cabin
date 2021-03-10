@@ -109,7 +109,8 @@ def imported_datasets(type=None):
     query = 'SELECT name, formula, sha FROM `system`;'
     if type:
         query += ' WHERE type = "%s"' % type
-    with MYSQL.cursor(user='reader') as cursor:
+
+    with MYSQL.cursor() as cursor:
         cursor.execute(query)
         result = cursor.fetchall()
 

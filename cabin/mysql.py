@@ -38,7 +38,7 @@ class _MySQL:
             for table in cursor._created_tables:
                 cursor.execute('DROP TABLE IF EXISTS `%s`;' % table)
 
-        with self.connection('writer', **connection_kw) as cnx:
+        with self.connection(WRITER, **connection_kw) as cnx:
             cnx.start_transaction()
             with cnx.cursor(**cursor_kw) as cursor:
                 cursor._created_tables = []
@@ -89,8 +89,8 @@ class _MySQL:
                 sleep(retry_every)
                 time_left -= retry_every
 
-        sys.stderr.write('\n%s\n' % str(last_exception))
-        raise BiodbError('Failed to connect to MySQL after %d seconds!' % timeout)
+        sys.stderr.write('\n')
+        raise BiodbError('Failed to connect to MySQL with %s' % str(last_exception))
 
     @contextmanager
     def connection(self, user, **kw):
@@ -130,7 +130,7 @@ class _MySQL:
             cnx.close()
 
     @contextmanager
-    def cursor(self, user, **kwargs):
+    def cursor(self, user=READER, **kwargs):
         with self.connection(user) as cnx:
             with cnx.cursor(**kwargs) as cursor:
                 yield cursor
@@ -260,7 +260,7 @@ class _MySQL:
                 sys.stderr.write(cursor.statement + '\n')
             return cursor.fetchone()[0]
 
-        with self.cursor(user='reader') as cursor:
+        with self.cursor(user=READER) as cursor:
             cursor.execute('SELECT COUNT(*) FROM `{table}`'.format(table=first))
             first_count = get_result(cursor)
 
