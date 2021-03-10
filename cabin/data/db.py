@@ -72,6 +72,7 @@ class ImportedTable(Dataset):
         result = cursor.fetchall()[0][0]
         return result
 
+
 class RecordByRecordImportedTable(ImportedTable):
     columms = AbstractAttribute()
     """A list of columns as per SQL schema which is used to produce the

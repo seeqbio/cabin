@@ -57,13 +57,14 @@ class MondoTable(RecordByRecordImportedTable):
 
             }
 
+
 class MondoAncestryTable(RecordByRecordImportedTable):
     """Calculates all ancestor-descendant relationships in mondo by traversing
     the is-a DAG, as per the "parents" column of Mondo.
 
     Motivating use case: queries against various sources (e.g. ClinVar) where
-    the user-specified disease id is allowed to be a descendant of diseases of
-    interest.
+    the user-specified disease id is allowed to be a supertype of diseases for
+    which clinical evidence exists.
 
     Example: give me variants associated with Leukemia, also include variants
     associated with subtypes like AML."""

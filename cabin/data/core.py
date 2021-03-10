@@ -117,21 +117,21 @@ class Dataset(ABC):
     # override any of them.
     def produce_recursive(self, dry_run=False):
         if self.exists():
-            logger.info('already exists: %s' % self.description)
+            logger.info('already exists:'.ljust(20) + self.description)
         else:
-            logger.info('to be produced: %s' % self.description)
+            logger.info('to be produced:'.ljust(20) + self.description)
 
             for inp in self.inputs.values():
                 # recurse
                 inp.produce_recursive(dry_run=dry_run)
 
             if not dry_run:
-                logger.info('producing:'.ljust(30) + self.description)
+                logger.info('producing:'.ljust(20) + self.description)
                 self.produce()
-                logger.info('produced:'.ljust(30) + self.description)
+                logger.info('produced:'.ljust(20) + self.description)
 
                 if hasattr(self, 'check'):
-                    logger.info('check:'.ljust(30) + self.description)
+                    logger.info('check:'.ljust(20) + self.description)
                     self.check()
 
     def root_versions(self):
