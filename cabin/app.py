@@ -94,7 +94,7 @@ class DropCommand(AppCommand):
         self.parser.add_argument('-n', '--dry-run', action='store_true', help="show what would be dropped")
 
     def run(self):
-        for _, hdataset in load_table_registry().items():
+        for hdataset in load_table_registry():
             if fnmatch.fnmatch(hdataset.name, self.app.args.dataset):
                 if (self.app.args.dry_run):
                     logger.info("Dropping table: %s (dry-run)" % hdataset.name)
@@ -113,7 +113,7 @@ class PruneCommand(AppCommand):
         self.parser.add_argument('-n', '--dry-run', action='store_true', help="show what would be pruned")
 
     def run(self):
-        for _, hdataset in load_table_registry().items():
+        for hdataset in load_table_registry():
             if not hdataset.is_latest():
                 if (self.app.args.dry_run):
                     logger.info("Pruning outdated table: %s (dry-run)" % hdataset.name)
@@ -191,7 +191,7 @@ class StatusCommand(AppCommand):
         # content lines
         class_names = [cls.__name__ for cls in glob_table_datasets(self.app.args.dataset)]
 
-        for _, hdataset in sorted(load_table_registry().items()):
+        for hdataset in load_table_registry():
             if hdataset.type not in class_names:
                 continue
             row = [

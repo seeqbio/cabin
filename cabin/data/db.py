@@ -109,6 +109,7 @@ def imported_datasets(type=None):
     query = 'SELECT name, formula, sha FROM `system`;'
     if type:
         query += ' WHERE type = "%s"' % type
+    query += ' ORDER BY name'
 
     with MYSQL.cursor() as cursor:
         cursor.execute(query)

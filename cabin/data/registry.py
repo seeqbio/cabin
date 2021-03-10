@@ -59,8 +59,8 @@ for name, cls in TYPE_REGISTRY.items():
 # DB might change throughout the course of execution
 # NOTE in python 3.7+ we can just define __getattr__, cf. https://stackoverflow.com/a/48916205
 def load_table_registry(latest_only=False):
-    return {
-        historical.name: historical
+    return [
+        historical
         for historical in imported_datasets()
         if not latest_only or historical.is_latest()
-    }
+    ]
