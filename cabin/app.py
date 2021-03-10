@@ -73,7 +73,7 @@ class ListCommand(AppCommand):
     help = "list all datasets for which a handler exists"
 
     def run(self):
-        logger.info('\n'.join(c for c in registry.TYPE_REGISTRY))
+        print('\n'.join(c for c in registry.TYPE_REGISTRY))
 
 
 class DropUsersCommand(AppCommand):
