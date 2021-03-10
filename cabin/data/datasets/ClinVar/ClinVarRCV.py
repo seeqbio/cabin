@@ -23,7 +23,7 @@ class ClinVarRCVFile(LocalFile):
 
 
 class ClinVarRCVTable(RecordByRecordImportedTable):
-    version = '2'
+    version = '3'
     depends = [ClinVarRCVFile]
     tags = ['active']
 
@@ -46,7 +46,7 @@ class ClinVarRCVTable(RecordByRecordImportedTable):
         return """
             CREATE TABLE `{table}` (
                 rcv_accession              VARCHAR(255)   PRIMARY KEY,
-                rcv_clinsig                VARCHAR(1023)  NOT NULL,
+                rcv_clinsig                VARCHAR(255)   NOT NULL,
                 variation_id               VARCHAR(255)   NOT NULL,
                 evidence_pmids             VARCHAR(5844)  NOT NULL,
                 evidence_descriptions      LONGTEXT       NOT NULL,  -- description of observations / sumamry of literature findings
@@ -57,6 +57,7 @@ class ClinVarRCVTable(RecordByRecordImportedTable):
                 hpo_ids                    VARCHAR(1255)  NOT NULL,  -- eg: HP:0010862|HP:0010864
                 mondo_ids                  VARCHAR(255)   NOT NULL,  -- eg: MONDO:0015280|MONDO:0018997
                 INDEX (variation_id),
+                INDEX (rcv_clinsig),
                 INDEX (mondo_ids)
             );
         """
