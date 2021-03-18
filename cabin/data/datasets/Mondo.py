@@ -22,11 +22,11 @@ class MondoFile(LocalFile):
 
 
 class MondoTable(RecordByRecordImportedTable):
-    version = '1'
+    version = '2'
     depends = [MondoFile]
     tags = ['active']
 
-    columns = ['name', 'id', 'children', 'parents', 'hpo_ids', 'do_ids', 'omim_ids', 'mesh_ids']
+    columns = ['name', 'id', 'def', 'children', 'parents', 'hpo_ids', 'do_ids', 'omim_ids', 'mesh_ids']
 
     @property
     def schema(self):
@@ -34,8 +34,9 @@ class MondoTable(RecordByRecordImportedTable):
           CREATE TABLE `{table}` (
             name       VARCHAR(255)   NOT NULL,         -- human readable disease name
             id         VARCHAR(255)   PRIMARY KEY,      -- unique identifier, eg: MONDO:0004355
-            parents    VARCHAR(255)   NOT NULL,         -- pipe separated immediate parent
+            def        TEXT           NULL,             -- definition of the disease
             children   TEXT           NOT NULL,         -- pipe separated immediate children
+            parents    VARCHAR(255)   NOT NULL,         -- pipe separated immediate parent
             hpo_ids    VARCHAR(255)   NOT NULL,         -- xrefs to Human Phenotype Ontology
             do_ids     VARCHAR(255)   NOT NULL,         -- xrefs to Disease Ontology
             omim_ids   VARCHAR(255)   NOT NULL,         -- xrefs to Online Mendelian Inheritance in Man
@@ -48,6 +49,7 @@ class MondoTable(RecordByRecordImportedTable):
             yield {
                 'id': term['id'],
                 'name': term['name'],
+                'def': term['def'],
                 'children': '|'.join(term['children']),
                 'parents': '|'.join(term['parents']),
                 'do_ids': '|'.join(xref for xref in term['xrefs'] if xref.startswith('DOID:')),
