@@ -135,3 +135,50 @@ class CIViCTable(RecordByRecordImportedTable):
 
             yield row
 
+
+class CIViCGeneOfficial(ExternalFile):
+    version = '01-Nov-2020'
+
+    @property
+    def url(self):
+        return 'https://civicdb.org/downloads/{version}/{version}-GeneSummaries.tsv'.format(version=self.version)
+
+
+class CIViCGeneFile(LocalFile):
+    version = '1'
+    depends = [CIViCGeneOfficial]
+    extension = 'tsv'
+
+
+class CIViCGeneTable(RecordByRecordImportedTable):
+    version = '1'
+    depends = [CIViCGeneFile]
+    tags = ['active']
+
+    columns = [
+        'gene_civic_url',
+        'name',
+        'entrez_id',
+        'description',
+        ]
+
+
+    @property
+    def schema(self):
+        return """
+            CREATE TABLE `{table}` (
+                gene_civic_url             VARCHAR(225) NOT NULL,
+                name                       VARCHAR(225) NOT NULL,
+                entrez_id                  VARCHAR(225) NOT NULL,
+                description                VARCHAR(225) NOT NULL,
+                INDEX (name),
+                INDEX (entrez_id)
+            );
+        """
+    def import_table(self, cursor):
+        cursor.execute("""
+            LOAD DATA LOCAL INFILE '{path}'
+            INTO TABLE `{table}`
+            IGNORE 1 LINES
+            (@dummy, gene_civic_url, name, entrez_id, description)
+        """.format(path=self.input.path, table=self.table_name))
