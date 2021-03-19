@@ -124,10 +124,10 @@ def read_obo(path):
 
         children = [child.id for child in ontology[term.id].subclasses(distance=1, with_self=False)]
         parents = [parent.id for parent in ontology[term.id].superclasses(distance=1, with_self=False)]
-
         yield {
             'name': term.name,
             'id': term.id,
+            'def': term.definition,
             'children': children,
             'parents': parents,
             'xrefs': [xref.id for xref in term.xrefs]
