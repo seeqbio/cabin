@@ -124,18 +124,20 @@ class ClinVarVariationToGeneTable(ImportedTable):
     def schema(self):
         return """
             CREATE TABLE `{table}` (
-                variation_id      INT          NOT NULL,
+                variation_id      VARCHAR(255)  NOT NULL,
                 gene_id           VARCHAR(255) NOT NULL,
-                gene_symbol       VARCHAR(255) NOT NULL
+                gene_symbol       VARCHAR(255) NOT NULL,
+                INDEX(variation_id),
+                INDEX(gene_id),
+                INDEX(gene_symbol)
             )
         """
 
     def import_table(self, cursor):
-        sql_insert = (
-            """
+        sql_insert = """
                 INSERT INTO `{table}`(variation_id, gene_symbol, gene_id)
                 SELECT variation_id, gene_symbol, gene_id
                 FROM `{H4V}`
                 GROUP BY variation_id, gene_symbol, gene_id;
-            """.format(table=self.table_name, H4V=ClinVarH4VTable().table_name))
+            """.format(table=self.table_name, H4V=self.input.table_name)
         cursor.execute(sql_insert)
