@@ -169,10 +169,9 @@ class CIViCGeneTable(RecordByRecordImportedTable):
             CREATE TABLE `{table}` (
                 gene_civic_url             VARCHAR(225) NOT NULL,
                 name                       VARCHAR(225) NOT NULL,
-                entrez_id                  VARCHAR(225) NOT NULL,
-                description                VARCHAR(225) NOT NULL,
-                INDEX (name),
-                INDEX (entrez_id)
+                entrez_id                  VARCHAR(225) NOT NULL PRIMARY KEY,
+                description                TEXT         NOT NULL,
+                INDEX (name)
             );
         """
     def import_table(self, cursor):
