@@ -9,6 +9,8 @@ class PfamOfficial(ExternalFile):
 
     @property
     def url(self):
+        # Next to each .txt.gz file there is an .sql.gz file containing its
+        # intended SQL schema. Note that schema changes over pfam versions
         return 'ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam{version}/database_files/pfamA.txt.gz'.format(version=self.version)
 
 
@@ -19,7 +21,7 @@ class PfamFile(LocalFile):
 
 
 class PfamTable(ImportedTable):
-    version = '1'
+    version = '2'
     depends = [PfamFile]
     tags = ['active']
 
@@ -39,4 +41,5 @@ class PfamTable(ImportedTable):
             cursor.execute("""
                 LOAD DATA LOCAL INFILE '{path}'
                 INTO TABLE `{table}`
+                (pfam_acc, @dummy, @dummy, description, @dummy, @dummy, @dummy, comment_)
             """.format(path=temp.name, table=self.table_name))
