@@ -33,7 +33,7 @@ class dbNSFPFile(S3MirroredLocalFile):
 
 
 class dbNSFPTable(ImportedTable):
-    version = '1'
+    version = '2'
     depends = [dbNSFPFile]
     tags = ['active']
 
@@ -48,13 +48,20 @@ class dbNSFPTable(ImportedTable):
         'SIFT_pred',
         'FATHMM_pred',
         'MutationTaster_pred',
+        'MetaSVM_pred',
+        'MetaLR_pred',
+        'M-CAP_pred',
+        'fathmm-MKL_coding_pred',
         'SIFT_score',
         'FATHMM_score',
         'MutationTaster_score',
         '1000Gp3_AF',
-        'ExAC_AF',
         'gnomAD_exomes_AF',
         'gnomAD_genomes_AF',
+        'ALSPAC_AF',
+        'ExAC_AF',
+        'ExAC_Adj_AF',
+        'ExAC_nonTCGA_AF',
         'LRT_score',
         'MutationAssessor_score',
         'LoFtool_score',
@@ -62,7 +69,6 @@ class dbNSFPTable(ImportedTable):
         'MetaLR_score',
         'MutPred_score',
         'fathmm-MKL_coding_score',
-        'GenoCanyon_score',
         'integrated_fitCons_score',
         'GM12878_fitCons_score',
         'H1-hESC_fitCons_score',
@@ -85,9 +91,12 @@ class dbNSFPTable(ImportedTable):
             genename                     VARCHAR(255),         -- HGNC gene symbol
             -- Allele frequency fields
             1000Gp3_AF                   FLOAT,
-            ExAC_AF                      FLOAT,
             gnomAD_exomes_AF             FLOAT,
             gnomAD_genomes_AF            FLOAT,
+            ALSPAC_AF                    FLOAT,
+            ExAC_AF                      FLOAT,
+            ExAC_Adj_AF                  FLOAT,
+            ExAC_nonTCGA_AF              FLOAT,
             -- clinical impact predictions, see dbNSFP readme for
             -- (a) conversion between codes/integers and impact predictions
             -- (b) delimiters for multiple predictions
@@ -95,6 +104,10 @@ class dbNSFPTable(ImportedTable):
             SIFT_pred                    VARCHAR(255),
             FATHMM_pred                  VARCHAR(255),
             MutationTaster_pred          VARCHAR(255),
+            MetaSVM_pred                 VARCHAR(255),
+            MetaLR_pred                  VARCHAR(255),
+            `M-CAP_pred`                 VARCHAR(255),
+            `fathmm-MKL_coding_pred`     VARCHAR(255),
             SIFT_score                   VARCHAR(255),         -- `;` separated list of floats kept as string
             FATHMM_score                 VARCHAR(255),         -- `;` separated list of floats kept as string
             MutationTaster_score         VARCHAR(255),         -- `;` separated list of floats kept as string
@@ -105,7 +118,6 @@ class dbNSFPTable(ImportedTable):
             MetaLR_score                 FLOAT,                -- ensembl method, larger = damaging
             MutPred_score                FLOAT,                -- predictor, larger = damaging
             `fathmm-MKL_coding_score`    FLOAT,                -- predictor, larger = damaging
-            GenoCanyon_score             FLOAT,                -- predictor, larger = damaging
             -- concervation scores, larger = more conserved = likely damaging
             integrated_fitCons_score     FLOAT,                -- integration (ie: highly correlated, not indep.) of: GM12878, H1-hESC and HUVEC
             GM12878_fitCons_score        FLOAT,                -- fitCons of cell type, GM12878
