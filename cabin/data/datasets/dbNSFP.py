@@ -90,13 +90,12 @@ class dbNSFPTable(ImportedTable):
             rs_dbSNP150                  VARCHAR(255),
             genename                     VARCHAR(255),         -- HGNC gene symbol
             -- Allele frequency fields
-            1000Gp3_AF                   FLOAT,
-            gnomAD_exomes_AF             FLOAT,
-            gnomAD_genomes_AF            FLOAT,
-            ALSPAC_AF                    FLOAT,
-            ExAC_AF                      FLOAT,
-            ExAC_Adj_AF                  FLOAT,
-            ExAC_nonTCGA_AF              FLOAT,
+            1000Gp3_AF                   FLOAT,      -- Alternative allele frequency in the whole 1000Gp3 data.
+            gnomAD_exomes_AF             FLOAT,      -- Alternative allele frequency in the whole gnomAD exome samples (123,136 samples)
+            gnomAD_genomes_AF            FLOAT,      -- Alternative allele frequency in the whole gnomAD genome samples (15,496 samples)
+            ExAC_AF                      FLOAT,      -- Allele frequency in total ExAC samples
+            ExAC_Adj_AF                  FLOAT,      -- Adjusted Alt allele frequency (DP >= 10 & GQ >= 20) in total ExAC samples
+            ExAC_nonTCGA_AF              FLOAT,      -- Allele frequency in total ExAC_nonTCGA samples
             -- clinical impact predictions, see dbNSFP readme for
             -- (a) conversion between codes/integers and impact predictions
             -- (b) delimiters for multiple predictions
