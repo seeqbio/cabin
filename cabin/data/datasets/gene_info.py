@@ -69,3 +69,36 @@ class GeneInfoTable(RecordByRecordImportedTable):
     def read(self):
         for row in read_xsv(self.input.path, gzipped=True):
             yield row
+
+
+class GeneSynonymsTable(RecordByRecordImportedTable):
+    version = '1'
+    depends = [GeneInfoFile]
+    tags = ['active']
+
+    columns = [
+        'gene_id',
+        'gene_symbol',
+        'canonical_symbol',
+    ]
+
+    @property
+    def schema(self):
+        return """
+            CREATE TABLE `{table}` (
+                gene_id                     VARCHAR(255) NOT NULL,  -- eg: 4536
+                gene_symbol                 VARCHAR(255) NOT NULL,  -- eg: MTND2
+                canonical_symbol            VARCHAR(255) NOT NULL,  -- eg: ND2
+                INDEX (canonical_symbol),
+                INDEX (gene_id)
+            );
+        """
+
+    def read(self):
+        for row in read_xsv(self.input.path, gzipped=True):
+            seen_entries = set()
+            for synonym in row['Synonyms'].split('|'):
+                entry = (row['GeneID'], synonym, row['Symbol'])
+                if entry not in seen_entries:
+                    seen_entries.add(entry)
+                    yield dict(zip(self.columns, entry))
