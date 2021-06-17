@@ -1,3 +1,4 @@
+from biodb.mysql import MYSQL
 from biodb.io import read_xsv
 from biodb.data.db import RecordByRecordImportedTable
 from biodb.data.files import (
@@ -73,7 +74,7 @@ class GeneInfoTable(RecordByRecordImportedTable):
 
 class GeneSynonymsTable(RecordByRecordImportedTable):
     version = '1'
-    depends = [GeneInfoFile]
+    depends = [GeneInfoTable]
     tags = ['active']
 
     columns = [
@@ -95,10 +96,14 @@ class GeneSynonymsTable(RecordByRecordImportedTable):
         """
 
     def read(self):
-        for row in read_xsv(self.input.path, gzipped=True):
-            seen_entries = set()
-            for synonym in row['Synonyms'].split('|'):
-                entry = (row['GeneID'], synonym, row['Symbol'])
-                if entry not in seen_entries:
-                    seen_entries.add(entry)
-                    yield dict(zip(self.columns, entry))
+        with MYSQL.cursor() as cursor:
+            query = """
+                SELECT gene_id, gene_symbol, synonyms 
+                FROM `{GeneInfo}`
+            """.format(GeneInfo=self.input.table_name)
+            cursor.execute(query)
+            for gene_id, symbol, synonyms in cursor.fetchall():
+                synonyms = synonyms.split('|')
+                for synonym in synonyms:
+                    yield dict(zip(self.columns, (gene_id, synonym, symbol)))
+                yield dict(zip(self.columns, (gene_id, symbol, symbol)))
