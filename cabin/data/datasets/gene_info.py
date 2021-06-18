@@ -1,3 +1,4 @@
+from biodb.mysql import MYSQL
 from biodb.io import read_xsv
 from biodb.data.db import RecordByRecordImportedTable
 from biodb.data.files import (
@@ -69,3 +70,40 @@ class GeneInfoTable(RecordByRecordImportedTable):
     def read(self):
         for row in read_xsv(self.input.path, gzipped=True):
             yield row
+
+
+class GeneSynonymsTable(RecordByRecordImportedTable):
+    version = '1'
+    depends = [GeneInfoTable]
+    tags = ['active']
+
+    columns = [
+        'gene_id',
+        'gene_symbol',
+        'canonical_symbol',
+    ]
+
+    @property
+    def schema(self):
+        return """
+            CREATE TABLE `{table}` (
+                gene_id                     VARCHAR(255) NOT NULL,  -- eg: 4536
+                gene_symbol                 VARCHAR(255) NOT NULL,  -- eg: MTND2
+                canonical_symbol            VARCHAR(255) NOT NULL,  -- eg: ND2
+                INDEX (canonical_symbol),
+                INDEX (gene_id)
+            );
+        """
+
+    def read(self):
+        with MYSQL.cursor() as cursor:
+            query = """
+                SELECT gene_id, gene_symbol, synonyms 
+                FROM `{GeneInfo}`
+            """.format(GeneInfo=self.input.table_name)
+            cursor.execute(query)
+            for gene_id, symbol, synonyms in cursor.fetchall():
+                synonyms = synonyms.split('|')
+                for synonym in synonyms:
+                    yield dict(zip(self.columns, (gene_id, synonym, symbol)))
+                yield dict(zip(self.columns, (gene_id, symbol, symbol)))
