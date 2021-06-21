@@ -58,7 +58,6 @@ class dbNSFPTable(ImportedTable):
         '1000Gp3_AF',
         'gnomAD_exomes_AF',
         'gnomAD_genomes_AF',
-        'ALSPAC_AF',
         'ExAC_AF',
         'ExAC_Adj_AF',
         'ExAC_nonTCGA_AF',
