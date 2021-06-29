@@ -338,3 +338,151 @@ class EnsemblCdnaTable(RecordByRecordImportedTable):
             # drop the ".X" version
             yield {'ensembl_transcript': name.split('.')[0],
                    'cdna': sequence}
+
+
+# ======     Derived exon & transcript info     ======
+from biodb.mysql import MYSQL
+from biodb.data.db import RecordByRecordImportedTable
+
+
+class SGXCodingExonTable(RecordByRecordImportedTable):
+    """ Coding exon information per coding transcript, such that exon-transcript
+    pair are unique. Info captures the coding region (via the translation table)
+        hypothetical ex:
+            exon rank 3 --> cds starts at position 12 (inclusive)
+            exons 4, 5, 6 --> internal are coding, cds for full exon length
+            exon rank 7 --> cds ends at position 58 (exclusive)
+        Note that exons 1,2 are not represented (not coding)
+    """
+
+
+    version = '1'
+    depends = [
+        EnsemblExonTranscriptTable,
+        EnsemblTranscriptTable,
+        EnsemblGeneTable,
+        EnsemblExonTable,
+        EnsemblTranslationTable
+    ]
+
+    @property
+    def depends_table_names(cls):
+       return {ds().type: ds().name for ds in cls.depends}
+ 
+    tags = ['active']
+
+    columns = [
+        'ensg',
+        'enst',
+        'ense',
+        'exon_rank',
+        'coding_start',
+        'coding_end'
+    ]
+
+    @property
+    def schema(self):
+        return """
+          CREATE TABLE `{table}` (
+            ensg                 VARCHAR(255)   NOT NULL,         -- ensemble stable gene id, eg: ENSG00000138413
+            enst                 VARCHAR(255)   NOT NULL,         -- ensembl stable transcript id, eg: ENST00000345146
+            ense                 VARCHAR(255)   NOT NULL,         -- ensembl stable exon ide, eg: ENSE00003564564
+            exon_rank            VARCHAR(255)   NOT NULL,         -- order of exons (1-based), only includes cds exons. eg: 3
+            coding_start         VARCHAR(255)   NOT NULL,         -- sgx specified inclusive
+            coding_end           VARCHAR(255)   NOT NULL,         -- sgx specified exclusing, such that length = coding_end - coding_start
+            INDEX (ensg)
+          );
+        """
+
+    def read(self):
+        """ For each transcript, run `enst_exons()` to select all exons, combine
+        using arithmetic to exon-by-transcript properties. Note: the resulting 
+        row is primarily generate from enst_exon, hence adding repeating info
+        of transcripts (enst, ensg) for each row.
+        """
+        def enst_exons(enst):
+            with MYSQL.cursor(dictionary=True) as cursor:
+                query = """
+                    SELECT e.exon_id, e.stable_id as ense, et.rank as exon_rank, e.seq_region_start, e.seq_region_end
+                    FROM `{EnsemblExonTranscriptTable}` et
+                    JOIN `{EnsemblTranscriptTable}` t using (transcript_id)
+                    JOIN `{EnsemblExonTable}` e USING (exon_id)
+                    WHERE t.stable_id = %s;
+                """.format(**self.depends_table_names)
+                cursor.execute(query, (enst,))
+                exons = cursor.fetchall()
+                return exons
+
+        with MYSQL.cursor(dictionary=True) as cursor:
+            query = """
+                SELECT t.stable_id as transcript_stable_id, g.stable_id as gene_id,
+                       tl.start_exon_id, tl.end_exon_id, tl.seq_start, tl.seq_end
+                FROM `{EnsemblTranscriptTable}` t
+                JOIN `{EnsemblTranslationTable}` tl using (transcript_id)
+                JOIN `{EnsemblGeneTable}` g using(gene_id);
+            """.format(**self.depends_table_names)
+            cursor.execute(query)
+            transcripts = cursor.fetchall()
+
+        for transcript in transcripts:
+            exon_by_id = {exon['exon_id']: exon for exon in enst_exons(transcript['transcript_stable_id'])}
+            start_rank = exon_by_id[transcript['start_exon_id']]['exon_rank']
+            end_rank = exon_by_id[transcript['end_exon_id']]['exon_rank']
+
+            for exon in exon_by_id.values():
+                # seq_region_start and seq_region_end are inclusive (ensemble-specified)
+                # coding_start is inclusive, coding_end is exclusive (sgx-specified), eg: 
+                exon_length = abs(exon['seq_region_start'] - exon['seq_region_end']) + 1
+                if start_rank <= exon['exon_rank'] <= end_rank:
+                    exon['coding'] = True
+                    exon['coding_start'] = transcript['seq_start'] if exon['exon_rank'] == start_rank else 1
+                    exon['coding_end'] = transcript['seq_end'] + 1 if exon['exon_rank'] == end_rank else exon_length + 1 
+                else:
+                    # exon is entirely in either of 5' or 3' UTRs
+                    exon['coding'] = False
+                    exon['coding_start'] = exon['coding_end'] = None
+                    continue
+                exon['enst'] = transcript['transcript_stable_id'] 
+                exon['ensg'] = transcript['gene_id'] 
+                yield exon
+
+
+class SGXTranscriptInfoTable(ImportedTable):
+    """ This table is just the join of various tables - do we really need it?
+
+    The purpose of this table is to collect the exon information that will 
+    be used for the transcript info table, which will be used for the
+    representative transcript.
+    """
+
+
+    version = '1'
+    from biodb.data.datasets.Gene2Ensembl import Gene2EnsemblTable
+    depends = [SGXCodingExonTable, Gene2EnsemblTable]
+
+    @property
+    def depends_table_names(cls):
+        return {ds().type: ds().name for ds in cls.depends}
+
+    tags = ['active']
+
+    @property
+    def schema(self):
+        return """
+          CREATE TABLE `{table}` (
+            ensg                     VARCHAR(255)   NOT NULL,       -- ensemble stable exon id, eg: ENSG00000138413
+            enst                     VARCHAR(255)   NOT NULL,       -- ensembl stable transcript id, eg: ENST00000345146
+            refseq_transcript        VARCHAR(255)   NULL,           -- matching nm if exists, eg: NM_005896
+            cds_length               INTEGER        NOT NULL        -- sum of protein-coding nucletides
+          );
+        """
+
+    def import_table(self, cursor):
+        sql_insert = """
+            INSERT INTO `{table}`(ensg, enst, refseq_transcript, cds_length)
+            SELECT se.ensg, se.enst, g.refseq_transcript, SUM(se.coding_end - se.coding_start) as cds_length
+            FROM `{SGXCodingExonTable}` as se
+            JOIN `{Gene2EnsemblTable}` g ON se.enst=g.ensembl_transcript
+            GROUP BY enst, ensg;
+        """.format(table=self.table_name, **self.depends_table_names)
+        cursor.execute(sql_insert)
