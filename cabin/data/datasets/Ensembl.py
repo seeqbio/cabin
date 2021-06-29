@@ -376,6 +376,7 @@ class SGXCodingExonTable(RecordByRecordImportedTable):
         'enst',
         'ense',
         'exon_rank',
+        'coding',
         'coding_start',
         'coding_end'
     ]
@@ -388,8 +389,9 @@ class SGXCodingExonTable(RecordByRecordImportedTable):
             enst                 VARCHAR(255)   NOT NULL,         -- ensembl stable transcript id, eg: ENST00000345146
             ense                 VARCHAR(255)   NOT NULL,         -- ensembl stable exon ide, eg: ENSE00003564564
             exon_rank            VARCHAR(255)   NOT NULL,         -- order of exons (1-based), only includes cds exons. eg: 3
-            coding_start         VARCHAR(255)   NOT NULL,         -- sgx specified inclusive
-            coding_end           VARCHAR(255)   NOT NULL,         -- sgx specified exclusing, such that length = coding_end - coding_start
+            coding               VARCHAR(255)   NOT NULL,         -- True if the exon is coding, False otherwise
+            coding_start         VARCHAR(255)   NULL,             -- sgx specified inclusive, Null if not coding
+            coding_end           VARCHAR(255)   NULL,             -- sgx specified exclusing, such that length = coding_end - coding_start
             INDEX (ensg)
           );
         """
@@ -441,7 +443,6 @@ class SGXCodingExonTable(RecordByRecordImportedTable):
                     # exon is entirely in either of 5' or 3' UTRs
                     exon['coding'] = False
                     exon['coding_start'] = exon['coding_end'] = None
-                    continue
                 exon['enst'] = transcript['transcript_stable_id'] 
                 exon['ensg'] = transcript['gene_id'] 
                 yield exon
