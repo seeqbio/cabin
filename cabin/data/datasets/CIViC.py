@@ -22,7 +22,7 @@ class CIViCFile(LocalFile):
 
 
 class CIViCTable(RecordByRecordImportedTable):
-    version = '1'
+    version = '2'
     depends = [CIViCFile]
     tags = ['active']
 
@@ -45,6 +45,7 @@ class CIViCTable(RecordByRecordImportedTable):
         'citation',
         'nct_ids',
         'rating',
+        'evidence_id',
         'chromosome_37',
         'start_37',
         'stop_37',
@@ -84,6 +85,7 @@ class CIViCTable(RecordByRecordImportedTable):
                 citation                   VARCHAR(255) NOT NULL,
                 nct_ids                    VARCHAR(225),                       -- NCI thesaurus id
                 rating                     VARCHAR(225),                       -- Aggregate score 1-5 of curator's confidence in evidence (5=strong)
+                evidence_id                VARCHAR(225) NOT NULL,
                 chromosome_37              VARCHAR(225) NOT NULL,
                 start_37                   VARCHAR(225) NOT NULL,
                 stop_37                    VARCHAR(225) NOT NULL,
