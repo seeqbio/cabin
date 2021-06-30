@@ -183,3 +183,62 @@ class CIViCGeneTable(RecordByRecordImportedTable):
             IGNORE 1 LINES
             (@dummy, gene_civic_url, name, entrez_id, description)
         """.format(path=self.input.path, table=self.table_name))
+
+from biodb.mysql import MYSQL
+from biodb.data.datasets.DGI import DGITable
+
+class SGXCIViC_drugs(RecordByRecordImportedTable):
+    version = '1'
+    depends = [CIViCTable, DGITable]
+    @property
+    def depends_table_names(cls):
+       return {ds().type: ds().name for ds in cls.depends}
+    tags = ['active']
+
+    columns = [
+        'drugs',
+        'civic_evidence_id',
+        'chembl_id'
+    ]
+
+    @property
+    def schema(self):
+        return """
+            CREATE TABLE `{table}` (
+                drugs                    VARCHAR(255) NOT NULL,    -- one drug, or multiple seperated by ', '
+                civic_evidence_id        VARCHAR(255) NOT NULL,    -- single row in `CIViCTable` that cooresponds to a unique variant
+                chembl_id                VARCHAR(255) NOT NULL,    -- one id, or multiple seperated by ', ' cooresponding to drugs field
+                INDEX(civic_evidence_id),
+                INDEX(chembl_id)
+            );
+        """
+
+    def read(self):
+        def _get_chembl_id(drug_name):
+            with MYSQL.cursor(dictionary=True) as cursor:
+                query = """
+                    SELECT drug_concept_id 
+                    FROM `{DGITable}`
+                    WHERE drug_name=%s
+                        AND drug_concept_id like 'chembl%';
+                """.format(**self.depends_table_names)
+                cursor.execute(query, (drug_name,))
+                result = cursor.fetchall()
+                return result[0]['drug_concept_id'] if result else None
+
+        with MYSQL.cursor(dictionary=True) as cursor:
+            query = """
+                SELECT drugs, evidence_id as civic_evidence_id
+                FROM `{CIViCTable}`
+                WHERE evidence_type='Predictive'
+                AND drugs !='';
+            """.format(**self.depends_table_names)
+            cursor.execute(query)
+            civic_hits = cursor.fetchall()
+ 
+        for hit in civic_hits:
+            # Gross string munging, TODO: tidy so that one can read this, eg: CHEMBL1336 instead of chembl:CHEMBL1336
+            chembl_ids = [_get_chembl_id(drug_name).split(':')[1] for drug_name in hit['drugs'].split(',') if _get_chembl_id(drug_name) != None]
+            if chembl_ids:
+                hit['chembl_id'] = ','.join(chembl_ids)
+                yield hit
