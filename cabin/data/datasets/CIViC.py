@@ -196,7 +196,7 @@ class SGXCIViC_drugs(RecordByRecordImportedTable):
     tags = ['active']
 
     columns = [
-        'drugs',
+        'drug_name',
         'civic_evidence_id',
         'chembl_id'
     ]
@@ -205,9 +205,9 @@ class SGXCIViC_drugs(RecordByRecordImportedTable):
     def schema(self):
         return """
             CREATE TABLE `{table}` (
-                drugs                    VARCHAR(255) NOT NULL,    -- one drug, or multiple seperated by ', '
+                drug_name                VARCHAR(255) NOT NULL,    -- one drug, not unique bc civic_evidence_id-specific
                 civic_evidence_id        VARCHAR(255) NOT NULL,    -- single row in `CIViCTable` that cooresponds to a unique variant
-                chembl_id                VARCHAR(255) NOT NULL,    -- one id, or multiple seperated by ', ' cooresponding to drugs field
+                chembl_id                VARCHAR(255) NOT NULL,    -- one id, not unique bc civic_evidence_id-specific
                 INDEX(civic_evidence_id),
                 INDEX(chembl_id)
             );
@@ -228,7 +228,7 @@ class SGXCIViC_drugs(RecordByRecordImportedTable):
 
         with MYSQL.cursor(dictionary=True) as cursor:
             query = """
-                SELECT drugs, evidence_id as civic_evidence_id
+                SELECT drugs, evidence_id
                 FROM `{CIViCTable}`
                 WHERE evidence_type='Predictive'
                 AND drugs !='';
@@ -237,8 +237,13 @@ class SGXCIViC_drugs(RecordByRecordImportedTable):
             civic_hits = cursor.fetchall()
  
         for hit in civic_hits:
-            # Gross string munging, TODO: tidy so that one can read this, eg: CHEMBL1336 instead of chembl:CHEMBL1336
-            chembl_ids = [_get_chembl_id(drug_name).split(':')[1] for drug_name in hit['drugs'].split(',') if _get_chembl_id(drug_name) != None]
-            if chembl_ids:
-                hit['chembl_id'] = ','.join(chembl_ids)
-                yield hit
+            # one civic evidence may have 0, 1, or n comma-seperated drugs
+            # each drug gets its own row in this table
+            for drug_name in hit['drugs'].split(','):
+                chembl_id =  _get_chembl_id(drug_name)
+                if chembl_id:
+                    yield {
+                        'drug_name': drug_name,
+                        'chembl_id': chembl_id.split(':')[1],
+                        'civic_evidence_id': hit['evidence_id']
+                    }
