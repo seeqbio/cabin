@@ -217,7 +217,7 @@ class SGXCIViC_drugs(RecordByRecordImportedTable):
         def _get_chembl_id(drug_name):
             with MYSQL.cursor(dictionary=True) as cursor:
                 query = """
-                    SELECT drug_concept_id 
+                    SELECT drug_concept_id
                     FROM `{DGITable}`
                     WHERE drug_name=%s
                         AND drug_concept_id like 'chembl%';
@@ -235,7 +235,7 @@ class SGXCIViC_drugs(RecordByRecordImportedTable):
             """.format(**self.depends_table_names)
             cursor.execute(query)
             civic_hits = cursor.fetchall()
- 
+
         for hit in civic_hits:
             # one civic evidence may have 0, 1, or n comma-seperated drugs
             # each drug gets its own row in this table
