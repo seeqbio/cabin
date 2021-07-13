@@ -13,8 +13,6 @@ SGX_MYSQL_CNX_TIMEOUT = int(os.environ.get('SGX_MYSQL_CNX_TIMEOUT', 30))
 SGX_DOWNLOAD_DIR = 'downloads'
 SGX_MYSQL_PROFILE = False
 
-SGX_ROOT_DIR = Path(__file__).parents[1].absolute()
-
 SGX_S3_MIRROR_BUCKET = os.environ.get('SGX_S3_MIRROR_BUCKET', 'sgx-archives')
 SGX_S3_MIRROR_PREFIX = os.environ.get('SGX_S3_MIRROR_PREFIX', 'biodb/mirrors').rstrip('/')
 

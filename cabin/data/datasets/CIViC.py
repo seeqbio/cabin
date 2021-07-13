@@ -1,9 +1,9 @@
+from pathlib import Path
 from pyliftover import LiftOver
 
 from biodb.data.db import RecordByRecordImportedTable
 from biodb.data.files import LocalFile, ExternalFile
 from biodb.io import read_xsv
-from biodb import settings
 from biodb import logger
 
 
@@ -106,7 +106,7 @@ class CIViCTable(RecordByRecordImportedTable):
         """
 
     def read(self):
-        chains_dir = settings.SGX_ROOT_DIR / 'biodb/data/chainfiles'
+        chains_dir = Path(__file__).parent.absolute() / 'chainfiles'
         lo_to19 = LiftOver(str(chains_dir) + '/b37tohg19.chain')
         lo_to38 = LiftOver(str(chains_dir) + '/hg19tohg38.chain')
 
