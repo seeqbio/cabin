@@ -4,7 +4,7 @@ import sys
 import argparse
 from pathlib import Path
 
-sys.path.append(os.environ['SGX_BIODB_ROOT'])
+sys.path.append(os.environ['SGX_ROOT'])
 
 from biodb.mysql import MYSQL
 
