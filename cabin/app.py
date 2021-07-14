@@ -72,14 +72,23 @@ class DescribeCommand(AppCommand):
         self.parser.add_argument('dataset')
 
     def run(self):
-        for hdataset in registry.load_table_registry():
-            if hdataset.type == self.app.args.dataset:
-                print('=> SCHEMA and INDEXES for %s\n' % hdataset.name)
-                query = """
-                    DESCRIBE `{table}`;
-                    SHOW INDEX FROM `{table}`;
-                """.format(table=hdataset.name)
-                MYSQL.shell_query(query)
+        ds_type = self.app.args.dataset
+        hdatasets = [
+            hd for hd in registry.load_table_registry()
+            if hd.type == ds_type
+        ]
+        if not hdatasets:
+            # nothing found: let exit code still be zero, just print a warning
+            logger.warn('No tables imported for dataset "%s"' % ds_type)
+            return
+
+        for hdataset in hdatasets:
+            print('=> SCHEMA and INDEXES for %s\n' % hdataset.name)
+            query = """
+                DESCRIBE `{table}`;
+                SHOW INDEX FROM `{table}`;
+            """.format(table=hdataset.name)
+            MYSQL.shell_query(query)
 
 
 class DropUsersCommand(AppCommand):
