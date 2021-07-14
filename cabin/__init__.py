@@ -19,7 +19,3 @@ class AbstractAttribute:
 
 class BiodbError(RuntimeError):
     pass
-
-
-class ProgrammingError(BiodbError):
-    pass
