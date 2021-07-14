@@ -9,9 +9,8 @@ from ftplib import FTP
 from dateutil import parser
 from pathlib import Path
 
-from biodb import logger
-from biodb import BiodbError
-from biodb import settings
+from . import logger, settings, BiodbError
+
 
 def read_xsv(path, delimiter='\t', columns=None, header_leading_hash=True, ignore_leading_hash=False, gzipped=False, encoding=None):
     """

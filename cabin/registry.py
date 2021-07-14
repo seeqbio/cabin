@@ -4,7 +4,7 @@ Implements import magic:
     * Any concrete Dataset subclass defined anywhere in biodb.db.datasets is
       imported and added to the symbol table of this module so that you can do
       things like: `from biodb.registry import MyDatasetClass` regardless of
-      where in biodb.data.datasets MyDatasetClass is defined.
+      where in the datasets package MyDatasetClass is defined.
     * Provides TYPE_REGISTRY which is a {cls.name => cls} dictionary of all
       defined Dataset classes.
     * Provides TABLE_REGISTRY which is a {dataset.name => dataset} dictionary of
@@ -13,7 +13,7 @@ Implements import magic:
 import pkgutil
 import inspect
 
-import biodb.data.datasets
+from . import datasets
 from .core import Dataset
 from .db import imported_datasets
 
@@ -50,7 +50,7 @@ def load_dataset_classes(pkg):
     return classes
 
 
-TYPE_REGISTRY = load_dataset_classes(biodb.data.datasets)
+TYPE_REGISTRY = load_dataset_classes(datasets)
 for name, cls in TYPE_REGISTRY.items():
     globals()[name] = cls
 

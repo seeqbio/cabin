@@ -6,9 +6,7 @@ from time import sleep
 import mysql.connector
 from contextlib import contextmanager
 
-from biodb import logger
-from biodb import settings
-from biodb import BiodbError
+from . import logger, settings, BiodbError
 
 
 READER = 'reader'

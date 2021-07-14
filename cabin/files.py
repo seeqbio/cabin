@@ -4,10 +4,9 @@ import botocore.exceptions
 from pathlib import Path
 from abc import abstractmethod
 
-from biodb import settings
-from biodb import AbstractAttribute
-from biodb.io import wget
-from biodb.data.core import Dataset
+from . import settings, AbstractAttribute
+from .io import wget
+from .core import Dataset
 
 
 class ExternalFile(Dataset):
