@@ -63,6 +63,25 @@ class ListCommand(AppCommand):
         print('\n'.join(sorted(registry.TYPE_REGISTRY.keys(), key=lambda x: x.lower())))
 
 
+class DescribeCommand(AppCommand):
+    name = "describe"
+    help = "describe the SQL schema of an imported table"
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.parser.add_argument('dataset')
+
+    def run(self):
+        for hdataset in registry.load_table_registry():
+            if hdataset.type == self.app.args.dataset:
+                print('=> SCHEMA and INDEXES for %s\n' % hdataset.name)
+                query = """
+                    DESCRIBE `{table}`;
+                    SHOW INDEX FROM `{table}`;
+                """.format(table=hdataset.name)
+                MYSQL.shell_query(query)
+
+
 class DropUsersCommand(AppCommand):
     name = "drop-users"
     help = "inverse of 'init', drops all users and their privileges, database itself stays put."
@@ -210,6 +229,7 @@ class App:
             'shell':            ShellCommand(app=self),
             'init':             InitCommand(app=self),
             'list':             ListCommand(app=self),
+            'describe':         DescribeCommand(app=self),
             'drop-users':       DropUsersCommand(app=self),
             'import':           ImportCommand(app=self),
             'drop':             DropCommand(app=self),
