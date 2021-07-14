@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 
 # see ops.SGX_INSTANCE_ID
 SGX_INSTANCE_ID = os.environ.get('SGX_INSTANCE_ID')

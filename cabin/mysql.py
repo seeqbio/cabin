@@ -216,7 +216,6 @@ class _MySQL:
 
         _add_system_table()
 
-
         cursor.close()
 
         logger.info('successfully initialized "{db}"!'.format(db=database))

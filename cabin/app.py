@@ -6,7 +6,7 @@ from abc import ABC
 from abc import abstractmethod
 from collections import OrderedDict
 
-from . import logger, settings, BiodbError, AbstractAttribute
+from . import logger, BiodbError, AbstractAttribute
 from . import registry
 from .mysql import MYSQL
 from .mysql import READER
