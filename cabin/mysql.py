@@ -6,9 +6,7 @@ from time import sleep
 import mysql.connector
 from contextlib import contextmanager
 
-from biodb import logger
-from biodb import settings
-from biodb import BiodbError
+from . import logger, settings, BiodbError
 
 
 READER = 'reader'
@@ -217,7 +215,6 @@ class _MySQL:
         cursor.execute("SET PERSIST local_infile = 'ON';")
 
         _add_system_table()
-
 
         cursor.close()
 

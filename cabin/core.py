@@ -3,8 +3,8 @@ import hashlib
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 
-from biodb.mysql import MYSQL
-from biodb import logger
+from . import logger
+from .mysql import MYSQL
 
 
 def calculate_sha(obj, num_chars=8):
@@ -214,7 +214,7 @@ class HistoricalDataset:
         garbage collection at all levels (tables, downloaded files,
         intermediate tables).
         """
-        from biodb.data.registry import TYPE_REGISTRY
+        from .registry import TYPE_REGISTRY
         type_ = self.formula['type']
         if type_ not in TYPE_REGISTRY:
             # don't even know who this dataset is

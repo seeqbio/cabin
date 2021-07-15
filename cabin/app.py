@@ -6,24 +6,11 @@ from abc import ABC
 from abc import abstractmethod
 from collections import OrderedDict
 
-from biodb import logger
-from biodb import BiodbError
-from biodb import AbstractAttribute
-# NOTE For some unknown reason this segfaults on python 3.5.2 and
-# mysql-connector-python 8.0.17:
-#
-#   >>> import hashlib; import mysql.connector
-#
-# but this does not:
-#   >>> import mysql.connector; import hashlib
-#
-# This means we should import mysql.connector _before_ hashlib.
-from biodb.mysql import MYSQL
-from biodb.mysql import READER
-
-from biodb.data import registry
-from biodb.data.db import ImportedTable
-from biodb.data.registry import load_table_registry
+from . import logger, BiodbError, AbstractAttribute
+from . import registry
+from .mysql import MYSQL
+from .mysql import READER
+from .db import ImportedTable
 
 
 def all_table_datasets(tag):
@@ -94,7 +81,7 @@ class DropCommand(AppCommand):
         self.parser.add_argument('-n', '--dry-run', action='store_true', help="show what would be dropped")
 
     def run(self):
-        for hdataset in load_table_registry():
+        for hdataset in registry.load_table_registry():
             if fnmatch.fnmatch(hdataset.name, self.app.args.dataset):
                 if (self.app.args.dry_run):
                     logger.info("(dry-run) Dropping table: %s" % hdataset.name)
@@ -113,7 +100,7 @@ class PruneCommand(AppCommand):
         self.parser.add_argument('-n', '--dry-run', action='store_true', help="show what would be pruned")
 
     def run(self):
-        for hdataset in load_table_registry():
+        for hdataset in registry.load_table_registry():
             if not hdataset.is_latest():
                 if (self.app.args.dry_run):
                     logger.info("(dry-run) Pruning outdated table: %s" % hdataset.name)
@@ -191,7 +178,7 @@ class StatusCommand(AppCommand):
         # content lines
         class_names = [cls.__name__ for cls in glob_table_datasets(self.app.args.dataset)]
 
-        for hdataset in load_table_registry():
+        for hdataset in registry.load_table_registry():
             if hdataset.type not in class_names:
                 continue
             row = [

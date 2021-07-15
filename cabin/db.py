@@ -1,11 +1,9 @@
 import json
 from abc import abstractmethod
 
-from biodb import AbstractAttribute
-from biodb import logger
-from biodb import settings
-from biodb.mysql import MYSQL
-from biodb.data.core import Dataset, HistoricalDataset
+from . import logger, settings, AbstractAttribute
+from .mysql import MYSQL
+from .core import Dataset, HistoricalDataset
 
 
 class ImportedTable(Dataset):
