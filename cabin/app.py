@@ -83,7 +83,7 @@ class DescribeCommand(AppCommand):
             return
 
         for hdataset in hdatasets:
-            print('=> SCHEMA and INDEXES for %s\n' % hdataset.name)
+            print('=> SCHEMA and INDEXES for %s (version=%s)\n' % (hdataset.name, hdataset.formula['version']))
             query = """
                 DESCRIBE `{table}`;
                 SHOW INDEX FROM `{table}`;
