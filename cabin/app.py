@@ -60,7 +60,35 @@ class ListCommand(AppCommand):
     help = "list all datasets for which a handler exists"
 
     def run(self):
-        print('\n'.join(c for c in registry.TYPE_REGISTRY))
+        print('\n'.join(sorted(registry.TYPE_REGISTRY.keys(), key=lambda x: x.lower())))
+
+
+class DescribeCommand(AppCommand):
+    name = "describe"
+    help = "describe the SQL schema of an imported table"
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.parser.add_argument('dataset')
+
+    def run(self):
+        ds_type = self.app.args.dataset
+        hdatasets = [
+            hd for hd in registry.load_table_registry()
+            if hd.type == ds_type
+        ]
+        if not hdatasets:
+            # nothing found: let exit code still be zero, just print a warning
+            logger.warn('No tables imported for dataset "%s"' % ds_type)
+            return
+
+        for hdataset in hdatasets:
+            print('=> SCHEMA and INDEXES for %s (version=%s)\n' % (hdataset.name, hdataset.formula['version']))
+            query = """
+                DESCRIBE `{table}`;
+                SHOW INDEX FROM `{table}`;
+            """.format(table=hdataset.name)
+            MYSQL.shell_query(query)
 
 
 class DropUsersCommand(AppCommand):
@@ -210,6 +238,7 @@ class App:
             'shell':            ShellCommand(app=self),
             'init':             InitCommand(app=self),
             'list':             ListCommand(app=self),
+            'describe':         DescribeCommand(app=self),
             'drop-users':       DropUsersCommand(app=self),
             'import':           ImportCommand(app=self),
             'drop':             DropCommand(app=self),

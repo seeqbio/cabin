@@ -104,7 +104,6 @@ class _MySQL:
 
         @contextmanager
         def cursor_wrapper(*args, **kwargs):
-
             cursor = real_cursor(cnx, *args, **kwargs)
             if self.profile:
                 cursor.execute('SET profiling = 1')
@@ -250,6 +249,21 @@ class _MySQL:
                 '-h', settings.SGX_MYSQL_HOST,
                 '-p' + self.passwords[user]]
         os.execvp('mysql', argv)
+
+    def shell_query(self, query, user=READER):
+        """Executes mysql client in a subprocess and runs the provided SQL
+        statement against it. Stdout/err are not captured and controlled is
+        returned to this process."""
+        import subprocess
+        args = ['mysql',
+                '-u', user,
+                '-D', settings.SGX_MYSQL_DB,
+                '-h', settings.SGX_MYSQL_HOST,
+                '-p' + self.passwords[user],
+                '-b',
+                '-e', query
+                ]
+        subprocess.Popen(args).communicate()
 
     def compare_tables(self, first, second, using, verbose=False):
         def get_result(cursor):
