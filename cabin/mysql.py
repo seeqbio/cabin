@@ -190,8 +190,8 @@ class _MySQL:
 
         def _add_system_table():
             logger.info('creating system table')
-            query = ("""
-                USE {db};
+            cursor.execute('USE {db};'.format(db=database))
+            cursor.execute("""
                 CREATE TABLE IF NOT EXISTS `system` (
                     instance_id VARCHAR(64),
                     sha         VARCHAR(64)  PRIMARY KEY,
@@ -200,8 +200,7 @@ class _MySQL:
                     table_name  VARCHAR(255),
                     formula     VARCHAR(4096)
                 );
-            """).format(db=database)
-            cursor.execute(query)
+            """)
 
         _create(user=READER, host='%', grant='SELECT')
         _create(user=WRITER, host='%', grant='ALL PRIVILEGES')
