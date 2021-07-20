@@ -144,7 +144,7 @@ class ImportCommand(AppCommand):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.parser.add_argument('dataset', nargs='?')
+        self.parser.add_argument('dataset', nargs='*', help="one or more dataset names, possibly globs")
         self.parser.add_argument('--all', action='store_true', help="import all table datasets")
         self.parser.add_argument('--tag', help="only import datasets with TAG, only valid with --all")
         self.parser.add_argument('-n', '--dry-run', action='store_true', help="do not actually import, just show a synopsis")
@@ -155,7 +155,14 @@ class ImportCommand(AppCommand):
         else:
             if self.app.args.tag:
                 raise BiodbError('--tag is only valid with --all')
-            classes = glob_table_datasets(self.app.args.dataset)
+
+            if not self.app.args.dataset:
+                raise BiodbError('either specify a dataset or --all')
+
+            classes = sum(
+                (glob_table_datasets(glob) for glob in self.app.args.dataset),
+                []
+            )
 
         if not classes:
             logger.error("No Tables in registry matching %s." % self.app.args.dataset)
