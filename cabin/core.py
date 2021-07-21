@@ -146,7 +146,7 @@ class Dataset(ABC):
 
     @classmethod
     def rdepends(cls):
-        from biodb.data import registry
+        from biodb import registry
         return [
             klass
             for klass in registry.TYPE_REGISTRY.values()
