@@ -140,13 +140,15 @@ class Dataset(ABC):
         # reason to use this is to make paths and table names more intelligble.
         if self.is_root:
             return [self.version]
-        return list(set(
-            sum((inp.root_versions() for _, inp in sorted(self.inputs.items())), [])
-        ))
+
+        return sum(
+            (inp.root_versions() for _, inp in sorted(self.inputs.items())),
+            []
+        )
 
     @classmethod
     def rdepends(cls):
-        from biodb.data import registry
+        from biodb import registry
         return [
             klass
             for klass in registry.TYPE_REGISTRY.values()
@@ -164,7 +166,7 @@ class Dataset(ABC):
         # sha is only included for intelligibility.
         return '{type}::{roots}::{sha}'.format(
             type=self.type,
-            roots='::'.join(self.root_versions()),
+            roots='::'.join(self.root_versions()[:2]),
             sha=self.formula_sha,
         )
 
