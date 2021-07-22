@@ -167,7 +167,7 @@ class ImportCommand(AppCommand):
             )
 
         if not classes:
-            logger.error("No Tables in registry matching %s." % self.app.args.dataset)
+            logger.error("No datasets matching %s." % self.app.args.dataset)
             return 1
 
         for cls in classes:
