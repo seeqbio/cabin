@@ -23,12 +23,14 @@ def all_table_datasets(tag):
     return classes
 
 
-def glob_table_datasets(glob):
+def glob_datasets(glob, tables_only=False):
     classes = []
     for cls in registry.TYPE_REGISTRY.values():
-        if (issubclass(cls, ImportedTable)):
-            if fnmatch.fnmatch(cls.__name__, glob):
-                classes.append(cls)
+        if tables_only and not issubclass(cls, ImportedTable):
+            continue
+
+        if fnmatch.fnmatch(cls.__name__, glob):
+            classes.append(cls)
     return classes
 
 
@@ -160,12 +162,12 @@ class ImportCommand(AppCommand):
                 raise BiodbError('either specify a dataset or --all')
 
             classes = sum(
-                (glob_table_datasets(glob) for glob in self.app.args.dataset),
+                (glob_datasets(glob) for glob in self.app.args.dataset),
                 []
             )
 
         if not classes:
-            logger.error("No Tables in registry matching %s." % self.app.args.dataset)
+            logger.error("No datasets matching %s." % self.app.args.dataset)
             return 1
 
         for cls in classes:
@@ -199,10 +201,10 @@ class StatusCommand(AppCommand):
 
         width_by_column = OrderedDict([
             ('type',         32),
-            ('version',      9),
-            ('depends',      38),
-            ('latest',       10),
-            ('Full name',    50),
+            ('version',      8),
+            ('latest',       7),
+            ('Table',        50),
+            ('depends',      40),
         ])
         columns = width_by_column.keys()
         fmt_string = ''.join('{%s:%d}' % (col, width) for col, width in width_by_column.items())
@@ -211,17 +213,17 @@ class StatusCommand(AppCommand):
         print(fmt_string.format(**dict(zip(columns, columns))))
 
         # content lines
-        class_names = [cls.__name__ for cls in glob_table_datasets(self.app.args.dataset)]
+        class_names = [cls.__name__ for cls in glob_datasets(self.app.args.dataset, tables_only=True)]
 
         for hdataset in registry.load_table_registry():
             if hdataset.type not in class_names:
                 continue
             row = [
                 hdataset.type,
-                hdataset.formula['version'], # TODO: consider adding to historical dataset as atribute
-                list(hdataset.formula['inputs'].keys()), # TODO: consider', '.join(c.__name__ for c in hdataset.depends),
+                hdataset.formula['version'],
                 hdataset.is_latest(),
                 hdataset.name,
+                '[' + ', '.join(ds.type for ds in hdataset.inputs.values()) + ']',
             ]
             row = [str(x) if x else '' for x in row]
             print(fmt_string.format(**dict(zip(columns, row))))
