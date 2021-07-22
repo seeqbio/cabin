@@ -218,8 +218,8 @@ class StatusCommand(AppCommand):
                 continue
             row = [
                 hdataset.type,
-                hdataset.formula['version'], # TODO: consider adding to historical dataset as atribute
-                list(hdataset.formula['inputs'].keys()), # TODO: consider', '.join(c.__name__ for c in hdataset.depends),
+                hdataset.formula['version'],
+                '[' + ', '.join(ds.type for ds in hdataset.inputs.values()) + ']',
                 hdataset.is_latest(),
                 hdataset.name,
             ]
