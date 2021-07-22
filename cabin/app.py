@@ -201,10 +201,10 @@ class StatusCommand(AppCommand):
 
         width_by_column = OrderedDict([
             ('type',         32),
-            ('version',      9),
-            ('depends',      38),
-            ('latest',       10),
-            ('Full name',    50),
+            ('version',      8),
+            ('latest',       7),
+            ('Table',        50),
+            ('depends',      40),
         ])
         columns = width_by_column.keys()
         fmt_string = ''.join('{%s:%d}' % (col, width) for col, width in width_by_column.items())
@@ -221,9 +221,9 @@ class StatusCommand(AppCommand):
             row = [
                 hdataset.type,
                 hdataset.formula['version'],
-                '[' + ', '.join(ds.type for ds in hdataset.inputs.values()) + ']',
                 hdataset.is_latest(),
                 hdataset.name,
+                '[' + ', '.join(ds.type for ds in hdataset.inputs.values()) + ']',
             ]
             row = [str(x) if x else '' for x in row]
             print(fmt_string.format(**dict(zip(columns, row))))
