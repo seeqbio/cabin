@@ -16,6 +16,10 @@ class ImportedTable(Dataset):
     def table_name(self):
         return self.name
 
+    @property
+    def input_table_names(self):
+        return {type: input.table_name for type, input in self.inputs.items()}
+
     def exists(self):
         with MYSQL.transaction() as cursor:
             cursor.execute("""
