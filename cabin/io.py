@@ -126,9 +126,9 @@ def read_obo(path):
 
         # get at the umls, one of various annotations, eg: 'http://linkedlifedata.com/resource/umls/id/C0013278'
         # step 1: get all 'exactMatch' annotations,
-        closeMatch = [ann.resource for ann in term.annotations if ann.property=='closeMatch' ] # or exactMatch
+        close_match = [ann.resource for ann in term.annotations if ann.property=='closeMatch' ] # or exactMatch
         # step 2: take only the umls ids by munging url
-        closeUMLS = [match.rsplit('/',1)[1] for match in closeMatch if match.rsplit('/',1)[0] =='http://linkedlifedata.com/resource/umls/id']
+        close_umls_ids = [match.rsplit('/',1)[1] for match in close_match if match.rsplit('/',1)[0] =='http://linkedlifedata.com/resource/umls/id']
 
         yield {
             'name': term.name,
@@ -137,7 +137,7 @@ def read_obo(path):
             'children': children,
             'parents': parents,
             'xrefs': [xref.id for xref in term.xrefs],
-            'closeUMLS': closeUMLS
+            'close_umls_ids': close_umls_ids
         }
 
 
