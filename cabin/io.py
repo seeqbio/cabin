@@ -124,20 +124,14 @@ def read_obo(path):
         children = [child.id for child in ontology[term.id].subclasses(distance=1, with_self=False)]
         parents = [parent.id for parent in ontology[term.id].superclasses(distance=1, with_self=False)]
 
-        # get at the umls, one of various annotations, eg: 'http://linkedlifedata.com/resource/umls/id/C0013278'
-        # step 1: get all 'exactMatch' annotations,
-        close_match = [ann.resource for ann in term.annotations if ann.property=='closeMatch' ] # or exactMatch
-        # step 2: take only the umls ids by munging url
-        close_umls_ids = [match.rsplit('/',1)[1] for match in close_match if match.rsplit('/',1)[0] =='http://linkedlifedata.com/resource/umls/id']
-
         yield {
+            '_term': term,
             'name': term.name,
             'id': term.id,
             'def': term.definition,
             'children': children,
             'parents': parents,
-            'xrefs': [xref.id for xref in term.xrefs],
-            'close_umls_ids': close_umls_ids
+            'xrefs': [xref.id for xref in term.xrefs]
         }
 
 
