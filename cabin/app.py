@@ -137,7 +137,6 @@ class PruneCommand(AppCommand):
                 else:
                     logger.info("Pruning outdated table: %s" % hdataset.name)
                     hdataset.drop()
-                    logger.info("Pruned outdated table.")
 
 
 class ImportCommand(AppCommand):
