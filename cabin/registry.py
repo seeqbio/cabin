@@ -73,14 +73,3 @@ def import_dataset_classes(root_name: str='biodb.datasets') -> Dict[str, Type]:
 TYPE_REGISTRY = import_dataset_classes()
 for name, cls in TYPE_REGISTRY.items():
     globals()[name] = cls
-
-
-# Table registry should be reloaded every time from scratch since the state of
-# DB might change throughout the course of execution
-# NOTE in python 3.7+ we can just define __getattr__, cf. https://stackoverflow.com/a/48916205
-def load_table_registry(latest_only=False):
-    return [
-        historical
-        for historical in imported_datasets()
-        if not latest_only or historical.is_latest()
-    ]

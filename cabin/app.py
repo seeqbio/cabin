@@ -10,7 +10,7 @@ from . import logger, BiodbError, AbstractAttribute
 from . import registry
 from .mysql import MYSQL
 from .mysql import READER
-from .db import ImportedTable
+from .db import ImportedTable, imported_tables
 
 
 def all_table_datasets(tag):
@@ -76,7 +76,7 @@ class DescribeCommand(AppCommand):
     def run(self):
         ds_type = self.app.args.dataset
         hdatasets = [
-            hd for hd in registry.load_table_registry()
+            hd for hd in imported_tables()
             if hd.type == ds_type
         ]
         if not hdatasets:
@@ -111,7 +111,7 @@ class DropCommand(AppCommand):
         self.parser.add_argument('-n', '--dry-run', action='store_true', help="show what would be dropped")
 
     def run(self):
-        for hdataset in registry.load_table_registry():
+        for hdataset in imported_tables():
             if fnmatch.fnmatch(hdataset.name, self.app.args.dataset):
                 if (self.app.args.dry_run):
                     logger.info("(dry-run) Dropping table: %s" % hdataset.name)
@@ -130,7 +130,7 @@ class PruneCommand(AppCommand):
         self.parser.add_argument('-n', '--dry-run', action='store_true', help="show what would be pruned")
 
     def run(self):
-        for hdataset in registry.load_table_registry():
+        for hdataset in imported_tables():
             if not hdataset.is_latest():
                 if (self.app.args.dry_run):
                     logger.info("(dry-run) Pruning outdated table: %s" % hdataset.name)
@@ -214,7 +214,7 @@ class StatusCommand(AppCommand):
         # content lines
         class_names = [cls.__name__ for cls in glob_datasets(self.app.args.dataset, tables_only=True)]
 
-        for hdataset in registry.load_table_registry():
+        for hdataset in imported_tables():
             if hdataset.type not in class_names:
                 continue
             row = [

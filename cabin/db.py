@@ -108,7 +108,7 @@ class RecordByRecordImportedTable(ImportedTable):
             }
 
 
-def imported_datasets(type=None):
+def imported_tables(latest_only=False, type=None):
     query = 'SELECT name, formula, sha FROM `system`'
     if type:
         query += ' WHERE type = "%s"' % type
@@ -120,4 +120,6 @@ def imported_datasets(type=None):
 
         for name, formula_json, sha in result:
             formula = json.loads(formula_json)
-            yield HistoricalDataset(formula, name=name, sha=sha)
+            hd = HistoricalDataset(formula, name=name, sha=sha)
+            if not latest_only or hd.is_latest():
+                yield hd
