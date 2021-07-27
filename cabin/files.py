@@ -1,10 +1,11 @@
+import os
 import boto3
 import botocore.exceptions
 
 from pathlib import Path
 from abc import abstractmethod
 
-from . import settings, AbstractAttribute
+from . import logger, settings, AbstractAttribute
 from .io import wget
 from .core import Dataset
 
@@ -74,7 +75,12 @@ class LocalFile(Dataset):
 
     def produce(self):
         Path(settings.SGX_DOWNLOAD_DIR).mkdir(exist_ok=True, parents=True)
-        wget(self.input.url, self.path)
+        try:
+            wget(self.input.url, self.path)
+        except: # any exception, even KeyboardInterrupt
+            logger.info('Removing partially downloaded file %s' % self.path)
+            os.unlink(self.path)
+            raise
 
 
 class S3MirrorFile(Dataset):
