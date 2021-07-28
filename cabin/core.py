@@ -117,18 +117,17 @@ class Dataset(ABC):
     # override any of them.
     def produce_recursive(self, dry_run=False):
         if self.exists():
-            logger.info('already exists:'.ljust(20) + self.description)
+            logger.info('exists:'.ljust(10) + self.description)
         else:
-            logger.info('to be produced:'.ljust(20) + self.description)
+            logger.info('want:'.ljust(10) + self.description)
 
             for inp in self.inputs.values():
                 # recurse
                 inp.produce_recursive(dry_run=dry_run)
 
             if not dry_run:
-                logger.info('producing:'.ljust(20) + self.description)
+                logger.info('produce:'.ljust(10) + self.description)
                 self.produce()
-                logger.info('produced:'.ljust(20) + self.description)
 
                 if hasattr(self, 'check'):
                     logger.info('check:'.ljust(20) + self.description)
@@ -178,7 +177,7 @@ class Dataset(ABC):
     def description(self):
         # A human readable description for the dataset
         return '{type} with formula sha {sha} and root versions {roots}'.format(
-            type=self.type.ljust(25),
+            type=self.type.ljust(30),
             roots=', '.join(self.root_versions()),
             sha=self.formula_sha,
         )
