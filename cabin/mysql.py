@@ -9,8 +9,8 @@ from contextlib import contextmanager
 from . import logger, settings, BiodbError
 
 
-READER = 'reader'
-WRITER = 'writer'
+READER = settings.SGX_MYSQL_READER_USER
+WRITER = settings.SGX_MYSQL_WRITER_USER
 
 
 class _MySQL:
