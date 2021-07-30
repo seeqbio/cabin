@@ -89,6 +89,7 @@ class DescribeCommand(AppCommand):
             query = """
                 DESCRIBE `{table}`;
                 SHOW INDEX FROM `{table}`;
+                SHOW TABLE STATUS WHERE name = '{table}' \G
             """.format(table=hdataset.name)
             MYSQL.shell_query(query)
 
