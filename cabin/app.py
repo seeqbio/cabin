@@ -128,9 +128,16 @@ class PruneCommand(AppCommand):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.parser.add_argument('-n', '--dry-run', action='store_true', help="show what would be pruned")
+        self.parser.add_argument('dataset', nargs='?', help="optional dataset name, possibly glob")
 
     def run(self):
+        if self.app.args.dataset:
+            class_names = [cls.__name__ for cls in glob_datasets(self.app.args.dataset, tables_only=False)]
+
         for hdataset in imported_tables():
+            if self.app.args.dataset and hdataset.type not in class_names:
+                continue
+
             if not hdataset.is_latest():
                 if (self.app.args.dry_run):
                     logger.info("(dry-run) Pruning outdated table: %s" % hdataset.name)
