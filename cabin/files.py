@@ -117,20 +117,22 @@ class S3MirrorFile(Dataset):
         if len(rdepends) == 1:
             return rdepends[0]().path
 
-        return '/tmp/{name}.{ext}'.format(name=self.name, ext=self.extension)
+        return Path('/tmp/{name}.{ext}'.format(name=self.name, ext=self.extension))
+
+    def produce_local(self):
+        wget(self.input.url, str(self.local_download_path()))
 
     def produce(self):
-        # download from external URL to local disk
-        local_path = self.local_download_path()
-        wget(self.input.url, str(local_path))
-
-        # upload from local disk to S3
+        local_path = str(self.local_download_path())
+        if not Path(local_path).exists():
+            self.produce_local()
+        # upload local copy to S3
         try:
             s3 = boto3.resource('s3')
             bucket = s3.Bucket(settings.SGX_S3_MIRROR_BUCKET)
-            bucket.upload_file(str(local_path), self.s3_key)
+            bucket.upload_file(local_path, self.s3_key)
         except botocore.exceptions.ClientError:
-            raise BiodbError('Upload failed!')
+            raise BiodbError('S3 Upload failed!')
 
     def exists(self):
         try:
