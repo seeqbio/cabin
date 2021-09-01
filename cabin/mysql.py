@@ -198,7 +198,7 @@ class _MySQL:
                     type        VARCHAR(128),
                     name        VARCHAR(255),
                     table_name  VARCHAR(255),
-                    formula     VARCHAR(4096)
+                    formula     TEXT,
                 );
             """)
 
