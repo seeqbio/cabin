@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from collections import OrderedDict
 
 from . import logger
-from .mysql import MYSQL
+from .mysql import MYSQL, WRITER
 
 
 def calculate_sha(obj, num_chars=8):
@@ -224,6 +224,7 @@ class HistoricalDataset:
         latest = cls()
         return latest.formula_sha == self.formula_sha
 
+    # TODO unify with ImportedTable
     def sql_drop_table(self):
         return 'DROP TABLE IF EXISTS `{table}`;'.format(table=self.name)
 
@@ -231,6 +232,6 @@ class HistoricalDataset:
         return 'DELETE FROM `system` WHERE name="{table}";'.format(table=self.name)
 
     def drop(self):
-        with MYSQL.transaction() as cursor:
+        with MYSQL.cursor(user=WRITER) as cursor:
             cursor.execute(self.sql_drop_table())
             cursor.execute(self.sql_drop_from_system())
