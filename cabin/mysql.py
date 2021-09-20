@@ -14,12 +14,6 @@ WRITER = settings.SGX_MYSQL_WRITER_USER
 
 
 class _MySQL:
-    passwords = {READER: settings.SGX_MYSQL_READER_PASSWORD,
-                 WRITER: settings.SGX_MYSQL_WRITER_PASSWORD}
-
-    def __init__(self, profile=False):
-        self.profile = profile
-
     @contextmanager
     def transaction(self, connection_kw={}, cursor_kw={}):
 
@@ -94,7 +88,7 @@ class _MySQL:
     def connection(self, user, **kw):
         cnx_kw = {
             'user': user,
-            'password': self.passwords[user],
+            'password': self._password_for(user),
             'host': settings.SGX_MYSQL_HOST,
             'database': settings.SGX_MYSQL_DB,
         }
@@ -246,7 +240,7 @@ class _MySQL:
                 '-u', user,
                 '-D', settings.SGX_MYSQL_DB,
                 '-h', settings.SGX_MYSQL_HOST,
-                '-p' + self.passwords[user]]
+                '-p' + self._password_for(user)]
         os.execvp('mysql', argv)
 
     def shell_query(self, query, user=READER):
@@ -258,7 +252,7 @@ class _MySQL:
                 '-u', user,
                 '-D', settings.SGX_MYSQL_DB,
                 '-h', settings.SGX_MYSQL_HOST,
-                '-p' + self.passwords[user],
+                '-p' + self._password_for(user),
                 '-b',
                 '-e', query
                 ]
@@ -309,4 +303,4 @@ class _MySQL:
             }
 
 
-MYSQL = _MySQL(profile=settings.SGX_MYSQL_PROFILE)
+MYSQL = _MySQL()
