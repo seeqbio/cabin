@@ -5,6 +5,7 @@ import fnmatch
 from abc import ABC
 from abc import abstractmethod
 from collections import OrderedDict
+import networkx as nx
 
 from . import logger, BiodbError, AbstractAttribute
 from . import registry
@@ -63,6 +64,80 @@ class ListCommand(AppCommand):
 
     def run(self):
         print('\n'.join(sorted(registry.TYPE_REGISTRY.keys(), key=lambda x: x.lower())))
+
+
+class DagCommand(AppCommand):
+    name = "dag"
+    help = "render the dependency DAG of biodb as per current state of code"
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.parser.add_argument('-o', '--output', required=True, help='Path to output png file')
+        self.parser.add_argument('-s', '--subgraph', nargs='+', help='Only build the relevant subgraph for these datasets')
+
+    def _build_graph(self):
+        G = nx.DiGraph()
+
+        for dataset in registry.TYPE_REGISTRY.values():
+            G.add_node(dataset.__name__)
+
+            for dep in dataset.depends:
+                G.add_node(dep.__name__)
+                G.add_edge(dep.__name__, dataset.__name__)
+
+        if self.app.args.subgraph:
+            includes = set(sum([
+                [cls.__name__ for cls in glob_datasets(node)]
+                for node in self.app.args.subgraph
+            ], []))
+            descendants = set().union(*[
+                nx.algorithms.dag.descendants(G, node)
+                for node in includes
+            ])
+            ancestors = set().union(*[
+                nx.algorithms.dag.ancestors(G, node)
+                for node in includes
+            ])
+            to_keep = set().union(includes, ancestors, descendants)
+            nodes = list(G.nodes().keys())
+            for node in nodes:
+                if node not in to_keep:
+                    G.remove_node(node)
+
+            nx.set_node_attributes(G, {
+                node: '#0c97ae' if node in includes else '#dddddd'
+                for node in G.nodes()
+            }, 'color')
+
+
+        return G
+
+    def run(self):
+        # this requires: graphviz and libgraphiz-dev (apt) and pygraphviz (pip)
+        G = self._build_graph()
+        P = nx.drawing.nx_agraph.to_agraph(G)
+
+        # attributes reference: https://www.graphviz.org/doc/info/attrs.html
+        # P.graph_attr['size'] = 2000
+        P.graph_attr['margin'] = 2
+        P.graph_attr['fontname'] = 'monospace'
+
+        P.graph_attr['rankdir'] = 'LR'
+        P.graph_attr['ranksep'] = 2
+        P.graph_attr['nodesep'] = 1
+
+        P.node_attr['shape'] = 'box'
+        P.node_attr['fontname'] = 'monospace'
+        P.node_attr['fontsize'] = 12
+        P.node_attr['margin'] = .1
+
+        P.edge_attr['fontsize'] = 8
+        P.edge_attr['penwidth'] = 0.5
+        P.edge_attr['pencolor'] = '#888888'
+        P.edge_attr['arrowhead'] = 'vee'
+
+        P.layout(prog='dot')
+        P.draw(self.app.args.output)
 
 
 class DescribeCommand(AppCommand):
@@ -254,6 +329,7 @@ class App:
             'shell':            ShellCommand(app=self),
             'init':             InitCommand(app=self),
             'list':             ListCommand(app=self),
+            'dag':              DagCommand(app=self),
             'describe':         DescribeCommand(app=self),
             'drop-users':       DropUsersCommand(app=self),
             'import':           ImportCommand(app=self),
