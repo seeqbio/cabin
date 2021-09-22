@@ -14,51 +14,6 @@ WRITER = settings.SGX_MYSQL_WRITER_USER
 
 
 class _MySQL:
-    passwords = {READER: settings.SGX_MYSQL_READER_PASSWORD,
-                 WRITER: settings.SGX_MYSQL_WRITER_PASSWORD}
-
-    def __init__(self, profile=False):
-        self.profile = profile
-
-    @contextmanager
-    def transaction(self, connection_kw={}, cursor_kw={}):
-
-        def create_table(cursor, table_name, query):
-            assert isinstance(table_name, str), 'bad table name: ' + table_name
-            # MySQL has a maximum table name length of 64
-            # https://dev.mysql.com/doc/refman/8.0/en/identifier-length.html
-            if len(table_name) > 64:
-                raise BiodbError('Table name `%s` exceeds the maximum allowed 64 characters' % table_name)
-            cursor._created_tables.append(table_name)
-            cursor.execute(query)
-
-        def drop_created_tables(cursor):
-            for table in cursor._created_tables:
-                cursor.execute('DROP TABLE IF EXISTS `%s`;' % table)
-
-        with self.connection(WRITER, **connection_kw) as cnx:
-            cnx.start_transaction()
-            with cnx.cursor(**cursor_kw) as cursor:
-                cursor._created_tables = []
-                # monkey patch a new method on the cursor we produce; we need a
-                # separate method for table creation to allow clean rollbacks.
-                # This is because CREATE/DROP table is not rollbackable by
-                # MySQL but we really need to at least rollback CREATE's to
-                # simplifying testing (failed import should fail cleanly and
-                # not leave a partial or empty table around).
-                cursor.create_table = types.MethodType(create_table, cursor)
-                cursor.drop_created_tables = types.MethodType(drop_created_tables, cursor)
-                try:
-                    yield cursor
-                    cnx.commit()
-                # catch all exceptions, even KeyboardInterrupt (i.e. ctrl+C)
-                # we must ensure to re-raise it.
-                # NOTE it seems like cursor.execute swallows keyboard
-                # interrupts!
-                except:
-                    cursor.drop_created_tables()
-                    cnx.rollback()
-                    raise
 
     def wait_for_connection(self, retry_every=1, timeout=settings.SGX_MYSQL_CNX_TIMEOUT, **cnx_kw):
         """Returns a connection to MySQL with the given connection kwargs, but
@@ -91,46 +46,36 @@ class _MySQL:
         raise BiodbError('Failed to connect to MySQL with %s' % str(last_exception))
 
     @contextmanager
-    def connection(self, user, **kw):
+    def connection(self, user=READER, **kw):
         cnx_kw = {
             'user': user,
-            'password': self.passwords[user],
+            'password': self._password_for(user),
             'host': settings.SGX_MYSQL_HOST,
             'database': settings.SGX_MYSQL_DB,
         }
         cnx_kw.update(**kw)
         cnx = self.wait_for_connection(**cnx_kw)
-        real_cursor = cnx.cursor
-
-        @contextmanager
-        def cursor_wrapper(*args, **kwargs):
-            cursor = real_cursor(cnx, *args, **kwargs)
-            if self.profile:
-                cursor.execute('SET profiling = 1')
-
-            try:
-                yield cursor
-            finally:
-                if self.profile:
-                    cursor.execute('SHOW profiles;')
-                    for row in cursor:
-                        idx, time_s, query = row
-                        time_ms = '{t} ms'.format(t=round(time_s * 1000, 2)).ljust(10)
-                        query = '\n\t\t\t'.join(textwrap.wrap(query, 80))
-                        logger.info('  {time}{query}'.format(idx=idx, time=time_ms, query=query))
-                cursor.close()
-
-        cnx.cursor = cursor_wrapper
         try:
             yield cnx
         finally:
             cnx.close()
 
     @contextmanager
-    def cursor(self, user=READER, **kwargs):
-        with self.connection(user) as cnx:
-            with cnx.cursor(**kwargs) as cursor:
+    def cursor(self, user=READER, connection_kw={}, cursor_kw={}):
+        connection_kw.setdefault('allow_local_infile', True)
+        with self.connection(user=user, **connection_kw) as cnx:
+            with cnx.cursor(**cursor_kw) as cursor:
+                # allow caller to commit when they wish
+                cursor.commit = cnx.commit
                 yield cursor
+
+            # since we use the default engine InnoDB, we are _always_ in a
+            # transaction. We need to commit before closing the connection or
+            # we will lose data. If the user is not READER, the cursor
+            # could possibly have been used to write, assume we need to commit.
+            # Note: autocommit drives our import performance off a cliff
+            if user != READER:
+                cnx.commit()
 
     def _get_root_connection(self):
         return self.wait_for_connection(
@@ -205,13 +150,6 @@ class _MySQL:
         _create(user=READER, host='%', grant='SELECT')
         _create(user=WRITER, host='%', grant='ALL PRIVILEGES')
 
-        # Set global system variable to allow loading data into tables
-        # from local files (see biodb/datasets/pfam.py).
-        # Docs: https://dev.mysql.com/doc/refman/8.0/en/persisted-system-variables.html
-        # Docs: https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_local_infile
-        # NOTE this is a SQL syntax error in 5.7
-        cursor.execute("SET PERSIST local_infile = 'ON';")
-
         _add_system_table()
 
         cursor.close()
@@ -246,7 +184,7 @@ class _MySQL:
                 '-u', user,
                 '-D', settings.SGX_MYSQL_DB,
                 '-h', settings.SGX_MYSQL_HOST,
-                '-p' + self.passwords[user]]
+                '-p' + self._password_for(user)]
         os.execvp('mysql', argv)
 
     def shell_query(self, query, user=READER):
@@ -258,7 +196,7 @@ class _MySQL:
                 '-u', user,
                 '-D', settings.SGX_MYSQL_DB,
                 '-h', settings.SGX_MYSQL_HOST,
-                '-p' + self.passwords[user],
+                '-p' + self._password_for(user),
                 '-b',
                 '-e', query
                 ]
@@ -270,7 +208,7 @@ class _MySQL:
                 sys.stderr.write(cursor.statement + '\n')
             return cursor.fetchone()[0]
 
-        with self.cursor(user=READER) as cursor:
+        with self.cursor() as cursor:
             cursor.execute('SELECT COUNT(*) FROM `{table}`'.format(table=first))
             first_count = get_result(cursor)
 
@@ -309,4 +247,4 @@ class _MySQL:
             }
 
 
-MYSQL = _MySQL(profile=settings.SGX_MYSQL_PROFILE)
+MYSQL = _MySQL()

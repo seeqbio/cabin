@@ -12,7 +12,6 @@ SGX_MYSQL_WRITER_PASSWORD = os.environ.get('SGX_MYSQL_WRITER_PASSWORD')
 SGX_MYSQL_CNX_TIMEOUT = int(os.environ.get('SGX_MYSQL_CNX_TIMEOUT', 30))
 
 SGX_DOWNLOAD_DIR = '/sgx/seeq.api/downloads'
-SGX_MYSQL_PROFILE = False
 
 SGX_S3_MIRROR_BUCKET = os.environ.get('SGX_S3_MIRROR_BUCKET', 'sgx-archives')
 SGX_S3_MIRROR_PREFIX = os.environ.get('SGX_S3_MIRROR_PREFIX', 'biodb/mirrors').rstrip('/')

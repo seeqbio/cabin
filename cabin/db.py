@@ -2,7 +2,7 @@ import json
 from abc import abstractmethod
 
 from . import logger, settings, AbstractAttribute
-from .mysql import MYSQL
+from .mysql import MYSQL, WRITER
 from .core import Dataset, HistoricalDataset
 
 
@@ -21,7 +21,7 @@ class ImportedTable(Dataset):
         return {type: input.table_name for type, input in self.inputs.items()}
 
     def exists(self):
-        with MYSQL.transaction() as cursor:
+        with MYSQL.cursor() as cursor:
             cursor.execute("""
                 SELECT COUNT(*)
                 FROM `system`
@@ -30,15 +30,34 @@ class ImportedTable(Dataset):
             return cursor.fetchall()[0][0]
 
     def produce(self):
-        with MYSQL.transaction(connection_kw={'allow_local_infile': True}) as cursor:
-            self._create_table(cursor)
-            self.import_table(cursor)
-            self._update_system_table(cursor)
-            logger.info("Imported %s rows to table: %s " % (self.get_nrows(cursor), self.table_name))
+        try:
+            with MYSQL.cursor(user=WRITER) as cursor:
+                self._create_table(cursor)
+                self.import_table(cursor)
+                self._update_system_table(cursor)
+                logger.info("Imported %s rows to table: %s " % (self.get_nrows(cursor), self.table_name))
+        except BaseException as e:
+            # catch everything to cleanup, even KeyboardInterrupt.
+            #
+            # Note: if the user hits ctrl+c twice in a row, then we may not
+            # finish actually cleaning up because the second KeyboardInterrupt
+            # will interupt the clean up logic.
+            #
+            # use a different cursor for cleanup, the original one is possibly
+            # mid-read/write and we'd get a packet out of order error.
+            with MYSQL.cursor(user=WRITER) as cursor:
+                logger.info('Import failed, cleaning up before exiting. This may take some time...')
+                self.failed_import_cleanup(cursor)
+
+            raise e
 
     @abstractmethod
     def import_table(self, cursor):
         pass
+
+    def failed_import_cleanup(self, cursor):
+        cursor.execute(self.sql_drop_table)
+        cursor.execute(self.sql_drop_from_system)
 
     @property
     def sql_drop_table(self):
@@ -48,14 +67,9 @@ class ImportedTable(Dataset):
     def sql_drop_from_system(self):
         return 'DELETE FROM `system` WHERE name="{table}";'.format(table=self.table_name)
 
-    def drop(self):
-        with MYSQL.transaction() as cursor:
-            cursor.execute(self.sql_drop_table)
-            cursor.execute(self.sql_drop_from_system)
-
     def _create_table(self, cursor):
         query = self.schema.format(table=self.table_name).strip()
-        cursor.create_table(self.table_name, query)
+        cursor.execute(query)
 
     def _update_system_table(self, cursor):
         instance_id = settings.SGX_INSTANCE_ID
