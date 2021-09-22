@@ -115,7 +115,7 @@ class S3MirrorFile(Dataset):
         # don't have to re-download this again.
         rdepends = self.rdepends()
         if len(rdepends) == 1:
-            return rdepends[0]().path
+            return Path(rdepends[0]().path)
 
         return Path('/tmp/{name}.{ext}'.format(name=self.name, ext=self.extension))
 
