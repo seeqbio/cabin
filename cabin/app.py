@@ -5,13 +5,13 @@ import fnmatch
 from abc import ABC
 from abc import abstractmethod
 from collections import OrderedDict
-import networkx as nx
 
 from . import logger, BiodbError, AbstractAttribute
 from . import registry
 from .mysql import MYSQL
 from .mysql import READER
 from .db import ImportedTable, imported_tables
+from .graph import glob_datasets, build_code_dag, draw_code_dag
 
 
 def all_table_datasets(tag):
@@ -21,17 +21,6 @@ def all_table_datasets(tag):
         if (issubclass(cls, ImportedTable)):
             if tag is None or tag in cls.tags:
                 classes.append(cls)
-    return classes
-
-
-def glob_datasets(glob, tables_only=False):
-    classes = []
-    for cls in registry.TYPE_REGISTRY.values():
-        if tables_only and not issubclass(cls, ImportedTable):
-            continue
-
-        if fnmatch.fnmatch(cls.__name__, glob):
-            classes.append(cls)
     return classes
 
 
@@ -67,6 +56,7 @@ class ListCommand(AppCommand):
 
 
 class DagCommand(AppCommand):
+    # this command requires: graphviz and libgraphiz-dev (apt) and pygraphviz (pip)
     name = "dag"
     help = "render the dependency DAG of biodb as per current state of code"
 
@@ -76,78 +66,12 @@ class DagCommand(AppCommand):
         self.parser.add_argument('-s', '--subgraph', nargs='+', help='Only build the relevant subgraph for these datasets')
         self.parser.add_argument('-a', '--all-types', action='store_true', help='Include all datasets, not just tables')
 
-    def _build_graph(self):
-        G = nx.DiGraph()
-
-        def dataset_has_type_of_interest(dataset):
-            return self.app.args.all_types or issubclass(dataset, ImportedTable)
-
-        for dataset in registry.TYPE_REGISTRY.values():
-            if not dataset_has_type_of_interest(dataset):
-                continue
-
-            G.add_node(dataset.__name__)
-
-            for dep in dataset.depends:
-                if not dataset_has_type_of_interest(dep):
-                    continue
-
-                G.add_node(dep.__name__)
-                G.add_edge(dep.__name__, dataset.__name__)
-
-        if self.app.args.subgraph:
-            includes = set(sum([
-                [cls.__name__ for cls in glob_datasets(node, tables_only=(not self.app.args.all_types))]
-                for node in self.app.args.subgraph
-            ], []))
-            descendants = set().union(*[
-                nx.algorithms.dag.descendants(G, node)
-                for node in includes
-            ])
-            ancestors = set().union(*[
-                nx.algorithms.dag.ancestors(G, node)
-                for node in includes
-            ])
-            to_keep = set().union(includes, ancestors, descendants)
-            nodes = list(G.nodes().keys())
-            for node in nodes:
-                if node not in to_keep:
-                    G.remove_node(node)
-
-            nx.set_node_attributes(G, {
-                node: '#0c97ae' if node in includes else '#dddddd'
-                for node in G.nodes()
-            }, 'color')
-
-
-        return G
-
     def run(self):
-        # this requires: graphviz and libgraphiz-dev (apt) and pygraphviz (pip)
-        G = self._build_graph()
-        P = nx.drawing.nx_agraph.to_agraph(G)
-
-        # attributes reference: https://www.graphviz.org/doc/info/attrs.html
-        # P.graph_attr['size'] = 2000
-        P.graph_attr['margin'] = 2
-        P.graph_attr['fontname'] = 'monospace'
-
-        P.graph_attr['rankdir'] = 'LR'
-        P.graph_attr['ranksep'] = 2
-        P.graph_attr['nodesep'] = 1
-
-        P.node_attr['shape'] = 'box'
-        P.node_attr['fontname'] = 'monospace'
-        P.node_attr['fontsize'] = 12
-        P.node_attr['margin'] = .1
-
-        P.edge_attr['fontsize'] = 8
-        P.edge_attr['penwidth'] = 0.5
-        P.edge_attr['pencolor'] = '#888888'
-        P.edge_attr['arrowhead'] = 'vee'
-
-        P.layout(prog='dot')
-        P.draw(self.app.args.output)
+        draw_code_dag(
+            path=self.app.args.output,
+            tables_only=(not self.app.args.all_types),
+            nodes_of_interest_glob=self.app.args.subgraph,
+        )
 
 
 class DescribeCommand(AppCommand):
