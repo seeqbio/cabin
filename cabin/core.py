@@ -3,6 +3,8 @@ import hashlib
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 
+from humanize import naturalsize
+
 from . import logger
 from .mysql import MYSQL, WRITER
 
@@ -186,6 +188,8 @@ class Dataset(ABC):
 
 
 class HistoricalDataset:
+    # FIXME this is not a generic historical dataset; this is specifically an
+    # imported table, see db.ImportedTable
     def __init__(self, formula, name=None, sha=None):
         self.type = formula['type']
         self.name = name
@@ -208,9 +212,9 @@ class HistoricalDataset:
         this is verified by a formula sha comparison.
 
         Historical datasets that are not "latest" are "stale": they can safely be
-        removed from biodb storage. Note that HistoricalDataset is recursive
+        removed from biodb storage. Note that HistoricalDataset is recursive,
         mirroring formulae: the subformulae of a formula are resurrected as
-        HistoricalDatasets for the dependency dataset. This allows us to do
+        HistoricalDataset for the dependency dataset. This allows us to do
         garbage collection at all levels (tables, downloaded files,
         intermediate tables).
         """
@@ -235,3 +239,17 @@ class HistoricalDataset:
         with MYSQL.cursor(user=WRITER) as cursor:
             cursor.execute(self.sql_drop_table())
             cursor.execute(self.sql_drop_from_system())
+
+    def get_data_stats(self):
+        with MYSQL.cursor() as cursor:
+            cursor.execute("""
+                SELECT table_rows, data_length
+                FROM information_schema.tables
+                WHERE table_name = '{table}';
+            """.format(table=self.name))
+            n_rows, data_length = cursor.fetchone()
+
+        return {
+            'n_rows': '{:,}'.format(n_rows), # add thousands comma separator
+            'size': naturalsize(data_length)
+        }

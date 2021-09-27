@@ -5,13 +5,15 @@ import fnmatch
 from abc import ABC
 from abc import abstractmethod
 from collections import OrderedDict
-import networkx as nx
+
+import prettytable
 
 from . import logger, BiodbError, AbstractAttribute
 from . import registry
 from .mysql import MYSQL
 from .mysql import READER
 from .db import ImportedTable, imported_tables
+from .graph import glob_datasets, build_historical_dag, draw_code_dag
 
 
 def all_table_datasets(tag):
@@ -21,17 +23,6 @@ def all_table_datasets(tag):
         if (issubclass(cls, ImportedTable)):
             if tag is None or tag in cls.tags:
                 classes.append(cls)
-    return classes
-
-
-def glob_datasets(glob, tables_only=False):
-    classes = []
-    for cls in registry.TYPE_REGISTRY.values():
-        if tables_only and not issubclass(cls, ImportedTable):
-            continue
-
-        if fnmatch.fnmatch(cls.__name__, glob):
-            classes.append(cls)
     return classes
 
 
@@ -67,6 +58,7 @@ class ListCommand(AppCommand):
 
 
 class DagCommand(AppCommand):
+    # this command requires: graphviz and libgraphiz-dev (apt) and pygraphviz (pip)
     name = "dag"
     help = "render the dependency DAG of biodb as per current state of code"
 
@@ -74,70 +66,14 @@ class DagCommand(AppCommand):
         super().__init__(**kwargs)
         self.parser.add_argument('-o', '--output', required=True, help='Path to output png file')
         self.parser.add_argument('-s', '--subgraph', nargs='+', help='Only build the relevant subgraph for these datasets')
-
-    def _build_graph(self):
-        G = nx.DiGraph()
-
-        for dataset in registry.TYPE_REGISTRY.values():
-            G.add_node(dataset.__name__)
-
-            for dep in dataset.depends:
-                G.add_node(dep.__name__)
-                G.add_edge(dep.__name__, dataset.__name__)
-
-        if self.app.args.subgraph:
-            includes = set(sum([
-                [cls.__name__ for cls in glob_datasets(node)]
-                for node in self.app.args.subgraph
-            ], []))
-            descendants = set().union(*[
-                nx.algorithms.dag.descendants(G, node)
-                for node in includes
-            ])
-            ancestors = set().union(*[
-                nx.algorithms.dag.ancestors(G, node)
-                for node in includes
-            ])
-            to_keep = set().union(includes, ancestors, descendants)
-            nodes = list(G.nodes().keys())
-            for node in nodes:
-                if node not in to_keep:
-                    G.remove_node(node)
-
-            nx.set_node_attributes(G, {
-                node: '#0c97ae' if node in includes else '#dddddd'
-                for node in G.nodes()
-            }, 'color')
-
-
-        return G
+        self.parser.add_argument('-a', '--all-types', action='store_true', help='Include all datasets, not just tables')
 
     def run(self):
-        # this requires: graphviz and libgraphiz-dev (apt) and pygraphviz (pip)
-        G = self._build_graph()
-        P = nx.drawing.nx_agraph.to_agraph(G)
-
-        # attributes reference: https://www.graphviz.org/doc/info/attrs.html
-        # P.graph_attr['size'] = 2000
-        P.graph_attr['margin'] = 2
-        P.graph_attr['fontname'] = 'monospace'
-
-        P.graph_attr['rankdir'] = 'LR'
-        P.graph_attr['ranksep'] = 2
-        P.graph_attr['nodesep'] = 1
-
-        P.node_attr['shape'] = 'box'
-        P.node_attr['fontname'] = 'monospace'
-        P.node_attr['fontsize'] = 12
-        P.node_attr['margin'] = .1
-
-        P.edge_attr['fontsize'] = 8
-        P.edge_attr['penwidth'] = 0.5
-        P.edge_attr['pencolor'] = '#888888'
-        P.edge_attr['arrowhead'] = 'vee'
-
-        P.layout(prog='dot')
-        P.draw(self.app.args.output)
+        draw_code_dag(
+            path=self.app.args.output,
+            tables_only=(not self.app.args.all_types),
+            nodes_of_interest_glob=self.app.args.subgraph,
+        )
 
 
 class DescribeCommand(AppCommand):
@@ -275,40 +211,61 @@ class StatusCommand(AppCommand):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.parser.add_argument('dataset', nargs='?', default='*')
+        self.parser.add_argument('dataset', nargs='*', default='*')
+
+    def _truncate_list(self, strings):
+        # given a list of strings, reduces them to 'A B' or 'A ...'
+        # used in rendering potentially long list of inputs/outputs
+        if not strings:
+            truncated_str = ''
+        elif len(strings) == 1:
+            truncated_str = strings[0]
+        else:
+            truncated_str = strings[0] + ' ...'
+
+        return '(%d) %s' % (len(strings), truncated_str)
 
     def run(self):
-        def yesno(val):
-            return 'yes' if val else 'no'
+        ptable = prettytable.PrettyTable()
+        ptable.set_style(prettytable.MARKDOWN)
+        ptable.field_names = [
+            'version',
+            'table',
+            'rows',
+            'size',
+            'inputs',
+            'outputs',
+        ]
+        ptable.align = 'l' # default left align
+        ptable.align['rows'] = 'r'
+        ptable.align['size'] = 'r'
+        ptable.align['version'] = 'r'
 
-        width_by_column = OrderedDict([
-            ('type',         32),
-            ('version',      8),
-            ('latest',       7),
-            ('Table',        50),
-            ('depends',      40),
-        ])
-        columns = width_by_column.keys()
-        fmt_string = ''.join('{%s:%d}' % (col, width) for col, width in width_by_column.items())
+        class_names = set(sum([
+            [cls.__name__ for cls in glob_datasets(glob, tables_only=True)]
+            for glob in self.app.args.dataset
+        ], []))
 
-        # header line
-        print(fmt_string.format(**dict(zip(columns, columns))))
+        hdatasets = list(imported_tables())
+        hdag = build_historical_dag(hdatasets)
 
-        # content lines
-        class_names = [cls.__name__ for cls in glob_datasets(self.app.args.dataset, tables_only=True)]
-
-        for hdataset in imported_tables():
-            if hdataset.type not in class_names:
+        for hdataset in hdatasets:
+            ds_type = hdataset.type
+            if ds_type not in class_names:
                 continue
+
+            data_stats = hdataset.get_data_stats()
             row = [
-                hdataset.type,
-                hdataset.formula['version'],
-                hdataset.is_latest(),
+                hdataset.formula['version'] + ('  ✓' if hdataset.is_latest() else '  !'),
                 hdataset.name,
-                '[' + ', '.join(ds.type for ds in hdataset.inputs.values()) + ']',
+                data_stats['n_rows'],
+                data_stats['size'],
+                self._truncate_list(list(hdataset.inputs.keys())),
+                self._truncate_list(list(hdag.successors(hdataset.name))),
             ]
-            row = [str(x) if x else '' for x in row]
-            print(fmt_string.format(**dict(zip(columns, row))))
+            ptable.add_row(row)
+
+        print(ptable)
 
 
 class App:
