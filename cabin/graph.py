@@ -40,6 +40,24 @@ def build_code_dag(tables_only=True):
     return G
 
 
+def build_historical_dag(hdatasets):
+    """Build the dataset DAG as per a list of historical datasets' formulae."""
+    G = nx.DiGraph()
+
+    names_by_sha = {}
+
+    for hdataset in hdatasets:
+        G.add_node(hdataset.name)
+        names_by_sha[hdataset.formula_sha] = hdataset.name
+
+    for hdataset in hdatasets:
+        for input_ in hdataset.inputs.values():
+            if input_.formula_sha in names_by_sha:
+                G.add_edge(names_by_sha[input_.formula_sha], hdataset.name)
+
+    return G
+
+
 def draw_code_dag(path, tables_only=True, nodes_of_interest_glob=None):
     """Draws the dataset DAG as per current state of code, ie registry.
 

@@ -6,12 +6,14 @@ from abc import ABC
 from abc import abstractmethod
 from collections import OrderedDict
 
+import prettytable
+
 from . import logger, BiodbError, AbstractAttribute
 from . import registry
 from .mysql import MYSQL
 from .mysql import READER
 from .db import ImportedTable, imported_tables
-from .graph import glob_datasets, build_code_dag, draw_code_dag
+from .graph import glob_datasets, build_historical_dag, draw_code_dag
 
 
 def all_table_datasets(tag):
@@ -209,40 +211,61 @@ class StatusCommand(AppCommand):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.parser.add_argument('dataset', nargs='?', default='*')
+        self.parser.add_argument('dataset', nargs='*', default='*')
+
+    def _truncate_list(self, strings):
+        # given a list of strings, reduces them to 'A B' or 'A ...'
+        # used in rendering potentially long list of inputs/outputs
+        if not strings:
+            truncated_str = ''
+        elif len(strings) == 1:
+            truncated_str = strings[0]
+        else:
+            truncated_str = strings[0] + ' ...'
+
+        return '(%d) %s' % (len(strings), truncated_str)
 
     def run(self):
-        def yesno(val):
-            return 'yes' if val else 'no'
+        ptable = prettytable.PrettyTable()
+        ptable.set_style(prettytable.MARKDOWN)
+        ptable.field_names = [
+            'version',
+            'table',
+            'rows',
+            'size',
+            'inputs',
+            'outputs',
+        ]
+        ptable.align = 'l' # default left align
+        ptable.align['rows'] = 'r'
+        ptable.align['size'] = 'r'
+        ptable.align['version'] = 'r'
 
-        width_by_column = OrderedDict([
-            ('type',         32),
-            ('version',      8),
-            ('latest',       7),
-            ('Table',        50),
-            ('depends',      40),
-        ])
-        columns = width_by_column.keys()
-        fmt_string = ''.join('{%s:%d}' % (col, width) for col, width in width_by_column.items())
+        class_names = set(sum([
+            [cls.__name__ for cls in glob_datasets(glob, tables_only=True)]
+            for glob in self.app.args.dataset
+        ], []))
 
-        # header line
-        print(fmt_string.format(**dict(zip(columns, columns))))
+        hdatasets = list(imported_tables())
+        hdag = build_historical_dag(hdatasets)
 
-        # content lines
-        class_names = [cls.__name__ for cls in glob_datasets(self.app.args.dataset, tables_only=True)]
-
-        for hdataset in imported_tables():
-            if hdataset.type not in class_names:
+        for hdataset in hdatasets:
+            ds_type = hdataset.type
+            if ds_type not in class_names:
                 continue
+
+            data_stats = hdataset.get_data_stats()
             row = [
-                hdataset.type,
-                hdataset.formula['version'],
-                hdataset.is_latest(),
+                hdataset.formula['version'] + ('  ✓' if hdataset.is_latest() else '  !'),
                 hdataset.name,
-                '[' + ', '.join(ds.type for ds in hdataset.inputs.values()) + ']',
+                data_stats['n_rows'],
+                data_stats['size'],
+                self._truncate_list(list(hdataset.inputs.keys())),
+                self._truncate_list(list(hdag.successors(hdataset.name))),
             ]
-            row = [str(x) if x else '' for x in row]
-            print(fmt_string.format(**dict(zip(columns, row))))
+            ptable.add_row(row)
+
+        print(ptable)
 
 
 class App:
