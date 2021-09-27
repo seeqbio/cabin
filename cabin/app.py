@@ -74,20 +74,30 @@ class DagCommand(AppCommand):
         super().__init__(**kwargs)
         self.parser.add_argument('-o', '--output', required=True, help='Path to output png file')
         self.parser.add_argument('-s', '--subgraph', nargs='+', help='Only build the relevant subgraph for these datasets')
+        self.parser.add_argument('-a', '--all-types', action='store_true', help='Include all datasets, not just tables')
 
     def _build_graph(self):
         G = nx.DiGraph()
 
+        def dataset_has_type_of_interest(dataset):
+            return self.app.args.all_types or issubclass(dataset, ImportedTable)
+
         for dataset in registry.TYPE_REGISTRY.values():
+            if not dataset_has_type_of_interest(dataset):
+                continue
+
             G.add_node(dataset.__name__)
 
             for dep in dataset.depends:
+                if not dataset_has_type_of_interest(dep):
+                    continue
+
                 G.add_node(dep.__name__)
                 G.add_edge(dep.__name__, dataset.__name__)
 
         if self.app.args.subgraph:
             includes = set(sum([
-                [cls.__name__ for cls in glob_datasets(node)]
+                [cls.__name__ for cls in glob_datasets(node, tables_only=(not self.app.args.all_types))]
                 for node in self.app.args.subgraph
             ], []))
             descendants = set().union(*[
