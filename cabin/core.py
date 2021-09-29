@@ -119,7 +119,7 @@ class Dataset(ABC):
     # override any of them.
     def produce_recursive(self, dry_run=False):
         if self.exists():
-            logger.debug('exists:'.ljust(10) + self.description)
+            logger.debug('exists:'.ljust(9) + self.description)
         else:
             logger.info('produce:'.ljust(10) + self.description)
 
@@ -243,11 +243,18 @@ class HistoricalDataset:
     def get_data_stats(self):
         with MYSQL.cursor() as cursor:
             cursor.execute("""
-                SELECT table_rows, data_length
+                SELECT data_length
                 FROM information_schema.tables
                 WHERE table_name = '{table}';
             """.format(table=self.name))
-            n_rows, data_length = cursor.fetchone()
+            # data_length in information_schema is only an estimate
+            data_length = cursor.fetchone()[0]
+
+            cursor.execute('SELECT count(*) FROM `{table}`;'.format(table=self.name))
+            # caution: don't use the table_rows column of information_schema,
+            # it's approximate (can be very misleading) and we have an easy way
+            # to get exact values.
+            n_rows = cursor.fetchone()[0]
 
         return {
             'n_rows': '{:,}'.format(n_rows), # add thousands comma separator
