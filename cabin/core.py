@@ -121,18 +121,20 @@ class Dataset(ABC):
         if self.exists():
             logger.debug('exists:'.ljust(9) + self.description)
         else:
-            logger.info('produce:'.ljust(10) + self.description)
-
             for inp in self.inputs.values():
                 # recurse
                 inp.produce_recursive(dry_run=dry_run)
+
+            logger.info('produce:'.ljust(10) + self.description)
 
             if not dry_run:
                 self.produce()
 
                 if hasattr(self, 'check'):
-                    logger.info('check:'.ljust(20) + self.description)
+                    logger.info('check:'.ljust(10) + self.description)
                     self.check()
+
+                logger.info('produced:'.ljust(10) + self.description)
 
     def root_versions(self):
         # returns a list of versions of all root ancestors. Root ancestors are
