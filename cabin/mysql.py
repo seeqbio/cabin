@@ -98,6 +98,8 @@ class _MySQL:
             assert pwd, 'Invalid root password'
             return pwd
 
+        raise BiodbError('No such user: %s' % user)
+
     def seems_initialized(self):
         cnx = self._get_root_connection()
         cursor = cnx.cursor()
