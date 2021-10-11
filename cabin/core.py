@@ -181,7 +181,8 @@ class Dataset(ABC):
         # A human readable description for the dataset
         return '{type} with formula sha {sha} and root versions {roots}'.format(
             type=self.type.ljust(30),
-            roots=', '.join(self.root_versions()),
+            # this is the human readable version, set-ify
+            roots=', '.join(set(self.root_versions())),
             sha=self.formula_sha,
         )
 
