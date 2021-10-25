@@ -97,20 +97,6 @@ def xml_element_clear_memory(elem):
 def xml_element_to_string(elem):
     return etree.tostring(elem, pretty_print=True, encoding='unicode')
 
-def read_string_as_xml(text):
-    """ parses a string containing XML data, returns Element."""
-    # see docs at :https://docs.python.org/3/library/xml.etree.elementtree.html
-    # FIXME: this could be a problem with large data - consider `fromstringlist`
-    # or other alternatives in this etree library if that occurs. Ideally, we would
-    # use an incremental parser instead of loading the entire DOM in memory
-    # NOTE users must clear the memory used by subelements retrieved via xpath
-    # or the like after use.
-
-    root = etree.fromstring(text) # https://stackoverflow.com/questions/8829529/lxml-convert-element-to-elementtree
-    element_tree = etree.ElementTree(root)
-    for elem in element_tree:
-        yield elem
-
 def read_xml(source, tag):
     """source is either path to a plain text XML file or a file object that
     reads in bytes."""
