@@ -195,6 +195,7 @@ class HistoricalDataset:
     # imported table, see db.ImportedTable
     def __init__(self, formula, name=None, sha=None):
         self.type = formula['type']
+        self.version = formula['version']
         self.name = name
 
         self.formula = formula
@@ -209,6 +210,17 @@ class HistoricalDataset:
             name: HistoricalDataset(sub)
             for name, sub in formula['inputs'].items()
         }
+
+    @property
+    def is_root(self):
+        return not self.inputs
+
+    def root_versions(self):
+        if self.is_root:
+            return [self.version]
+        return list(set(
+            sum((inp.root_versions() for _, inp in sorted(self.inputs.items())), [])
+        ))
 
     def is_latest(self):
         """Whether this HistoricalDataset matches the current state of code;
