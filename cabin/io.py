@@ -1,10 +1,8 @@
 import os
 import csv
 import gzip
-import pysam
 import subprocess
 from lxml import etree
-from Bio import SeqIO
 from ftplib import FTP
 from dateutil import parser
 from pathlib import Path

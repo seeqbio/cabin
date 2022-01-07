@@ -20,7 +20,7 @@ def get_class_path(cls):
     return inspect.getmodule(cls).__file__
 
 
-def import_dataset_classes(root_name: str='biodb.datasets') -> Dict[str, Type]:
+def import_dataset_classes(root_name: str='cabin.datasets') -> Dict[str, Type]:
     """Recursively finds all Dataset classes defined in the root package and
     imports them. Returns a dictionary of Dataset type, i.e. class name, to
     Class object.

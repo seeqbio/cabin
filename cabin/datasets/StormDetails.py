@@ -1,7 +1,7 @@
-from biodb.mysql import MYSQL
-from biodb.db import RecordByRecordImportedTable
-from biodb.files import LocalFile, ExternalFile
-from biodb.io import read_xsv
+from cabin.mysql import MYSQL
+from cabin.db import RecordByRecordImportedTable
+from cabin.files import LocalFile, ExternalFile
+from cabin.io import read_xsv
 
 
 class StormDetailsOfficial(ExternalFile):
