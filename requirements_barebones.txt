@@ -1,0 +1,9 @@
+flake8
+pytest
+
+mysql-connector-python
+
+boto3
+awscli
+
+lxml
