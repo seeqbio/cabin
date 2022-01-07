@@ -1,7 +1,7 @@
 from cabin.mysql import MYSQL
 from cabin.db import RecordByRecordImportedTable
 from cabin.files import LocalFile, ExternalFile
-from cabin.io import read_xsv
+from cabin.io import read_csv
 
 
 class StormDetailsOfficial(ExternalFile):
@@ -16,7 +16,7 @@ class StormDetailsOfficial(ExternalFile):
     @property
     def url(self):
         
-        return 'https://www.ncei.noaa.gov/data/storm-events/access/original/{v}/StormEvents_details_s{v}0101_e{v}1231_c20160115'.format(v=self.version)
+        return 'https://www.ncei.noaa.gov/data/storm-events/access/original/{v}/StormEvents_details_s{v}0101_e{v}1231_c20160115.csv'.format(v=self.version)
 
 
 class StormDetailsFile(LocalFile):
@@ -34,7 +34,8 @@ class StormDetailsTable(RecordByRecordImportedTable):
         'state_fips',
         'year',
         'month_name',
-        'event_type  begin_date_time',
+        'event_type',
+        'begin_date_time',
         'cz_timezone',
         'end_date_time',
         'injuries_direct',
@@ -83,13 +84,13 @@ class StormDetailsTable(RecordByRecordImportedTable):
                 tor_length        VARCHAR(255) NOT NULL,
                 tor_width         VARCHAR(255) NOT NULL,
                 episode_title     VARCHAR(255) NOT NULL,
-                episode_narrative VARCHAR(255) NOT NULL,
-                event_narrative   VARCHAR(255) NOT NULL,
+                episode_narrative         TEXT NOT NULL,
+                event_narrative           TEXT NOT NULL,
                 INDEX (month_name)
             );
         """
 
     def read(self):
-        for row in read_xsv(self.inputs['StormDetailsFile'].path):
+        for row in read_csv(self.inputs['StormDetailsFile'].path):
             yield row
 
