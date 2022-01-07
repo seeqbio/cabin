@@ -81,7 +81,7 @@ class _MySQL:
         return self.wait_for_connection(
             user='root',
             host=settings.SGX_MYSQL_HOST,
-            password=self._password_for('root')
+            password='KAZ' # self._password_for('root')
         )
 
     def _password_for(self, user):
@@ -94,7 +94,7 @@ class _MySQL:
             return settings.SGX_MYSQL_WRITER_PASSWORD
 
         if user == 'root':
-            pwd = os.environ.get('SGX_MYSQL_ROOT_PASSWORD')
+            pwd = 'KAZ' # os.environ.get('SGX_MYSQL_ROOT_PASSWORD')
             assert pwd, 'Invalid root password'
             return pwd
 
