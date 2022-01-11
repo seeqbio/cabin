@@ -104,7 +104,7 @@ class _MySQL:
         return False
         cnx = self._get_root_connection()
         cursor = cnx.cursor()
-        cursor.execute('SELECT user FROM mysql.user WHERE user = "%s"' % READER)
+        cursor.execute("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_NAME='system';")
         return bool(cursor.fetchone())
 
     def initialize(self):
