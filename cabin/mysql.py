@@ -115,9 +115,7 @@ class _MySQL:
             raise BiodbError('Database `%s` seems to be already initialized!' % database)
 
 
-        # cnx = self._get_root_connection()
-
-        # cursor.execute('CREATE DATABASE IF NOT EXISTS {db};'.format(db=database))
+        cursor = cnx.cursor()
 
         def _add_system_table():
             logger.info('creating system table')
