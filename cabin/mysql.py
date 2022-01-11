@@ -27,7 +27,6 @@ class _MySQL:
         time_left = timeout
         while time_left > 0:
             try:
-                import pdb; pdb.set_trace()
                 cnx = mysql.connector.connect(**cnx_kw)
                 if last_exception is not None:
                     sys.stderr.write('\n')
@@ -55,7 +54,6 @@ class _MySQL:
             'database': settings.SGX_MYSQL_DB,
         }
         cnx_kw.update(**kw)
-        import pdb; pdb.set_trace()
         cnx = self.wait_for_connection(**cnx_kw)
         try:
             yield cnx
