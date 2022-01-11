@@ -11,7 +11,7 @@ import prettytable
 from . import logger, BiodbError, AbstractAttribute
 from . import registry
 from .mysql import MYSQL
-from .mysql import READER
+from .mysql import WRITER
 from .db import ImportedTable, imported_tables
 from .graph import glob_datasets, build_historical_dag, draw_code_dag
 
@@ -199,7 +199,7 @@ class ShellCommand(AppCommand):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.parser.add_argument('--user', '-u', default=READER, help="user to log in to MySQL")
+        self.parser.add_argument('--user', '-u', default=WRITER, help="user to log in to MySQL")
 
     def run(self):
         MYSQL.shell(self.app.args.user) # execvp to mysql client

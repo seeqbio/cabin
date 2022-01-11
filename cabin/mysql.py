@@ -9,7 +9,6 @@ from contextlib import contextmanager
 from . import logger, settings, BiodbError
 
 
-READER = settings.CABIN_MYSQL_READER_USER
 WRITER = settings.CABIN_MYSQL_WRITER_USER
 
 
@@ -46,7 +45,7 @@ class _MySQL:
         raise BiodbError('Failed to connect to MySQL with %s' % str(last_exception))
 
     @contextmanager
-    def connection(self, user=READER, **kw):
+    def connection(self, user=WRITER, **kw):
         cnx_kw = {
             'user': user,
             'password': self._password_for(user),
@@ -61,7 +60,7 @@ class _MySQL:
             cnx.close()
 
     @contextmanager
-    def cursor(self, user=READER, connection_kw={}, cursor_kw={}):
+    def cursor(self, user=WRITER, connection_kw={}, cursor_kw={}):
         connection_kw.setdefault('allow_local_infile', True)
         with self.connection(user=user, **connection_kw) as cnx:
             with cnx.cursor(**cursor_kw) as cursor:
@@ -74,8 +73,7 @@ class _MySQL:
             # we will lose data. If the user is not READER, the cursor
             # could possibly have been used to write, assume we need to commit.
             # Note: autocommit drives our import performance off a cliff
-            if user != READER:
-                cnx.commit()
+            cnx.commit()
 
     def _get_root_connection(self):
         return self.wait_for_connection(
@@ -85,55 +83,40 @@ class _MySQL:
         )
 
     def _password_for(self, user):
-        if user == READER:
-            assert settings.CABIN_MYSQL_READER_PASSWORD, 'Unset password CABIN_MYSQL_READER_PASSWORD'
-            return settings.CABIN_MYSQL_READER_PASSWORD
-
         if user == WRITER:
             assert settings.CABIN_MYSQL_WRITER_PASSWORD, 'Unset password CABIN_MYSQL_WRITER_PASSWORD'
             return settings.CABIN_MYSQL_WRITER_PASSWORD
-
-        if user == 'root':
-            pwd = 'KAZ' # os.environ.get('CABIN_MYSQL_ROOT_PASSWORD')
-            assert pwd, 'Invalid root password'
-            return pwd
-
-        raise BiodbError('No such user: %s' % user)
+        else:
+            raise BiodbError('No such user: %s' % user)
 
     def seems_initialized(self):
-        return False
-        cnx = self._get_root_connection()
-        cursor = cnx.cursor()
-        cursor.execute("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_NAME='system';")
-        return bool(cursor.fetchone())
+        with self.cursor() as cursor:
+            cursor.execute("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_NAME='system';")
+            system_exists = bool(cursor.fetchall())
+        return system_exists
 
     def initialize(self):
         database = settings.CABIN_MYSQL_DB
         logger.info('initialiazing database "%s"' % database)
-
         if self.seems_initialized():
             raise BiodbError('Database `%s` seems to be already initialized!' % database)
 
-
-        cursor = cnx.cursor()
-
         def _add_system_table():
             logger.info('creating system table')
-            cursor.execute('USE {db};'.format(db=database))
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS `system` (
-                    instance_id VARCHAR(64),
-                    sha         VARCHAR(64)  PRIMARY KEY,
-                    type        VARCHAR(128),
-                    name        VARCHAR(255),
-                    table_name  VARCHAR(255),
-                    formula     TEXT
-                );
-            """)
+            with self.cursor() as cursor:
+                cursor.execute('USE {db};'.format(db=database))
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS `system` (
+                        instance_id VARCHAR(64),
+                        sha         VARCHAR(64)  PRIMARY KEY,
+                        type        VARCHAR(128),
+                        name        VARCHAR(255),
+                        table_name  VARCHAR(255),
+                        formula     TEXT
+                    );
+                """)
 
         _add_system_table()
-
-        cursor.close()
 
         logger.info('successfully initialized "{db}"!'.format(db=database))
 
@@ -155,7 +138,7 @@ class _MySQL:
                 '-p' + self._password_for(user)]
         os.execvp('mysql', argv)
 
-    def shell_query(self, query, user=READER):
+    def shell_query(self, query, user=WRITER):
         """Executes mysql client in a subprocess and runs the provided SQL
         statement against it. Stdout/err are not captured and controlled is
         returned to this process."""
