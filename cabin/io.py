@@ -142,7 +142,7 @@ def read_fasta(path, gzipped=False):
 
 def wget(source, destination):
     cmd = ['wget', '-q', str(source), '-O', str(destination)]
-    if not settings.SGX_NON_INTERACTIVE:
+    if not settings.CABIN_NON_INTERACTIVE:
         cmd = cmd + ['--show-progress']
     proc = subprocess.Popen(cmd)
     proc.communicate()

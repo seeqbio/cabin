@@ -72,8 +72,8 @@ class ImportedTable(Dataset):
         cursor.execute(query)
 
     def _update_system_table(self, cursor):
-        instance_id = settings.SGX_INSTANCE_ID
-        assert instance_id, 'Unset SGX_INSTANCE_ID'
+        instance_id = settings.CABIN_INSTANCE_ID
+        assert instance_id, 'Unset CABIN_INSTANCE_ID'
         query = ("""
             INSERT INTO `system`
             (type, name, formula, sha, table_name, instance_id)

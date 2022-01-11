@@ -9,13 +9,13 @@ from contextlib import contextmanager
 from . import logger, settings, BiodbError
 
 
-READER = settings.SGX_MYSQL_READER_USER
-WRITER = settings.SGX_MYSQL_WRITER_USER
+READER = settings.CABIN_MYSQL_READER_USER
+WRITER = settings.CABIN_MYSQL_WRITER_USER
 
 
 class _MySQL:
 
-    def wait_for_connection(self, retry_every=1, timeout=settings.SGX_MYSQL_CNX_TIMEOUT, **cnx_kw):
+    def wait_for_connection(self, retry_every=1, timeout=settings.CABIN_MYSQL_CNX_TIMEOUT, **cnx_kw):
         """Returns a connection to MySQL with the given connection kwargs, but
         retries a number of times before raising an exception.
 
@@ -50,8 +50,8 @@ class _MySQL:
         cnx_kw = {
             'user': user,
             'password': self._password_for(user),
-            'host': settings.SGX_MYSQL_HOST,
-            'database': settings.SGX_MYSQL_DB,
+            'host': settings.CABIN_MYSQL_HOST,
+            'database': settings.CABIN_MYSQL_DB,
         }
         cnx_kw.update(**kw)
         cnx = self.wait_for_connection(**cnx_kw)
@@ -80,22 +80,21 @@ class _MySQL:
     def _get_root_connection(self):
         return self.wait_for_connection(
             user='root',
-            host=settings.SGX_MYSQL_HOST,
-            password=self._password_for('root')
+            host=settings.CABIN_MYSQL_HOST,
+            password='KAZ' # self._password_for('root')
         )
 
     def _password_for(self, user):
         if user == READER:
-            assert settings.SGX_MYSQL_READER_PASSWORD, 'Unset password SGX_MYSQL_READER_PASSWORD'
-            return settings.SGX_MYSQL_READER_PASSWORD
+            assert settings.CABIN_MYSQL_READER_PASSWORD, 'Unset password CABIN_MYSQL_READER_PASSWORD'
+            return settings.CABIN_MYSQL_READER_PASSWORD
 
         if user == WRITER:
-            assert settings.SGX_MYSQL_WRITER_PASSWORD, 'Unset password SGX_MYSQL_WRITER_PASSWORD'
-            return settings.SGX_MYSQL_WRITER_PASSWORD
+            assert settings.CABIN_MYSQL_WRITER_PASSWORD, 'Unset password CABIN_MYSQL_WRITER_PASSWORD'
+            return settings.CABIN_MYSQL_WRITER_PASSWORD
 
         if user == 'root':
-            raise
-            pwd = 'KAZ' # os.environ.get('SGX_MYSQL_ROOT_PASSWORD')
+            pwd = 'KAZ' # os.environ.get('CABIN_MYSQL_ROOT_PASSWORD')
             assert pwd, 'Invalid root password'
             return pwd
 
@@ -109,7 +108,7 @@ class _MySQL:
         return bool(cursor.fetchone())
 
     def initialize(self):
-        database = settings.SGX_MYSQL_DB
+        database = settings.CABIN_MYSQL_DB
         logger.info('initialiazing database "%s"' % database)
 
         if self.seems_initialized():
@@ -189,8 +188,8 @@ class _MySQL:
         """
         argv = ['mysql',
                 '-u', user,
-                '-D', settings.SGX_MYSQL_DB,
-                '-h', settings.SGX_MYSQL_HOST,
+                '-D', settings.CABIN_MYSQL_DB,
+                '-h', settings.CABIN_MYSQL_HOST,
                 '-p' + self._password_for(user)]
         os.execvp('mysql', argv)
 
@@ -201,8 +200,8 @@ class _MySQL:
         import subprocess
         args = ['mysql',
                 '-u', user,
-                '-D', settings.SGX_MYSQL_DB,
-                '-h', settings.SGX_MYSQL_HOST,
+                '-D', settings.CABIN_MYSQL_DB,
+                '-h', settings.CABIN_MYSQL_HOST,
                 '-p' + self._password_for(user),
                 '-b',
                 '-e', query
