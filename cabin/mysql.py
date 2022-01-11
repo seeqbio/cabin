@@ -119,23 +119,6 @@ class _MySQL:
 
         # cursor.execute('CREATE DATABASE IF NOT EXISTS {db};'.format(db=database))
 
-        def _create(user, host, grant):
-            password = self._password_for(user)
-
-            logger.info("creating user '%s'@'%s' and granting %s" % (user, host, grant))
-            # intentionally not using `CREATE USER IF NOT EXISTS` since that
-            # would mislead the user into thinking they can reset the passwords
-            # if they just re-initialized.
-            cursor.execute("""
-                CREATE USER '{user}'@'{host}' IDENTIFIED BY '{password}';
-            """.format(user=user, host=host, password=password))
-
-            cursor.execute("""
-                GRANT {grant} ON `{db}`.* TO "{user}"@"{host}"
-            """.format(grant=grant, db=database, user=user, host=host))
-
-            cursor.execute('FLUSH PRIVILEGES;')
-
         def _add_system_table():
             logger.info('creating system table')
             cursor.execute('USE {db};'.format(db=database))
@@ -149,31 +132,12 @@ class _MySQL:
                     formula     TEXT
                 );
             """)
-        with self.connection() as cnx:
-            cursor = cnx.cursor()
-            _add_system_table()
-            return
-        # _create(user=READER, host='%', grant='SELECT')
-        # _create(user=WRITER, host='%', grant='ALL PRIVILEGES')
 
-        # _add_system_table()
+        _add_system_table()
 
         cursor.close()
 
         logger.info('successfully initialized "{db}"!'.format(db=database))
-
-    def drop_users(self):
-        cnx = self._get_root_connection()
-        cursor = cnx.cursor()
-
-        cursor.execute("DROP USER '{user}'@'%'".format(user=READER))
-        logger.info('dropped user "%s"!' % READER)
-
-        cursor.execute("DROP USER '{user}'@'%'".format(user=WRITER))
-        logger.info('dropped user "%s"!' % WRITER)
-
-        cursor.execute('FLUSH PRIVILEGES;')
-        cursor.close()
 
     def shell(self, user):
         """Executes mysql client in _this_ process (replaces python process
