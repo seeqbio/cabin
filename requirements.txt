@@ -5,13 +5,16 @@ botocore==1.23.30
 colorama==0.4.3
 docutils==0.15.2
 flake8==4.0.1
+humanize==3.13.1
 iniconfig==1.1.1
 jmespath==0.10.0
 lxml==4.7.1
 mccabe==0.6.1
 mysql-connector-python==8.0.27
+networkx==2.6.3
 packaging==21.3
 pluggy==1.0.0
+prettytable==3.0.0
 protobuf==3.19.1
 py==1.11.0
 pyasn1==0.4.8
@@ -26,3 +29,4 @@ s3transfer==0.5.0
 six==1.16.0
 toml==0.10.2
 urllib3==1.26.8
+wcwidth==0.2.5
