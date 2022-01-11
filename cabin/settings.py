@@ -7,8 +7,8 @@ SGX_MYSQL_HOST = '127.0.0.1' # 'mysql'
 SGX_MYSQL_DB = 'cabin'
 SGX_MYSQL_READER_USER = 'cabin'
 SGX_MYSQL_WRITER_USER = 'cabin'
-SGX_MYSQL_READER_PASSWORD = 'password'
-SGX_MYSQL_WRITER_PASSWORD = 'password' # os.environ.get('SGX_MYSQL_WRITER_PASSWORD')
+SGX_MYSQL_READER_PASSWORD = 'cabin'
+SGX_MYSQL_WRITER_PASSWORD = 'cabin' # os.environ.get('SGX_MYSQL_WRITER_PASSWORD')
 SGX_MYSQL_CNX_TIMEOUT = int(os.environ.get('SGX_MYSQL_CNX_TIMEOUT', 30))
 
 SGX_DOWNLOAD_DIR = '/sgx/cabin/downloads'
