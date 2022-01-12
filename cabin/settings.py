@@ -8,6 +8,7 @@ CABIN_MYSQL_DB = os.environ.get('CABIN_DB_NAME', 'cabin')
 CABIN_MYSQL_USER =  os.environ.get('CABIN_MYSQL_USER', 'cabin')
 CABIN_MYSQL_PASSWORD =  os.environ.get('CABIN_MYSQL_PASSWORD', 'cabin')
 CABIN_MYSQL_CNX_TIMEOUT = int(os.environ.get('CABIN_MYSQL_CNX_TIMEOUT', 30))
+CABIN_SYSTEM_TABLE = os.environ.get('CABIN_SYSTEM_TABLE', 'cabin_system')
 
 CABIN_DOWNLOAD_DIR = os.environ.get('CABIN_DOWNLOADS', '/tmp/cabin/downloads')
 
