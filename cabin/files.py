@@ -65,7 +65,7 @@ class LocalFile(Dataset):
     @property
     def path(self):
         return '{downloads}/{name}.{ext}'.format(
-            downloads=settings.SGX_DOWNLOAD_DIR,
+            downloads=settings.CABIN_DOWNLOAD_DIR,
             name=self.name,
             ext=self.extension
         )
@@ -74,7 +74,7 @@ class LocalFile(Dataset):
         return Path(self.path).exists()
 
     def produce(self):
-        Path(settings.SGX_DOWNLOAD_DIR).mkdir(exist_ok=True, parents=True)
+        Path(settings.CABIN_DOWNLOAD_DIR).mkdir(exist_ok=True, parents=True)
         try:
             wget(self.input.url, self.path)
         except: # any exception, even KeyboardInterrupt
@@ -105,7 +105,7 @@ class S3MirrorFile(Dataset):
     @property
     def s3_key(self):
         return '{prefix}/{name}.{ext}'.format(
-            prefix=settings.SGX_S3_MIRROR_PREFIX,
+            prefix=settings.CABIN_S3_MIRROR_PREFIX,
             name=self.name,
             ext=self.extension
         )
@@ -129,7 +129,7 @@ class S3MirrorFile(Dataset):
         # upload local copy to S3
         try:
             s3 = boto3.resource('s3')
-            bucket = s3.Bucket(settings.SGX_S3_MIRROR_BUCKET)
+            bucket = s3.Bucket(settings.CABIN_S3_MIRROR_BUCKET)
             bucket.upload_file(local_path, self.s3_key)
         except botocore.exceptions.ClientError:
             raise BiodbError('S3 Upload failed!')
@@ -137,7 +137,7 @@ class S3MirrorFile(Dataset):
     def exists(self):
         try:
             s3 = boto3.client('s3')
-            s3.head_object(Bucket=settings.SGX_S3_MIRROR_BUCKET, Key=str(self.s3_key))
+            s3.head_object(Bucket=settings.CABIN_S3_MIRROR_BUCKET, Key=str(self.s3_key))
             return True
         except botocore.exceptions.ClientError:
             return False
@@ -151,5 +151,5 @@ class S3MirroredLocalFile(LocalFile):
         # of the S3MirrorFile dependency.
         if not self.exists():
             s3 = boto3.resource('s3')
-            bucket = s3.Bucket(settings.SGX_S3_MIRROR_BUCKET)
+            bucket = s3.Bucket(settings.CABIN_S3_MIRROR_BUCKET)
             bucket.download_file(self.input.s3_key, str(self.path))

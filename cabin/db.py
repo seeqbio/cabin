@@ -2,7 +2,7 @@ import json
 from abc import abstractmethod
 
 from . import logger, settings, AbstractAttribute
-from .mysql import MYSQL, WRITER
+from .mysql import MYSQL
 from .core import Dataset, HistoricalDataset
 
 
@@ -31,7 +31,7 @@ class ImportedTable(Dataset):
 
     def produce(self):
         try:
-            with MYSQL.cursor(user=WRITER) as cursor:
+            with MYSQL.cursor() as cursor:
                 self._create_table(cursor)
                 self.import_table(cursor)
                 self._update_system_table(cursor)
@@ -45,7 +45,7 @@ class ImportedTable(Dataset):
             #
             # use a different cursor for cleanup, the original one is possibly
             # mid-read/write and we'd get a packet out of order error.
-            with MYSQL.cursor(user=WRITER) as cursor:
+            with MYSQL.cursor() as cursor:
                 logger.info('Import failed, cleaning up before exiting. This may take some time...')
                 self.failed_import_cleanup(cursor)
 
@@ -72,8 +72,8 @@ class ImportedTable(Dataset):
         cursor.execute(query)
 
     def _update_system_table(self, cursor):
-        instance_id = settings.SGX_INSTANCE_ID
-        assert instance_id, 'Unset SGX_INSTANCE_ID'
+        instance_id = settings.CABIN_INSTANCE_ID
+        assert instance_id, 'Unset CABIN_INSTANCE_ID'
         query = ("""
             INSERT INTO `system`
             (type, name, formula, sha, table_name, instance_id)

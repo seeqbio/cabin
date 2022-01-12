@@ -6,7 +6,7 @@ from collections import OrderedDict
 from humanize import naturalsize
 
 from . import logger
-from .mysql import MYSQL, WRITER
+from .mysql import MYSQL
 
 
 def calculate_sha(obj, num_chars=8):
@@ -251,7 +251,7 @@ class HistoricalDataset:
         return 'DELETE FROM `system` WHERE name="{table}";'.format(table=self.name)
 
     def drop(self):
-        with MYSQL.cursor(user=WRITER) as cursor:
+        with MYSQL.cursor() as cursor:
             cursor.execute(self.sql_drop_table())
             cursor.execute(self.sql_drop_from_system())
 
