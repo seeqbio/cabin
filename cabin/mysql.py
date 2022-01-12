@@ -9,9 +9,6 @@ from contextlib import contextmanager
 from . import logger, settings, BiodbError
 
 
-WRITER = settings.CABIN_MYSQL_WRITER_USER
-
-
 class _MySQL:
 
     def wait_for_connection(self, retry_every=1, timeout=settings.CABIN_MYSQL_CNX_TIMEOUT, **cnx_kw):
@@ -45,7 +42,7 @@ class _MySQL:
         raise BiodbError('Failed to connect to MySQL with %s' % str(last_exception))
 
     @contextmanager
-    def connection(self, user=WRITER, **kw):
+    def connection(self, user=settings.CABIN_MYSQL_USER, **kw):
         cnx_kw = {
             'user': user,
             'password': self._password_for(user),
@@ -60,7 +57,7 @@ class _MySQL:
             cnx.close()
 
     @contextmanager
-    def cursor(self, user=WRITER, connection_kw={}, cursor_kw={}):
+    def cursor(self, user=settings.CABIN_MYSQL_USER, connection_kw={}, cursor_kw={}):
         connection_kw.setdefault('allow_local_infile', True)
         with self.connection(user=user, **connection_kw) as cnx:
             with cnx.cursor(**cursor_kw) as cursor:
@@ -76,9 +73,9 @@ class _MySQL:
             cnx.commit()
 
     def _password_for(self, user):
-        if user == WRITER:
-            assert settings.CABIN_MYSQL_WRITER_PASSWORD, 'Unset password CABIN_MYSQL_WRITER_PASSWORD'
-            return settings.CABIN_MYSQL_WRITER_PASSWORD
+        if user == settings.CABIN_MYSQL_USER:
+            assert settings.CABIN_MYSQL_PASSWORD, 'Unset password CABIN_MYSQL_PASSWORD'
+            return settings.CABIN_MYSQL_PASSWORD
         else:
             raise BiodbError('No such user: %s' % user)
 
@@ -113,7 +110,7 @@ class _MySQL:
 
         logger.info('successfully initialized "{db}"!'.format(db=database))
 
-    def shell(self, user):
+    def shell(self, user=settings.CABIN_MYSQL_USER):
         """Executes mysql client in _this_ process (replaces python process
         immediately). This is necessary; using a subprocess produces weird
         behavior with how interrupts are handled, e.g. how ctrl+c works.
@@ -131,7 +128,7 @@ class _MySQL:
                 '-p' + self._password_for(user)]
         os.execvp('mysql', argv)
 
-    def shell_query(self, query, user=WRITER):
+    def shell_query(self, query, user=settings.CABIN_MYSQL_USER):
         """Executes mysql client in a subprocess and runs the provided SQL
         statement against it. Stdout/err are not captured and controlled is
         returned to this process."""
