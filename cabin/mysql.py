@@ -75,13 +75,6 @@ class _MySQL:
             # Note: autocommit drives our import performance off a cliff
             cnx.commit()
 
-    def _get_root_connection(self):
-        return self.wait_for_connection(
-            user='root',
-            host=settings.CABIN_MYSQL_HOST,
-            password='KAZ' # self._password_for('root')
-        )
-
     def _password_for(self, user):
         if user == WRITER:
             assert settings.CABIN_MYSQL_WRITER_PASSWORD, 'Unset password CABIN_MYSQL_WRITER_PASSWORD'
