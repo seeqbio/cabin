@@ -81,7 +81,11 @@ class _MySQL:
 
     def seems_initialized(self):
         with self.cursor() as cursor:
-            cursor.execute("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_NAME='system';")
+            cursor.execute("""
+                SELECT TABLE_NAME
+                FROM information_schema.TABLES
+                WHERE TABLE_NAME='{system}';
+            """.format(system=settings.CABIN_SYSTEM_TABLE))
             system_exists = bool(cursor.fetchall())
         return system_exists
 
@@ -96,7 +100,7 @@ class _MySQL:
             with self.cursor() as cursor:
                 cursor.execute('USE {db};'.format(db=database))
                 cursor.execute("""
-                    CREATE TABLE IF NOT EXISTS `system` (
+                    CREATE TABLE IF NOT EXISTS `{system}` (
                         instance_id VARCHAR(64),
                         sha         VARCHAR(64)  PRIMARY KEY,
                         type        VARCHAR(128),
@@ -104,7 +108,7 @@ class _MySQL:
                         table_name  VARCHAR(255),
                         formula     TEXT
                     );
-                """)
+                """.format(system=settings.CABIN_SYSTEM_TABLE))
 
         _add_system_table()
 

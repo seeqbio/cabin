@@ -4,6 +4,7 @@ from abc import abstractmethod
 from . import logger, settings, AbstractAttribute
 from .mysql import MYSQL
 from .core import Dataset, HistoricalDataset
+from .settings import CABIN_SYSTEM_TABLE
 
 
 class ImportedTable(Dataset):
@@ -24,9 +25,9 @@ class ImportedTable(Dataset):
         with MYSQL.cursor() as cursor:
             cursor.execute("""
                 SELECT COUNT(*)
-                FROM `system`
+                FROM `%s`
                 WHERE sha = '%s';
-            """ % self.formula_sha)
+            """ % (CABIN_SYSTEM_TABLE, self.formula_sha))
             return cursor.fetchall()[0][0]
 
     def produce(self):
@@ -65,7 +66,7 @@ class ImportedTable(Dataset):
 
     @property
     def sql_drop_from_system(self):
-        return 'DELETE FROM `system` WHERE name="{table}";'.format(table=self.table_name)
+        return 'DELETE FROM `{system}` WHERE name="{table}";'.format(system=CABIN_SYSTEM_TABLE, table=self.table_name)
 
     def _create_table(self, cursor):
         query = self.schema.format(table=self.table_name).strip()
@@ -75,11 +76,11 @@ class ImportedTable(Dataset):
         instance_id = settings.CABIN_INSTANCE_ID
         assert instance_id, 'Unset CABIN_INSTANCE_ID'
         query = ("""
-            INSERT INTO `system`
+            INSERT INTO `%s`
             (type, name, formula, sha, table_name, instance_id)
             VALUES
             ('%s', '%s', '%s', '%s', '%s', '%s');
-        """ % (self.type, self.name, self.formula_json, self.formula_sha, self.table_name, instance_id))
+        """ % (CABIN_SYSTEM_TABLE, self.type, self.name, self.formula_json, self.formula_sha, self.table_name, instance_id))
         cursor.execute(query)
 
     def get_nrows(self, cursor):
@@ -123,7 +124,7 @@ class RecordByRecordImportedTable(ImportedTable):
 
 
 def imported_tables(latest_only=False, type=None):
-    query = 'SELECT name, formula, sha FROM `system`'
+    query = 'SELECT name, formula, sha FROM `{system}`'.format(system=CABIN_SYSTEM_TABLE)
     if type:
         query += ' WHERE type = "%s"' % type
     query += ' ORDER BY name'

@@ -7,6 +7,7 @@ from humanize import naturalsize
 
 from . import logger
 from .mysql import MYSQL
+from .settings import CABIN_SYSTEM_TABLE
 
 
 def calculate_sha(obj, num_chars=8):
@@ -248,7 +249,7 @@ class HistoricalDataset:
         return 'DROP TABLE IF EXISTS `{table}`;'.format(table=self.name)
 
     def sql_drop_from_system(self):
-        return 'DELETE FROM `system` WHERE name="{table}";'.format(table=self.name)
+        return 'DELETE FROM `{system}` WHERE name="{table}";'.format(system=CABIN_SYSTEM_TABLE, table=self.name)
 
     def drop(self):
         with MYSQL.cursor() as cursor:
