@@ -81,7 +81,7 @@ class _MySQL:
         return self.wait_for_connection(
             user='root',
             host=settings.SGX_MYSQL_HOST,
-            password='KAZ' # self._password_for('root')
+            password=self._password_for('root')
         )
 
     def _password_for(self, user):
@@ -94,6 +94,7 @@ class _MySQL:
             return settings.SGX_MYSQL_WRITER_PASSWORD
 
         if user == 'root':
+            raise
             pwd = 'KAZ' # os.environ.get('SGX_MYSQL_ROOT_PASSWORD')
             assert pwd, 'Invalid root password'
             return pwd
@@ -101,6 +102,7 @@ class _MySQL:
         raise BiodbError('No such user: %s' % user)
 
     def seems_initialized(self):
+        return False
         cnx = self._get_root_connection()
         cursor = cnx.cursor()
         cursor.execute('SELECT user FROM mysql.user WHERE user = "%s"' % READER)
@@ -113,10 +115,10 @@ class _MySQL:
         if self.seems_initialized():
             raise BiodbError('Database `%s` seems to be already initialized!' % database)
 
-        cnx = self._get_root_connection()
 
-        cursor = cnx.cursor()
-        cursor.execute('CREATE DATABASE IF NOT EXISTS {db};'.format(db=database))
+        # cnx = self._get_root_connection()
+
+        # cursor.execute('CREATE DATABASE IF NOT EXISTS {db};'.format(db=database))
 
         def _create(user, host, grant):
             password = self._password_for(user)
@@ -148,11 +150,14 @@ class _MySQL:
                     formula     TEXT
                 );
             """)
+        with self.connection() as cnx:
+            cursor = cnx.cursor()
+            _add_system_table()
+            return
+        # _create(user=READER, host='%', grant='SELECT')
+        # _create(user=WRITER, host='%', grant='ALL PRIVILEGES')
 
-        _create(user=READER, host='%', grant='SELECT')
-        _create(user=WRITER, host='%', grant='ALL PRIVILEGES')
-
-        _add_system_table()
+        # _add_system_table()
 
         cursor.close()
 

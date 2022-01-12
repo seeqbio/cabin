@@ -5,5 +5,7 @@ mysql-connector-python
 
 boto3
 awscli
-
+humanize
+networkx
+prettytable
 lxml
