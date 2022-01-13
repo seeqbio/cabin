@@ -1,8 +1,5 @@
 import os
 
-# see ops.CABIN_INSTANCE_ID
-CABIN_INSTANCE_ID = '1'#os.environ.get('CABIN_INSTANCE_ID')
-
 CABIN_MYSQL_HOST = os.environ.get('CABIN_DB_HOST', '127.0.0.1')
 CABIN_MYSQL_DB = os.environ.get('CABIN_DB_NAME', 'cabin')
 CABIN_MYSQL_USER =  os.environ.get('CABIN_MYSQL_USER', 'cabin')

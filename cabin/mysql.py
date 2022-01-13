@@ -6,7 +6,7 @@ from time import sleep
 import mysql.connector
 from contextlib import contextmanager
 
-from . import logger, settings, BiodbError
+from . import logger, settings, CabinError
 
 
 class _MySQL:
@@ -39,7 +39,7 @@ class _MySQL:
                 time_left -= retry_every
 
         sys.stderr.write('\n')
-        raise BiodbError('Failed to connect to MySQL with %s' % str(last_exception))
+        raise CabinError('Failed to connect to MySQL with %s' % str(last_exception))
 
     @contextmanager
     def connection(self, user=settings.CABIN_MYSQL_USER, **kw):
@@ -77,7 +77,7 @@ class _MySQL:
             assert settings.CABIN_MYSQL_PASSWORD, 'Unset password CABIN_MYSQL_PASSWORD'
             return settings.CABIN_MYSQL_PASSWORD
         else:
-            raise BiodbError('No such user: %s' % user)
+            raise CabinError('No such user: %s' % user)
 
     def seems_initialized(self):
         with self.cursor() as cursor:
@@ -93,7 +93,7 @@ class _MySQL:
         database = settings.CABIN_MYSQL_DB
         logger.info('initialiazing database "%s"' % database)
         if self.seems_initialized():
-            raise BiodbError('Database `%s` seems to be already initialized!' % database)
+            raise CabinError('Database `%s` seems to be already initialized!' % database)
 
         def _add_system_table():
             logger.info('creating system table')

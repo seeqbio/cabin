@@ -7,7 +7,7 @@ from ftplib import FTP
 from dateutil import parser
 from pathlib import Path
 
-from . import logger, settings, BiodbError
+from . import logger, settings, CabinError
 
 
 def read_xsv(path, delimiter='\t', columns=None, header_leading_hash=True, ignore_leading_hash=False, gzipped=False, encoding=None):
@@ -35,7 +35,7 @@ def read_xsv(path, delimiter='\t', columns=None, header_leading_hash=True, ignor
         header = f.readline().strip()
         if header_leading_hash:
             if header[0] != '#':
-                raise BiodbError('Expected first line to start with #')
+                raise CabinError('Expected first line to start with #')
             header = header[1:]
         columns = header.split(delimiter)
 
@@ -150,7 +150,7 @@ def wget(source, destination):
         logger.info('Successfully downloaded to %s' % destination)
     else:
         os.remove(destination)
-        raise BiodbError('Failed to download to %s' % destination)
+        raise CabinError('Failed to download to %s' % destination)
 
 
 def ftp_modify_time(ftp_server, ftp_path):
@@ -166,7 +166,7 @@ def ftp_modify_time(ftp_server, ftp_path):
         return parser.parse(timestamp)
     else:
         ftp_url = 'ftp://{s}{p}'.format(s=ftp_server, p=ftp_path)
-        raise BiodbError('Failed to get FTP file modification time for: ' + ftp_url)
+        raise CabinError('Failed to get FTP file modification time for: ' + ftp_url)
 
 
 def cut_tsv_with_zcat(src, dst):
@@ -175,7 +175,7 @@ def cut_tsv_with_zcat(src, dst):
     proc = subprocess.Popen(command, shell=True)
     proc.communicate()
     if proc.returncode:
-        raise BiodbError('Failed to cut: ' + str(src))
+        raise CabinError('Failed to cut: ' + str(src))
 
 
 def gunzip(src, dst):
@@ -183,7 +183,7 @@ def gunzip(src, dst):
     proc = subprocess.Popen(command, shell=True)
     proc.communicate()
     if proc.returncode:
-        raise BiodbError('Failed to unzip: ' + str(src))
+        raise CabinError('Failed to unzip: ' + str(src))
 
 
 def unzip(zipname, extract_dir=None):

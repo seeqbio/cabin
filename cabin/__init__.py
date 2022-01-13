@@ -5,7 +5,7 @@ logging.basicConfig(
     level=logging.WARNING,
     format="[%(asctime)s] %(levelname)s %(message)s"
 )
-logger = logging.getLogger('biodb')
+logger = logging.getLogger('cabin')
 logger.setLevel(logging.INFO)
 
 
@@ -17,5 +17,5 @@ class AbstractAttribute:
         raise NotImplementedError('Class "{c}" has an undefined abstract class attribute'.format(c=type.__name__))
 
 
-class BiodbError(RuntimeError):
+class CabinError(RuntimeError):
     pass
