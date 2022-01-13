@@ -139,7 +139,7 @@ class Dataset(ABC):
 
     def root_versions(self):
         # returns a list of versions of all root ancestors. Root ancestors are
-        # always external to biodb (e.g. source VCF for ClinVar). The only
+        # always external to cabin (e.g. source dataset like StormDetails.csv). The only
         # reason to use this is to make paths and table names more intelligble.
         if self.is_root:
             return [self.version]
@@ -151,7 +151,7 @@ class Dataset(ABC):
 
     @classmethod
     def rdepends(cls):
-        from biodb import registry
+        from cabin import registry
         return [
             klass
             for klass in registry.TYPE_REGISTRY.values()
@@ -228,7 +228,7 @@ class HistoricalDataset:
         this is verified by a formula sha comparison.
 
         Historical datasets that are not "latest" are "stale": they can safely be
-        removed from biodb storage. Note that HistoricalDataset is recursive,
+        removed from cabin storage. Note that HistoricalDataset is recursive,
         mirroring formulae: the subformulae of a formula are resurrected as
         HistoricalDataset for the dependency dataset. This allows us to do
         garbage collection at all levels (tables, downloaded files,

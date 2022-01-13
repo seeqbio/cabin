@@ -52,7 +52,7 @@ class FTPTimestampedFile(ExternalFile):
 
     @property
     def current_ftp_version(self):
-        from biodb.io import ftp_modify_time
+        from cabin.io import ftp_modify_time
         if not hasattr(self, '_current_version'):
             timestamp = ftp_modify_time(self.ftp_server, self.ftp_path)
             self._current_version = str(timestamp.date())
@@ -132,7 +132,7 @@ class S3MirrorFile(Dataset):
             bucket = s3.Bucket(settings.CABIN_S3_MIRROR_BUCKET)
             bucket.upload_file(local_path, self.s3_key)
         except botocore.exceptions.ClientError:
-            raise BiodbError('S3 Upload failed!')
+            raise CabinError('S3 Upload failed!')
 
     def exists(self):
         try:

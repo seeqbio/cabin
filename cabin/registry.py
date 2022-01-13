@@ -1,11 +1,11 @@
 """
 Implements import magic. Usage:
 
-    from biodb.registry import CIViCTable
-    # just works, regardless of where in biodb.datasets the class is defined
+    from cabin.registry import StormDetailsTable
+    # just works, regardless of where in cabin.datasets the class is defined
 
-    from biodb.registry import TYPE_REGISTRY
-    TYPE_REGISTRY['CIViCTable'] == CIViCTable   # True
+    from cabin.registry import TYPE_REGISTRY
+    TYPE_REGISTRY['StormDetailsTable'] == StormDetailsTable   # True
 """
 from typing import Dict, Type
 import pkgutil
@@ -30,30 +30,30 @@ def import_dataset_classes(root_name: str='cabin.datasets') -> Dict[str, Type]:
     # import here in full name all the way to root_name. This means, for
     # example, performing the equivalent of
     #
-    #       import biodb.datatasets.CIViC
+    #       import cabin.datatasets.StormDetails
     #
     # in order to get at the classes in that module, and *not* the equivalent of
     #
-    #       from biodb.datasets import CIViC
+    #       from cabin.datasets import StormDetails
     #
     # This way we can easily clobber our caller's unrelated imports if they
     # have modules with similar names. After the equivalent of the above
     # relative import gets executed, anyone asking for
     #
-    #       import CIViC
+    #       import StormDetails
     #
     # will get the module we import here.
     pkg = importlib.import_module(root_name)
     classes = {}
     for importer, modname, ispkg in pkgutil.walk_packages(path=pkg.__path__, prefix=root_name + '.'):
-        mod = importlib.import_module(modname) # e.g. biodb.datasets.CIViC
+        mod = importlib.import_module(modname) # e.g. cabin.datasets.StormDetails
         for name, cls in inspect.getmembers(mod):
             if not inspect.isclass(cls):
                 continue
             # exclude any Dataset without a proper version (e.g. None).
             # This is a proxy for (abstract) base classes.
             if issubclass(cls, Dataset) and getattr(cls, 'version', None):
-                # e.g. CIViCTable from biodb.datasets.CIViC
+                # e.g. StormDetailsTable from cabin.datasets.StormDetails
                 name = cls.__name__
                 if name in classes:
                     # enforce class name uniqueness but don't choke on the same

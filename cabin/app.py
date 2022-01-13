@@ -8,7 +8,7 @@ from collections import OrderedDict
 
 import prettytable
 
-from . import logger, BiodbError, AbstractAttribute
+from . import logger, CabinError, AbstractAttribute
 from . import registry
 from .mysql import MYSQL
 from .db import ImportedTable, imported_tables
@@ -59,7 +59,7 @@ class ListCommand(AppCommand):
 class DagCommand(AppCommand):
     # this command requires: graphviz and libgraphiz-dev (apt) and pygraphviz (pip)
     name = "dag"
-    help = "render the dependency DAG of biodb as per current state of code"
+    help = "render the dependency DAG of cabin as per current state of code"
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -173,10 +173,10 @@ class ImportCommand(AppCommand):
             classes = all_table_datasets(tag=self.app.args.tag)
         else:
             if self.app.args.tag:
-                raise BiodbError('--tag is only valid with --all')
+                raise CabinError('--tag is only valid with --all')
 
             if not self.app.args.dataset:
-                raise BiodbError('either specify a dataset or --all')
+                raise CabinError('either specify a dataset or --all')
 
             classes = sum(
                 (glob_datasets(glob) for glob in self.app.args.dataset),
@@ -305,7 +305,7 @@ class App:
         else:
             try:
                 return self.commands[self.args.command].run()
-            except BiodbError as e:
+            except CabinError as e:
                 logger.error('Error: ' + str(e))
                 if self.args.debug:
                     raise
