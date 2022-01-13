@@ -12,10 +12,10 @@ setup(
     python_requires=">=3.5.0", # TODO
     description="TODO",
     long_description=long_description,
-    url="TODO",
-    author="TODO",
+    url="https://github.com/seeqbio/cabin/",
+    author="Streamline Genomics",
     author_email="TODO",
-    license="TODO",
+    license="MIT",
     classifiers=[
         "TODO",
     ],
